@@ -176,3 +176,29 @@
   background: transparent;
   text-align: left;
 }
+
+/* ---- Stage 8: join table, assist comparison ---- */
+.db__total td {
+  border-top: 1px solid var(--rule);
+}
+.db__cmpgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s3);
+}
+.db__cmpcell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  background: var(--panel);
+}
+.db__cmpval {
+  font-family: var(--font-mono);
+  font-size: var(--fs-l);
+  line-height: var(--lh-l);
+  font-weight: 500;
+  color: var(--text);
+}

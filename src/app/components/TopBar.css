@@ -60,3 +60,23 @@
   align-items: center;
   justify-content: center;
 }
+
+.topbar__status {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+/* DEMO PROFILE: labelled, never mistakable for a result chip (no semantic colour). */
+.topbar__demo {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 var(--s2);
+  border: 1px dashed var(--text-dim);
+  border-radius: var(--r1);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+}

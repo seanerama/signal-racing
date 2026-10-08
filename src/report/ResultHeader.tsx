@@ -77,7 +77,7 @@ export function setupChips(
 }
 
 export function ResultHeader(props: ResultHeaderProps) {
-  const { run, bestTime, target, isPB, passed, units, extra, onDebrief } = props;
+  const { run, bestTime, target, isPB, passed, units, extra, onDebrief, actions } = props;
 
   useEffect(() => {
     if (!run) return;
@@ -122,6 +122,7 @@ export function ResultHeader(props: ResultHeaderProps) {
         ))}
         <span class="rh__spacer" />
         <span class="rh__run micro dim">{`RUN ${run.index}`}</span>
+        {actions}
         {passed && onDebrief && (
           <Button variant="secondary" size="compact" onClick={() => onDebrief()}>
             Continue to debrief

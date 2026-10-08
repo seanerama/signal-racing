@@ -27,12 +27,14 @@ import {
   unlocked,
 } from './game-store';
 import { LevelSelect } from './LevelSelect';
+import { demoProfile, demoStatus } from './demo';
 import { log } from './log';
 import { levelPath, navigate, parseRoute, routePath, type Route } from './router';
 import { DevHome } from './routes/DevHome';
 import { DevReport } from './routes/DevReport';
 import { DevWorker } from './routes/DevWorker';
-import { Workbench } from './Workbench';
+import { LevelRoute } from './LevelRoute';
+import { DebriefExtra } from './DebriefExtra';
 import './App.css';
 import './screens.css';
 
@@ -88,6 +90,7 @@ function DebriefRoute({ id }: { id: LevelId }) {
           />
         ) : undefined
       }
+      extra={<DebriefExtra level={level} st={st} />}
       level={level}
       session={st?.session ?? null}
       hintOpens={st?.hintOpens.value ?? {}}
@@ -121,7 +124,7 @@ function RouteView({ route }: { route: Route }) {
       return <LevelSelect units={units.value} />;
     case 'level':
       return unlocked(route.id) ? (
-        <Workbench key={route.id} levelId={route.id} units={units.value} />
+        <LevelRoute key={route.id} id={route.id} units={units.value} />
       ) : (
         <Locked id={route.id} />
       );
@@ -241,7 +244,7 @@ function ShortcutSheet() {
   );
 }
 
-function usePaletteCommands(route: Route): Command[] {
+function usePaletteCommands(route: Route, phaseB: boolean): Command[] {
   const wb = workbenchActions.value;
   return useMemo(() => {
     const cmds: Command[] = LEVELS.map((l) => ({
@@ -273,7 +276,7 @@ function usePaletteCommands(route: Route): Command[] {
         group: 'View',
         label: `Axis: ${axisMode.value === 'time' ? 'distance' : 'time'}`,
         hint: 'X · Phase B',
-        disabled: true,
+        disabled: !phaseB,
         run: () => (axisMode.value = axisMode.value === 'time' ? 'distance' : 'time'),
       },
       {
@@ -297,7 +300,7 @@ function usePaletteCommands(route: Route): Command[] {
     }
     return cmds;
     // Recompute when the palette opens.
-  }, [paletteOpen.value, route, wb]);
+  }, [paletteOpen.value, route, wb, phaseB]);
 }
 
 export function App() {
@@ -306,7 +309,7 @@ export function App() {
   const level = levelId ? getLevel(levelId) : undefined;
   const phaseB = level?.phase === 'B';
   useKeyboardMap(phaseB);
-  const commands = usePaletteCommands(route);
+  const commands = usePaletteCommands(route, phaseB);
 
   const st = route.name === 'level' && levelId && unlocked(levelId) ? levelState(levelId) : null;
   const s = st?.session;
@@ -322,6 +325,19 @@ export function App() {
         onPalette={() => (paletteOpen.value = true)}
         {...(route.name === 'level' && workbenchActions.value
           ? { onBrief: () => workbenchActions.value?.openBrief() }
+          : {})}
+        {...(demoProfile.value
+          ? {
+              status: (
+                <span
+                  class="topbar__demo"
+                  data-testid="demo-chip"
+                  title={`Demo profile: every level unlocked; a recorded unassisted Puzzle attempt (setups and seeds, re-simulated on load${demoStatus.value === 'loading' ? ', loading' : ''}) feeds the debrief comparison.`}
+                >
+                  DEMO PROFILE
+                </span>
+              ),
+            }
           : {})}
         pips={
           s ? (

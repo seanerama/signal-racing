@@ -1,0 +1,149 @@
+/* Puzzle assist block (design-system "Puzzle assist"): a filter, not an oracle. Same type, weight
+   and 22px rows as the channel table; no accent, no glow. Tokens only. */
+.as {
+  background: var(--panel);
+}
+.as__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s1) var(--s3);
+  min-height: 28px;
+}
+.as__title {
+  margin: 0;
+}
+.as__what {
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.as__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  cursor: pointer;
+  color: var(--text-dim);
+}
+.as__toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.as__track {
+  position: relative;
+  width: 24px;
+  height: 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r1);
+  background: var(--bg);
+}
+.as__knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  background: var(--text-faint);
+}
+.as--on .as__knob {
+  left: 13px;
+  background: var(--text);
+}
+.as--on .as__toggle {
+  color: var(--text);
+}
+.as__toggle input:focus-visible + .as__track {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.as__empty {
+  margin: 0;
+  padding: 0 var(--s3) var(--s2);
+}
+.as__table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+.as__table th,
+.as__table td {
+  height: var(--row-h);
+  padding: 0 var(--s1);
+  border-top: 1px solid var(--line);
+  white-space: nowrap;
+  text-align: left;
+  font-weight: 400;
+}
+.as__table thead th {
+  height: 16px;
+  border-top: 0;
+}
+.as__rank {
+  width: 20px;
+  padding-left: var(--s3) !important;
+  text-align: right !important;
+}
+.as__id {
+  width: 34%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.as__r {
+  width: 44px;
+  text-align: right !important;
+}
+.as__reason {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-sans);
+}
+.as__add {
+  width: 60px;
+  padding-right: var(--s3) !important;
+  text-align: right !important;
+}
+.as__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 2px;
+}
+.as__link:hover {
+  text-decoration-color: var(--text-dim);
+}
+.as__addbtn {
+  height: 18px;
+  padding: 0 var(--s1);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.as__addbtn:hover:not(:disabled) {
+  background: var(--raised);
+  color: var(--text);
+}
+.as__addbtn:disabled {
+  color: var(--text-faint);
+  border-color: transparent;
+  cursor: default;
+}
+.as__row:hover {
+  background: var(--raised);
+}
+.as__foot {
+  margin: 0;
+  padding: var(--s1) var(--s3) var(--s2);
+  border-top: 1px solid var(--line);
+}

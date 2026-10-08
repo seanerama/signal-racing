@@ -81,6 +81,8 @@ export interface ResultHeaderProps {
   extra?: ResultHeaderExtra[];
   units: UnitSystem;
   onDebrief?(): void;
+  /** Stage 8, additive: secondary actions on line 1 (Export CSV). */
+  actions?: ComponentChildren;
 }
 
 /** `src/report/RunPips.tsx`. */

@@ -9,7 +9,8 @@
  *   overall when the latest is not the best), so the gap between two lines is always meaningful.
  * - `colorBy` on the track view follows the selected strip.
  * - A failed run shows the fault panel in place of the stack; the session does not consume it.
- * - Stage 8 extends it through `headerExtra`, `tableHeader` and `segmentBoundaries`.
+ * - Stage 8 extends it through `headerExtra`, `tableHeader` and `segmentBoundaries`
+ *   (`LevelRoute.tsx` composes them), and adds Export CSV to the result header on every level.
  */
 import type { ComponentChildren } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
@@ -33,6 +34,7 @@ import { HintControls } from '@/setup/HintControls';
 import { SetupPanel } from '@/setup/SetupPanel';
 import { runSeed } from '@/worker/build-input';
 import { WaterfallOverlay } from '@/viz3d/WaterfallOverlay';
+import { CsvButton } from '@/report/CsvButton';
 import { workbenchActions } from './actions';
 import { BriefModal } from './BriefModal';
 import { Button } from './components/Button';
@@ -47,11 +49,23 @@ export interface WorkbenchProps {
   units: UnitSystem;
   /** Extra result-header chips (Stage 8: compromise gap). */
   headerExtra?: ResultHeaderExtra[];
-  /** Slot docked at the top of the channel table (Stage 8: assist). */
-  tableHeader?: ComponentChildren;
+  /**
+   * Slot docked at the top of the channel table (Stage 8: assist). A function receives the
+   * stack state and the strip actions.
+   */
+  tableHeader?: ComponentChildren | ((ctx: TableHeaderCtx) => ComponentChildren);
   /** Segment boundaries in axis units (Phase B). */
   segmentBoundaries?: number[];
   axis?: 'time' | 'distance';
+}
+
+/** What a function-form `tableHeader` gets from the workbench. */
+export interface TableHeaderCtx {
+  inStack: ReadonlySet<ChannelId>;
+  /** Adds the strip (if missing) without flashing it. */
+  addChannel(id: ChannelId): void;
+  /** Adds the strip if missing and flashes its gutter. */
+  showChannel(id: ChannelId): void;
 }
 
 declare global {
@@ -195,6 +209,18 @@ export function Workbench({
     ? 'No run yet. Hints read the run you just made.'
     : 'Nothing in this run trips a rule. Compare it against your best on the strips.';
 
+  const headerCtx: TableHeaderCtx = {
+    inStack,
+    addChannel: (id) => {
+      if (!stripLayout.value.includes(id)) stripLayout.value = [...stripLayout.value, id];
+    },
+    showChannel,
+  };
+  const tableNode: ComponentChildren =
+    typeof tableHeader === 'function'
+      ? (tableHeader as (ctx: TableHeaderCtx) => ComponentChildren)(headerCtx)
+      : tableHeader;
+
   return (
     <div class="wb" data-testid="workbench" data-level={level.id}>
       <SetupPanel
@@ -237,6 +263,22 @@ export function Workbench({
           levers={level.levers}
           units={units}
           {...(headerExtra ? { extra: headerExtra } : {})}
+          {...(latest
+            ? {
+                actions: (
+                  <CsvButton
+                    levelId={level.id}
+                    run={{
+                      index: latest.index,
+                      seed: latest.seed,
+                      setup: latest.setup,
+                      telemetry: latest.telemetry,
+                    }}
+                    units={units}
+                  />
+                ),
+              }
+            : {})}
           {...(status === 'passed' ? { onDebrief: () => navigate(debriefPath(level.id)) } : {})}
         />
         {status === 'passed' && !latestPassed && (
@@ -304,7 +346,7 @@ export function Workbench({
             inStack={inStack}
             onToggle={(id) => setStrips(toggleStrip(stripLayout.value, id))}
             units={units}
-            header={tableHeader}
+            header={tableNode}
           />
         </div>
       </aside>

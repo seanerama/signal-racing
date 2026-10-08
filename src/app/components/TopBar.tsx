@@ -27,6 +27,8 @@ export interface TopBarProps {
   onPalette?(): void;
   /** ⓘ brief (in a level). */
   onBrief?(): void;
+  /** Status chips before the controls (Stage 8: `DEMO PROFILE`). */
+  status?: ComponentChildren;
 }
 
 /**
@@ -43,6 +45,7 @@ export function TopBar({
   axisEnabled = false,
   onPalette,
   onBrief,
+  status,
 }: TopBarProps) {
   return (
     <header class="topbar" data-testid="topbar">
@@ -51,6 +54,7 @@ export function TopBar({
       </a>
       <div class="topbar__crumb">{children}</div>
       {pips && <div class="topbar__pips">{pips}</div>}
+      {status && <div class="topbar__status">{status}</div>}
       <div class="topbar__controls">
         <SegmentedControl
           label="Units"
