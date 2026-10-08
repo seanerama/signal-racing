@@ -60,7 +60,7 @@ for (const o of candidates) {
       );
       const b = argmin(RAMPS, (r) => rows[RAMPS.indexOf(r)] ?? Infinity);
       console.log(
-        `A2 p=${p}: best ramp ${b.x} t=${b.v.toFixed(3)} | r0 ${rows[0]?.toFixed(3)} r1.5 ${rows[15]?.toFixed(3)} spread ${pct(b.v, Math.max(...rows))} | ${rows.map((x) => x.toFixed(2)).join(' ')}`,
+        `A2 p=${p}: best ramp ${b.x} t=${b.v.toFixed(3)} | r0 ${rows[0]?.toFixed(3)} r3.0 ${rows[15]?.toFixed(3)} spread ${pct(b.v, Math.max(...rows))} | ${rows.map((x) => x.toFixed(2)).join(' ')}`,
       );
     }
     const bp = argmin(
@@ -99,7 +99,7 @@ for (const o of candidates) {
     ] as const) {
       const rows = WINGS.map((w) => {
         let best = Infinity;
-        for (const r of [0, 0.1, 0.2, 0.3, 0.5])
+        for (const r of [0, 0.2, 0.4, 0.6])
           for (const d of WEIGHT_DISTS)
             best = Math.min(
               best,

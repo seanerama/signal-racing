@@ -156,8 +156,8 @@ export function engineForce(car: CarParams, theta: number, v: number): number {
 }
 
 /**
- * Row 11: `F_bf = 0.55·β·brakeForceMax`, `F_br = 0.45·β·brakeForceMax`, β ∈ {0,1}.
- * The 0.55 is `brakeBiasFront` (fixed at 0.55 in the meeting cut).
+ * Row 11: `F_bf = brakeBiasFront·β·brakeForceMax`, `F_br = (1 − brakeBiasFront)·β·brakeForceMax`,
+ * β ∈ {0,1} (`brakeBiasFront` 0.60, fixed in the meeting cut).
  */
 export function brakeDemand(
   car: CarParams,
@@ -171,13 +171,19 @@ export function brakeDemand(
 
 /**
  * Row 12: `r = F_demand/F_max`. If `r ≤ 1`: `F = F_demand`, `slip = sPeak·r`.
- * If `r > 1` (sliding): `F = slideFactor·F_max`, `slip = min(1, sPeak + kSlide·(r − 1))`.
+ * If `r > 1` (sliding): `F = slideFactor·F_max`.
+ *
+ * Row 12b (slide hysteresis): the axle's `sliding` state becomes true when `r > 1` and stays true
+ * until `r < kRegrip`. While sliding, `F = slideFactor·F_max` and
+ * `slip = min(1, sPeak + kSlide·max(0, r − kRegrip))`. `wasSliding` is the axle's state from the
+ * previous step (false for a fresh axle); no demand (`F_demand ≤ 0`) ends a slide.
  */
 export function tireForce(
   car: CarParams,
   demand: number,
   fMax: number,
   out: TireForceResult = { force: 0, slip: 0, sliding: false },
+  wasSliding = false,
 ): TireForceResult {
   if (demand <= 0) {
     out.force = 0;
@@ -186,13 +192,14 @@ export function tireForce(
     return out;
   }
   const r = fMax > 0 ? demand / fMax : Infinity;
-  if (r <= 1) {
+  const sliding = wasSliding ? r >= car.kRegrip : r > 1;
+  if (!sliding) {
     out.force = demand;
     out.slip = car.sPeak * r;
     out.sliding = false;
   } else {
     out.force = fMax > 0 ? car.slideFactor * fMax : 0;
-    out.slip = Math.min(1, car.sPeak + car.kSlide * (r - 1));
+    out.slip = Math.min(1, car.sPeak + car.kSlide * Math.max(0, r - car.kRegrip));
     out.sliding = true;
   }
   return out;

@@ -8,10 +8,22 @@ import type { CarParams } from './types';
 
 /*
  * Stage 2 value changes from the contract 01 / spec table (equations unchanged):
- * - fPeak 10_000 → 6_150 N. With 10 kN the rear (μ·N_r ≈ 6.3 kN at d = 0.45 even with full
- *   load transfer) spins for seconds whatever the ramp, so A2's ramp has nothing to teach. At
- *   6.15 kN a stab of throttle spins the rears (standstill budget ≈ 5.35 kN) and stays stuck in
- *   the spin, while a short ramp lets load transfer build first and the car never spins.
+ * - fPeak 10_000 → 5_800 N (Stage 2 had 6_150; Stage 2b, Vision Lead approved 2026-10-08).
+ *   With slide hysteresis (row 12b, kRegrip) a spin, once started, lasts until the budget grows
+ *   past demand/kRegrip, i.e. tens of m/s later whatever the ramp. So a ramp only pays if it
+ *   avoids the spin altogether, and it must be short (each second of ramp costs ≈ 0.5 s, about
+ *   what a spin costs). Load transfer, not downforce, is what a short ramp waits for, so the A2
+ *   ramp optimum is interior exactly for
+ *     μ·d·m·g  <  fPeak  <  μ·d·m·g / (1 − μ·h/L)   ≈ 5.35 … 6.25 kN at d = 0.45, p = pOpt:
+ *   above the standstill budget (a stab of throttle spins on the first step, before any load
+ *   has transferred) and below the fully transferred budget (a short ramp never spins).
+ *   5.8 kN sits mid-window, so the lesson survives ±5% in fPeak (tested over 5.5–6.1 kN).
+ *   On the 0–3.0 s (step 0.2) lever the optimum is the shortest non-zero ramp, 0.2 s: ramp 0
+ *   spins (+0.33 s), every longer ramp only adds time (≈ +0.1 s per 0.2 s); spread 7.5%.
+ *   Pressure: grip beyond the no-spin need buys nothing, so p = 1.5–1.8 bar tie (plateau).
+ *   With 10 kN every ramp in 0–3 s spins and the ramp optimum is 0: placing the window there
+ *   would need μ ≈ 2.6 or a ~1200 kg car, outside the spec table.
+ * - kRegrip 0.85 (new field, contract 02 row 12b): a sliding axle regrips below 85 % of its budget.
  * - brakeBiasFront 0.55 → 0.60 and brakeForceMax 16_000 → 13_000 N. With 55 % front and 16 kN
  *   (2.2 g, above μ·g) both axles lock at low speed for every weight distribution and the rear
  *   locks first, so braking also wants more rear weight and A3 has no interior optimum. With
@@ -21,7 +33,7 @@ import type { CarParams } from './types';
 export const DEFAULT_CAR: Readonly<CarParams> = Object.freeze({
   mass: 750,
   power: 500_000,
-  fPeak: 6_150,
+  fPeak: 5_800,
   cd0A: 0.68,
   kdA: 0.02,
   cl0A: 1.4,
@@ -42,6 +54,7 @@ export const DEFAULT_CAR: Readonly<CarParams> = Object.freeze({
   sPeak: 0.1,
   kSlide: 0.5,
   slideFactor: 0.8,
+  kRegrip: 0.85,
   fuelMass0: 0,
   arbFrontShare: 0.5,
 });

@@ -128,7 +128,7 @@ function sweepWing(name: string, track: Track): void {
   console.log('wing  ramp  wd    time     vCornerMin');
   const rows = WINGS.map((w) => {
     const cands = [];
-    for (const r of [0, 0.3, 0.5, 0.7, 1.0])
+    for (const r of [0, 0.2, 0.4, 0.6, 1.0])
       for (const d of WEIGHT_DISTS)
         cands.push({
           w,

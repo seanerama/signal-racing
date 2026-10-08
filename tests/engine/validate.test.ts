@@ -17,7 +17,7 @@ function fieldOf(fn: () => void): string | null {
 type Mutator = (x: SimInput) => void;
 const cases: [string, Mutator][] = [
   ['setup.throttle_ramp', (x) => (x.setup.throttle_ramp = -0.1)],
-  ['setup.throttle_ramp', (x) => (x.setup.throttle_ramp = 1.6)],
+  ['setup.throttle_ramp', (x) => (x.setup.throttle_ramp = 3.1)],
   ['setup.throttle_ramp', (x) => (x.setup.throttle_ramp = NaN)],
   ['setup.tire_pressure', (x) => (x.setup.tire_pressure = 1.1)],
   ['setup.tire_pressure', (x) => (x.setup.tire_pressure = 2.3)],
@@ -52,7 +52,8 @@ describe('validateInput', () => {
   it('accepts every lever-range corner of a valid input', () => {
     for (const s of [
       { throttle_ramp: 0, tire_pressure: 1.2, weight_dist: 0.38, wing: 0 },
-      { throttle_ramp: 1.5, tire_pressure: 2.2, weight_dist: 0.52, wing: 8 },
+      { throttle_ramp: 3.0, tire_pressure: 2.2, weight_dist: 0.52, wing: 8 },
+      { throttle_ramp: 2 * 0.1 * 15, tire_pressure: 1.65, weight_dist: 0.45, wing: 4 },
       { throttle_ramp: 3 * 0.1 * 5, tire_pressure: 1.2 + 10 * 0.1, weight_dist: 0.99, wing: 4 },
     ]) {
       const x = fresh();
