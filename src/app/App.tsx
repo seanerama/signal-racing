@@ -4,6 +4,7 @@ import { routePath } from './router';
 import { DevReport } from './routes/DevReport';
 import { DevWorker } from './routes/DevWorker';
 import { Home } from './routes/Home';
+import { DevViz3d } from '@/viz3d/DevViz3d';
 import './App.css';
 
 function Route() {
@@ -12,6 +13,8 @@ function Route() {
       return <DevWorker />;
     case '/dev/report':
       return <DevReport units={units.value} onUnitsChange={(next) => (units.value = next)} />;
+    case '/dev/viz3d':
+      return <DevViz3d units={units.value} />;
     default:
       return <Home units={units.value} />;
   }
