@@ -73,6 +73,12 @@ export interface ChannelDef {
     /** Per-sample dropout probability, ≤ 0.002. */
     dropoutRate: number;
   };
+  /**
+   * Physically bounded sensors (Stage 8 amendment, additive): the noisy value is clamped to
+   * `[min, max]` after noise (a pot or a wheel-speed sensor cannot read outside its range).
+   * Dropouts stay NaN. Absent = unbounded.
+   */
+  clamp?: readonly [number, number];
 }
 
 /**

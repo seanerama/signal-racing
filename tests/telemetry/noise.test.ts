@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRng } from '@/engine/rng';
 import { applyNoise } from '@/telemetry/noise';
-import { allChannels, channelQuantum, channelRange } from '@/telemetry/registry';
+import { allChannels, channelQuantum, channelRange, getChannel } from '@/telemetry/registry';
 import { createRunTelemetry } from '@/telemetry/run-telemetry';
 import { makeFixture, std } from './fixtures';
 
@@ -56,7 +56,8 @@ describe('noise layer', () => {
     const rt = createRunTelemetry({ physical: pc, channelIds: ids, seed: 77 });
     let checked = 0;
     for (const c of allChannels()) {
-      if (c.noise.sigmaFrac === 0 || channelQuantum(c.id) !== undefined) continue;
+      // Clamped channels are checked separately (the clamp trims noise at the bounds).
+      if (c.noise.sigmaFrac === 0 || channelQuantum(c.id) !== undefined || c.clamp) continue;
       const clean = rt.getClean(c.id);
       const noisy = rt.get(c.id);
       const diff = new Float32Array(rt.n);
@@ -83,5 +84,37 @@ describe('noise layer', () => {
     }
     expect(observed / expected).toBeGreaterThan(0.85);
     expect(observed / expected).toBeLessThan(1.15);
+  });
+
+  it('clamped sensors never read outside their physical range (at rest, at full pedal)', () => {
+    const pc = makeFixture({ vmax: 45, segments: [{ kind: 'straight', length: 1000 }] });
+    const ids = ['speed', 'wheel_speed_rl', 'throttle', 'brake', 'gear'];
+    const rt = createRunTelemetry({ physical: pc, channelIds: ids, seed: 9 });
+    for (const id of ids) {
+      const [lo, hi] = getChannel(id).clamp!;
+      for (const v of rt.get(id)) {
+        if (Number.isNaN(v)) continue;
+        expect(v, id).toBeGreaterThanOrEqual(lo);
+        expect(v, id).toBeLessThanOrEqual(hi);
+      }
+    }
+    // Interior samples still carry noise.
+    const clean = rt.getClean('speed');
+    const noisy = rt.get('speed');
+    let moved = 0;
+    for (let i = 0; i < rt.n; i++) if (clean[i]! > 5 && noisy[i] !== clean[i]) moved++;
+    expect(moved).toBeGreaterThan(100);
+  });
+
+  it('applyNoise: clamp applies after noise and leaves dropouts NaN', () => {
+    const clean = new Float32Array(5000).fill(1);
+    const out = applyNoise(
+      clean,
+      { sigmaFrac: 0.05, dropoutRate: 0.01, range: [0, 1], clamp: [0, 1] },
+      createRng(3),
+    );
+    expect(out.some(Number.isNaN)).toBe(true);
+    for (const v of out) if (!Number.isNaN(v)) expect(v).toBeLessThanOrEqual(1);
+    expect(out.some((v) => v < 1)).toBe(true);
   });
 });
