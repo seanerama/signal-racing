@@ -190,6 +190,7 @@ export function LeverWidget({
         data-testid={`lever-track-${spec.id}`}
       >
         <span class="lever__rail" />
+        <span class="lever__fill" style={{ width: `${fractionOf(spec, value) * 100}%` }} />
         {ticks.map((i) => (
           <span
             key={i}

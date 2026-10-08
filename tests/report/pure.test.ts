@@ -173,13 +173,17 @@ describe('uplot-theme', () => {
     projector: false,
   };
 
-  it('series: best first in --trace-best, current in the slot hue; widths per mode', () => {
-    const o = buildStripOptions({ ...base, slot: 2 });
-    expect(o.series).toHaveLength(3);
-    expect(o.series[1]!.stroke).toBe('#7a8494b3');
-    expect(o.series[2]!.stroke).toBe('#f062c0');
-    expect(o.series[2]!.width).toBe(1.5);
-    expect(o.series[1]!.width).toBe(1);
+  it('series (Stage 10): reference first, #7b9092 1 px dashed [5,5]; current lime 1.5 px solid in every strip', () => {
+    for (const slot of [0, 2, 7]) {
+      const o = buildStripOptions({ ...base, slot });
+      expect(o.series).toHaveLength(3);
+      expect(o.series[1]!.stroke).toBe('#7b9092');
+      expect(o.series[1]!.dash).toEqual([5, 5]);
+      expect(o.series[2]!.stroke).toBe('#c9f36a');
+      expect(o.series[2]!.dash).toBeUndefined();
+      expect(o.series[2]!.width).toBe(1.5);
+      expect(o.series[1]!.width).toBe(1);
+    }
     const p = buildStripOptions({ ...base, projector: true });
     expect(p.series[2]!.width).toBe(2.5);
     expect(p.series[1]!.width).toBe(1.5);
@@ -201,10 +205,39 @@ describe('uplot-theme', () => {
     expect(o.legend?.show).toBe(false);
   });
 
-  it('slot tokens cycle after 8', () => {
-    expect(slotToken(0)).toBe('--t1');
-    expect(slotToken(7)).toBe('--t8');
-    expect(slotToken(8)).toBe('--t1');
+  it('no per-strip hue: every slot maps to the lime current-run token', () => {
+    expect(slotToken(0)).toBe('--trace-current');
+    expect(slotToken(7)).toBe('--trace-current');
+    expect(slotToken(8)).toBe('--trace-current');
+  });
+
+  it('minimum y span (Stage 10): a flat channel is centred in a span, bounded physically', () => {
+    // Oil temp steady at 92.0–92.4 °C with a 10 °C minimum span → ~87–97 plus 5 %.
+    const [lo, hi] = paddedRange(92.0, 92.4, 10);
+    expect(hi - lo).toBeCloseTo(10 * 1.1, 6);
+    expect((lo + hi) / 2).toBeCloseTo(92.2, 6);
+    // Throttle held at 99.5–100 % with a 20 % span never shows above 100 %.
+    const [tlo, thi] = paddedRange(99.5, 100, 20, [0, 100]);
+    expect(thi).toBeCloseTo(101, 6); // only the 5 % pad
+    expect(tlo).toBeCloseTo(79, 6);
+    // A non-negative channel keeps its floor at 0.
+    expect(paddedRange(0.1, 0.2, 1)[0]).toBeCloseTo(-0.05, 6);
+    // Wide data are untouched by the minimum.
+    expect(paddedRange(0, 100, 20)).toEqual([-5, 105]);
+  });
+
+  it('the bottom x-axis carries its unit on the last tick', () => {
+    const o = buildStripOptions({ ...base, showXAxis: true, xUnit: 'm' });
+    const values = o.axes![0]!.values as (u: unknown, s: number[]) => string[];
+    expect(values(null, [0, 200, 400])).toEqual(['0', '200', '400 m']);
+  });
+
+  it('the current trace can be cut at a playhead (progressive drawing)', () => {
+    let lim = 10;
+    const o = buildStripOptions({ ...base, limit: () => lim });
+    expect(typeof o.series[2]!.paths).toBe('function');
+    expect(o.series[1]!.paths).toBeUndefined();
+    lim = Infinity;
   });
 
   it('y ticks: at most 3, inside the range; range pads the union by 5%', () => {

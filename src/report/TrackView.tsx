@@ -1,18 +1,20 @@
 /**
- * Top-down track view (design-system "Track view"; a scoped Vision Lead override of "no car on
- * screen"). It shows WHERE a moment in the graphs happened, nothing else: the path, a plain block
- * at the cursor's sample, a hollow best-run block at the same t (or s), optional colour-by-channel
- * and a player-started Replay. It redraws only when the cursor or its inputs change; there is no
- * idle animation loop.
+ * Top-down track view (design-system "Track view"; Stage 10 Lap Lab treatment; a scoped Vision
+ * Lead override of "no car on screen"). It shows WHERE a moment in the graphs happened: the road
+ * on a faint grid, the racing line coloured by speed against the best run (or by the selected
+ * strip's channel), the car glyph at the cursor's sample and the best run's ghost car at the
+ * same t (or s). During playback the cursor follows the playhead, so the car drives the lap and
+ * the racing line is drawn up to it. It redraws only when the cursor, the playhead or an input
+ * changes; there is no idle loop.
  */
 import { effect } from '@preact/signals';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { RunTelemetry } from '@/telemetry/types';
 import { formatValue, unitLabel } from '@/units';
-import { Button } from '@/app/components/Button';
 import { nearestIndex, resampleOnto } from './align';
 import { channelMeta } from './channel-meta';
-import { cursorIdx, replaying, stopReplay, toggleReplay } from './cursor-store';
+import { cursorIdx } from './cursor-store';
+import { playhead } from './playback';
 import {
   drawScene,
   finiteRange,
@@ -54,6 +56,48 @@ export function alignedBestIndex(
     : nearestIndex(best.s, current.s[i] as number);
 }
 
+/** A run's speed (m/s) per sample: the clean `speed` channel when logged, else ds/dt. */
+export function runSpeed(rt: RunTelemetry): Float64Array {
+  const out = new Float64Array(rt.n);
+  if (rt.channelIds.includes('speed')) {
+    try {
+      const v = rt.getClean('speed');
+      if (v.length === rt.n) {
+        for (let i = 0; i < rt.n; i++) out[i] = v[i] as number;
+        return out;
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+  for (let i = 0; i < rt.n; i++) {
+    const a = Math.max(0, i - 1);
+    const b = Math.min(rt.n - 1, i + 1);
+    const dt = (rt.t[b] as number) - (rt.t[a] as number);
+    out[i] = dt > 0 ? ((rt.s[b] as number) - (rt.s[a] as number)) / dt : 0;
+  }
+  return out;
+}
+
+/** current − best speed (m/s) at every geometry metre (NaN where either run has no data). */
+export function speedDeltaPerMetre(
+  current: RunTelemetry,
+  best: RunTelemetry,
+  count: number,
+): Float64Array {
+  const dst = new Float64Array(count);
+  for (let i = 0; i < count; i++) dst[i] = i;
+  const c = resampleOnto(current.s, runSpeed(current), dst);
+  const b = resampleOnto(best.s, runSpeed(best), dst);
+  const out = new Float64Array(count);
+  const cEnd = current.s[current.n - 1] ?? 0;
+  const bEnd = best.s[best.n - 1] ?? 0;
+  for (let i = 0; i < count; i++) {
+    out[i] = i > cEnd || i > bEnd ? NaN : (c[i] as number) - (b[i] as number);
+  }
+  return out;
+}
+
 export function TrackView({
   geometry,
   current,
@@ -63,9 +107,9 @@ export function TrackView({
   units,
   axis,
 }: TrackViewProps) {
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [size, setSize] = useState<{ w: number; h: number }>({ w: 320, h: 200 });
+  const [size, setSize] = useState<{ w: number; h: number }>({ w: 300, h: 248 });
 
   // Track the container size (CSS px); DPR scaling happens at draw time.
   useEffect(() => {
@@ -82,11 +126,12 @@ export function TrackView({
     return () => ro.disconnect();
   }, []);
 
+  const count = geometry.points.length / 2;
+
   // Colour-by values per geometry metre, and the legend range (display units).
   const colouring = useMemo(() => {
     if (!colorBy || !current || !current.channelIds.includes(colorBy)) return null;
     const ys = current.get(colorBy);
-    const count = geometry.points.length / 2;
     const dst = new Float64Array(count);
     for (let i = 0; i < count; i++) dst[i] = i;
     const values = resampleOnto(current.s, ys, dst);
@@ -97,7 +142,13 @@ export function TrackView({
     return { id: colorBy, norm, ...range };
   }, [colorBy, current, geometry]);
 
-  // Redraw on cursor change (and when inputs change). One frame per change, nothing idle.
+  // Racing line by speed against the best run, per metre.
+  const lineDelta = useMemo(
+    () => (current && best ? speedDeltaPerMetre(current, best, count) : null),
+    [current, best, geometry],
+  );
+
+  // Redraw on cursor/playhead change (and when inputs change). One frame per change.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -106,19 +157,31 @@ export function TrackView({
     canvas.height = Math.round(size.h * dpr);
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const colors = {
-      rule: cssVar('--rule'),
+    const mono = cssVar('--font-mono');
+    const colors: Scene['colors'] = {
+      grid: cssVar('--track-grid'),
+      verge: cssVar('--track-verge'),
+      asphalt: cssVar('--track-asphalt'),
+      line: cssVar('--track-line'),
+      start: cssVar('--track-start'),
+      label: cssVar('--trace-best'),
       faint: cssVar('--text-faint'),
       text: cssVar('--text'),
       bg: cssVar('--bg'),
-      best: cssVar('--trace-best'),
-      font: `500 ${cssPx('--fs-micro', 10)}px ${cssVar('--font-mono')}`,
+      car: cssVar('--trace-current'),
+      ghost: cssVar('--ghost-car'),
+      cockpit: cssVar('--car-cockpit'),
+      faster: cssVar('--gain'),
+      slower: cssVar('--loss'),
+      font: `400 ${cssPx('--fs-micro', 10)}px ${mono}`,
+      smallFont: `400 9px ${mono}`,
       ramp: VIRIDIS.slice(PATH_RAMP_FROM).map(
         (hex, k) => cssVar(`--seq-${k + PATH_RAMP_FROM}`) || hex,
       ),
     };
     return effect(() => {
       const idx = cursorIdx.value ?? 0; // no cursor: parked at the start
+      const head = playhead.value;
       const scene: Scene = {
         width: size.w,
         height: size.h,
@@ -126,39 +189,22 @@ export function TrackView({
         geometry,
         colors,
         pathValues: colouring?.norm ?? null,
+        lineDelta,
+        showLine: !!current,
+        lineUpTo: current && head !== null ? (current.s[Math.min(current.n - 1, head)] ?? 0) : null,
         segmentLabels,
         current: current ? poseAt(current, idx, geometry) : poseOnGeometry(geometry, 0),
         best:
           current && best
             ? poseAt(best, alignedBestIndex(current, best, idx, axis), geometry)
             : null,
+        showCar: !!current,
       };
       drawScene(ctx, scene);
       canvas.dataset['cursorIdx'] = String(idx);
     });
-  }, [size, geometry, current, best, colouring, segmentLabels, axis]);
+  }, [size, geometry, current, best, colouring, lineDelta, segmentLabels, axis]);
 
-  // Space toggles Replay while focus is in the view (or nowhere in particular).
-  const canReplay = !!current && current.n > 1;
-  useEffect(() => {
-    const onKey = (ev: KeyboardEvent) => {
-      if (ev.key !== ' ' || !current || !canReplay) return;
-      const target = ev.target as HTMLElement | null;
-      const inView = !!target && !!wrapRef.current?.contains(target);
-      const idle = !target || target === document.body;
-      if (!inView && !idle) return;
-      if (target && /^(BUTTON|INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
-      ev.preventDefault();
-      toggleReplay(current.n, current.dt, ev.shiftKey ? 4 : 1);
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [current, canReplay]);
-
-  // Stop a sweep when the run under it goes away.
-  useEffect(() => () => stopReplay(), [current]);
-
-  const isReplaying = replaying.value;
   const legendQ = colouring ? channelMeta(colouring.id).quantity : null;
 
   return (
@@ -171,9 +217,26 @@ export function TrackView({
     >
       <canvas ref={canvasRef} class="trackview__canvas" aria-hidden="true" />
       <div class="trackview__head">
-        <span class="trackview__title micro">TRACK</span>
+        <span class="trackview__title h2">Track</span>
+        {!colouring && (
+          <span class="trackview__key" data-testid="trackview-key">
+            {!current ? (
+              'no run yet'
+            ) : best ? (
+              <>
+                <span class="trackview__swatch trackview__swatch--faster" aria-hidden="true" />
+                faster
+                <span class="trackview__swatch trackview__swatch--slower" aria-hidden="true" />
+                slower
+                <span class="trackview__vs">than best</span>
+              </>
+            ) : (
+              'racing line'
+            )}
+          </span>
+        )}
         {colouring && legendQ && (
-          <span class="trackview__legend micro" data-testid="trackview-legend">
+          <span class="trackview__legend" data-testid="trackview-legend">
             <span class="trackview__legend-id">{colouring.id}</span>
             <span class="trackview__legend-val">
               {formatValue(legendQ, units, colouring.min, { withUnit: false })}
@@ -185,20 +248,6 @@ export function TrackView({
             <span class="dim">{unitLabel(legendQ, units)}</span>
           </span>
         )}
-        <Button
-          variant="ghost"
-          size="compact"
-          class="trackview__replay"
-          disabled={!canReplay}
-          aria-pressed={isReplaying}
-          title="Replay at 1× (Shift+click for 4×). Space toggles, Esc stops."
-          onClick={(ev: MouseEvent) => {
-            if (!current) return;
-            toggleReplay(current.n, current.dt, ev.shiftKey ? 4 : 1);
-          }}
-        >
-          {isReplaying ? '■ Stop' : '▶ Replay'}
-        </Button>
       </div>
     </section>
   );

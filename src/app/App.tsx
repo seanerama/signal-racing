@@ -6,10 +6,12 @@
  */
 import { Component, type ComponentChildren } from 'preact';
 import { useEffect, useMemo } from 'preact/hooks';
-import { axisMode, projectorMode, units } from '@/game/prefs';
+import { axisMode, density, projectorMode, units } from '@/game/prefs';
 import { LEVELS, getLevel } from '@/levels/index';
 import type { LevelId } from '@/levels/types';
-import { RunPips } from '@/report/RunPips';
+import { RunCount } from '@/report/RunCount';
+import { playState, skipPlayback, togglePause } from '@/report/playback';
+import { chooseSpeed } from './Workbench';
 import { Debrief } from '@/debrief/Debrief';
 import { DevViz3d } from '@/viz3d/DevViz3d';
 import { ResponseSurfacePanel } from '@/viz3d/ResponseSurfacePanel';
@@ -160,7 +162,13 @@ function isTyping(t: EventTarget | null): boolean {
   return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable;
 }
 
-function useKeyboardMap(phaseB: boolean) {
+/** Inside the hint box, digits open tiers (1/2/3); they are not playback speeds there. */
+function inHintBox(t: EventTarget | null): boolean {
+  const el = t as HTMLElement | null;
+  return !!el?.closest?.('[data-testid="hint-box"]');
+}
+
+function useKeyboardMap() {
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
       const mod = ev.metaKey || ev.ctrlKey;
@@ -177,7 +185,32 @@ function useKeyboardMap(phaseB: boolean) {
       if (mod || ev.altKey || isTyping(ev.target)) return;
       if (paletteOpen.value || shortcutsOpen.value) return;
       if (document.querySelector('[aria-modal="true"]')) return;
+      const wb = workbenchActions.value;
       switch (ev.key) {
+        case ' ': {
+          // Stage 10 playback: Space pauses/resumes a playing run, or replays the latest one.
+          const el = ev.target as HTMLElement | null;
+          if (!wb || (el && /^(BUTTON|A|SELECT)$/.test(el.tagName))) return;
+          ev.preventDefault();
+          if (playState.value !== 'idle') togglePause();
+          else wb.replay();
+          return;
+        }
+        case 's':
+        case 'S':
+          if (wb && playState.value !== 'idle') {
+            ev.preventDefault();
+            skipPlayback();
+          }
+          return;
+        case '1':
+        case '2':
+        case '4':
+          if (wb && !inHintBox(ev.target)) {
+            ev.preventDefault();
+            chooseSpeed(Number(ev.key) as 1 | 2 | 4);
+          }
+          return;
         case 'r':
         case 'R':
           if (workbenchActions.value) {
@@ -198,7 +231,7 @@ function useKeyboardMap(phaseB: boolean) {
           return;
         case 'x':
         case 'X':
-          if (phaseB) axisMode.value = axisMode.value === 'time' ? 'distance' : 'time';
+          axisMode.value = axisMode.value === 'time' ? 'distance' : 'time';
           return;
         case 'p':
         case 'P':
@@ -212,18 +245,20 @@ function useKeyboardMap(phaseB: boolean) {
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [phaseB]);
+  }, []);
 }
 
 const SHORTCUTS: Array<[string, string]> = [
   ['R  /  ⌘⏎', 'Run'],
-  ['H', 'Hint popover (1/2/3 arm a tier, press again to open it)'],
+  ['H', 'Open or close the hint box (1/2/3 open a tier inside it; hints are free)'],
   ['/', 'Focus the channel filter'],
   ['↑ ↓', 'Move strip selection;  ⌥↑ ⌥↓ reorder;  Del remove'],
   ['← →', 'Step the pinned cursor, or the focused lever'],
-  ['Space', 'Replay (track view)'],
+  ['Space', 'Pause or resume playback; replay when stopped'],
+  ['S', 'Skip playback to the finish'],
+  ['1  /  2  /  4', 'Playback speed'],
   ['Esc', 'Unpin cursor, close popover'],
-  ['U  /  X', 'Units  /  axis (Phase B)'],
+  ['U  /  X', 'Units  /  axis (distance or time)'],
   ['P', 'Projector mode'],
   ['⌘K', 'Command palette'],
   ['?', 'This sheet'],
@@ -247,7 +282,7 @@ function ShortcutSheet() {
   );
 }
 
-function usePaletteCommands(route: Route, phaseB: boolean): Command[] {
+function usePaletteCommands(route: Route): Command[] {
   const wb = workbenchActions.value;
   return useMemo(() => {
     const cmds: Command[] = LEVELS.map((l) => ({
@@ -284,9 +319,14 @@ function usePaletteCommands(route: Route, phaseB: boolean): Command[] {
         id: 'axis',
         group: 'View',
         label: `Axis: ${axisMode.value === 'time' ? 'distance' : 'time'}`,
-        hint: 'X · Phase B',
-        disabled: !phaseB,
+        hint: 'X',
         run: () => (axisMode.value = axisMode.value === 'time' ? 'distance' : 'time'),
+      },
+      {
+        id: 'density',
+        group: 'View',
+        label: `Density: ${density.value === 'compact' ? 'default (readable)' : 'compact'}`,
+        run: () => (density.value = density.value === 'compact' ? 'default' : 'compact'),
       },
       {
         id: 'keys',
@@ -309,16 +349,15 @@ function usePaletteCommands(route: Route, phaseB: boolean): Command[] {
     }
     return cmds;
     // Recompute when the palette opens.
-  }, [paletteOpen.value, route, wb, phaseB]);
+  }, [paletteOpen.value, route, wb]);
 }
 
 export function App() {
   const route = parseRoute(routePath.value);
   const levelId = route.name === 'level' || route.name === 'debrief' ? route.id : null;
   const level = levelId ? getLevel(levelId) : undefined;
-  const phaseB = level?.phase === 'B';
-  useKeyboardMap(phaseB);
-  const commands = usePaletteCommands(route, phaseB);
+  useKeyboardMap();
+  const commands = usePaletteCommands(route);
 
   const st = route.name === 'level' && levelId && unlocked(levelId) ? levelState(levelId) : null;
   const s = st?.session;
@@ -328,9 +367,9 @@ export function App() {
       <TopBar
         units={units.value}
         onUnitsChange={(next) => (units.value = next)}
-        axis={phaseB ? axisMode.value : 'time'}
+        axis={axisMode.value}
         onAxisChange={(next) => (axisMode.value = next)}
-        axisEnabled={phaseB}
+        axisEnabled={route.name === 'level' || route.name === 'debrief'}
         onPalette={() => (paletteOpen.value = true)}
         {...(route.name === 'level' && workbenchActions.value
           ? { onBrief: () => workbenchActions.value?.openBrief() }
@@ -350,15 +389,7 @@ export function App() {
               ),
             }
           : {})}
-        pips={
-          s ? (
-            <RunPips
-              budget={s.level.runBudget}
-              usedByRuns={s.runs.value.length}
-              usedByHints={s.runsUsed.value - s.runs.value.length}
-            />
-          ) : undefined
-        }
+        pips={s ? <RunCount runs={s.runs.value.length} hints={s.hintsOpened.value} /> : undefined}
       >
         {level && (
           <>

@@ -14,28 +14,53 @@ afterEach(() => {
 });
 
 describe('prefs', () => {
-  it('defaults: metric, time axis, empty layout, projector off', async () => {
+  it('defaults: metric, distance axis (Stage 10), empty layout, projector off, 1× real-time playback, default density', async () => {
     const p = await import('@/game/prefs');
     expect(p.units.value).toBe('metric');
-    expect(p.axisMode.value).toBe('time');
+    expect(p.axisMode.value).toBe('distance');
     expect(p.stripLayout.value).toEqual([]);
     expect(p.projectorMode.value).toBe(false);
+    expect(p.playbackSpeed.value).toBe(1);
+    expect(p.playbackMode.value).toBe('realtime');
+    expect(p.density.value).toBe('default');
     expect(store.length).toBe(0); // defaults are not written
+  });
+
+  it('a v0.3 time-axis default under the old key does not carry over', async () => {
+    store.setItem('signal.v1.axis', JSON.stringify({ v: 1, data: 'time' }));
+    const p = await import('@/game/prefs');
+    expect(p.axisMode.value).toBe('distance');
+  });
+
+  it('playback speed, playback mode and density persist; wrong values fall back', async () => {
+    let p = await import('@/game/prefs');
+    p.playbackSpeed.value = 4;
+    p.playbackMode.value = 'instant';
+    p.density.value = 'compact';
+    vi.resetModules();
+    p = await import('@/game/prefs');
+    expect(p.playbackSpeed.value).toBe(4);
+    expect(p.playbackMode.value).toBe('instant');
+    expect(p.density.value).toBe('compact');
+    store.setItem('signal.v1.playbackSpeed', JSON.stringify({ v: 1, data: 3 }));
+    vi.resetModules();
+    p = await import('@/game/prefs');
+    expect(p.playbackSpeed.value).toBe(1);
   });
 
   it('persists writes under signal.v1.* and reloads them', async () => {
     let p = await import('@/game/prefs');
     p.units.value = 'imperial';
-    p.axisMode.value = 'distance';
+    p.axisMode.value = 'time';
     p.stripLayout.value = ['speed', 'oil_temp'];
     p.projectorMode.value = true;
     expect(JSON.parse(store.getItem('signal.v1.units')!)).toEqual({ v: 1, data: 'imperial' });
-    expect(store.getItem('signal.v1.axis')).toContain('distance');
+    expect(store.getItem('signal.v1.axisMode')).toContain('time');
     expect(store.getItem('signal.v1.layout')).toContain('oil_temp');
     vi.resetModules();
     p = await import('@/game/prefs');
     expect(p.units.value).toBe('imperial');
-    expect(p.axisMode.value).toBe('distance');
+    expect(p.axisMode.value).toBe('time');
     expect(p.stripLayout.value).toEqual(['speed', 'oil_temp']);
     expect(p.projectorMode.value).toBe(true);
   });
@@ -48,10 +73,8 @@ describe('prefs', () => {
     expect(p.stripLayout.value).toEqual([]);
   });
 
-  it('Phase B forces the distance axis once', async () => {
+  it('entering Phase B no longer changes the axis (distance is the default everywhere)', async () => {
     const p = await import('@/game/prefs');
-    p.enterPhaseB();
-    expect(p.axisMode.value).toBe('distance');
     p.axisMode.value = 'time';
     p.enterPhaseB();
     expect(p.axisMode.value).toBe('time');

@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 4173;
+/** `PW_PORT` lets a second checkout run its suite alongside (e.g. 4180) without a port clash. */
+const PORT = Number(process.env['PW_PORT'] ?? 4173);
 
 /**
  * E2E. `npm run test:e2e` builds `dist/` and `dist-single/` first, then:
@@ -21,6 +22,14 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+      grepInvert: /@perf/,
+    },
+    {
+      // Wall-clock budgets run alone, after everything else, so parallel workers do not skew them.
+      name: 'perf',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+      grep: /@perf/,
+      dependencies: ['chromium'],
     },
   ],
   webServer: {

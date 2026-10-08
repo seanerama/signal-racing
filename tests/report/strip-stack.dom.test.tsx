@@ -97,7 +97,7 @@ describe('StripStack: uPlot instances', () => {
 
   it('a strip for an id not in availableIds renders the placeholder and no uPlot', () => {
     renderStack({ strips: [...SIX, 'clutch_temp'] });
-    expect(screen.getByText('clutch_temp: not on this car')).toBeTruthy();
+    expect(screen.getByText('clutch_temp: not logged on this level')).toBeTruthy();
     expect(FakeUPlot.instances).toHaveLength(6);
   });
 

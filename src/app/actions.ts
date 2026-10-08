@@ -10,6 +10,8 @@ export interface WorkbenchActions {
   toggleHint(): void;
   addChannel(id: ChannelId): void;
   openBrief(): void;
+  /** Stage 10: replay the latest run (results stay visible). */
+  replay(): void;
   channels: readonly ChannelId[];
   inStack: ReadonlySet<ChannelId>;
 }

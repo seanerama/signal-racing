@@ -26,7 +26,7 @@ test('level select: disclaimer and the model link', async ({ page }) => {
 
 test('A4: the grip circle follows the cursor mid-corner', async ({ page }) => {
   test.setTimeout(60_000);
-  await page.goto('/?demo=1#/level/A4');
+  await page.goto('/?demo=1&playback=instant#/level/A4');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.getByTestId('begin').click();
@@ -53,7 +53,7 @@ test('A4: the grip circle follows the cursor mid-corner', async ({ page }) => {
 
 test('B4L: make the call on run 2, cross-check, debrief, model page', async ({ page }) => {
   test.setTimeout(120_000);
-  await page.goto('/?demo=1#/level/B4L');
+  await page.goto('/?demo=1&playback=instant#/level/B4L');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await expect(page.getByTestId('disclaimer-brief')).toBeVisible();
@@ -73,7 +73,12 @@ test('B4L: make the call on run 2, cross-check, debrief, model page', async ({ p
     await page.getByTestId(`call-add-${id}`).click();
     await expect(page.locator(`[data-testid="strip-stack"] [data-strip="${id}"]`)).toHaveCount(1);
   }
-  // Park the cursor near the spike so the readouts show values.
+  // Park the cursor near the spike so the readouts show values (the added strips sit below the
+  // fold with Stage 10's taller strips: bring the last one into view first).
+  await page
+    .locator('[data-testid="strip-stack"] [data-strip="wheel_speed_rl"]')
+    .first()
+    .scrollIntoViewIfNeeded();
   const plot = page.locator('[data-testid="strip-stack"] .u-over').first();
   const box = (await plot.boundingBox())!;
   await page.mouse.move(box.x + box.width * 0.272, box.y + box.height / 2);
@@ -84,9 +89,9 @@ test('B4L: make the call on run 2, cross-check, debrief, model page', async ({ p
 
   // Finish with the setup the earlier levels teach, then the debrief shows the call.
   for (const [id, v] of [
-    ['throttle_ramp', '0'],
-    ['tire_pressure', '1.6'],
-    ['weight_dist', '0.52'],
+    ['throttle_ramp', '0.2'],
+    ['tire_pressure', '1.7'],
+    ['weight_dist', '0.46'],
     ['wing', '3'],
   ] as const) {
     await setLever(page, id, v);

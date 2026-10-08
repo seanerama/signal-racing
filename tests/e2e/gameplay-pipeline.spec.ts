@@ -3,11 +3,13 @@ import { fresh, setLever } from './helpers';
 
 /**
  * Stage 6 Pipeline Test (browser): level select → brief → grid-search progress on RUN → runs →
- * hints (budget decrements) → pass → debrief → progression persisted across a reload. Plus the
- * acceptance checks for the strip layout, units, the fault panel and the keyboard map.
+ * hints (Stage 10: free, counted) → pass → debrief → progression persisted across a reload. Plus
+ * the acceptance checks for the strip layout, units, the fault panel and the keyboard map.
  */
 
-test('A1 → A2: hints cost runs, A2 passes, progress survives a reload', async ({ page }) => {
+test('A1 → A2: hints are free but counted, A2 passes, progress survives a reload', async ({
+  page,
+}) => {
   await fresh(page);
   // A1 in one run.
   await page.getByTestId('level-row-A1').click();
@@ -25,23 +27,25 @@ test('A1 → A2: hints cost runs, A2 passes, progress survives a reload', async 
   await page.getByTestId('begin').click();
 
   // The A1 layout persisted (it is global), and A1 strips missing here would be placeholders.
-  const pips = page.getByTestId('run-pips');
-  await expect(pips).toHaveAttribute('aria-label', '6 of 6 runs left');
+  const count = page.getByTestId('run-count');
+  await expect(count).toHaveAttribute('aria-label', '0 runs made, 0 hints opened');
 
   // Run 1 at the defaults (no ramp, pressure off-peak): the rears spin.
   await page.getByTestId('run-button').click();
   await expect(page.getByTestId('rh-time')).toBeVisible({ timeout: 30_000 });
-  await expect(pips).toHaveAttribute('aria-label', '5 of 6 runs left');
+  await expect(count).toHaveAttribute('aria-label', '1 run made, 0 hints opened');
 
-  // H opens the hint popover; the first press arms, the second opens tier 1 and spends a run.
+  // The hint box is docked and open; H closes and reopens it. One click opens tier 1 (free).
+  await expect(page.getByTestId('hint-box')).toBeVisible();
+  await page.keyboard.press('h');
+  await expect(page.getByTestId('hint-box')).toBeHidden();
+  await expect(page.getByTestId('hint-reopen')).toContainText('new');
   await page.keyboard.press('h');
   const open = page.getByTestId('hint-open');
   await expect(open).toBeVisible();
   await open.click();
-  await expect(open).toHaveText(/OPEN −1 RUN\?/);
-  await open.click();
   await expect(page.getByTestId('hint-popover')).toContainText('rear_slip_ratio');
-  await expect(pips).toHaveAttribute('aria-label', '4 of 6 runs left, 1 spent on hints');
+  await expect(count).toHaveAttribute('aria-label', '1 run made, 1 hint opened');
 
   // The cited channel is a link: it pulls the strip into the stack.
   await page.getByTestId('hint-popover').getByRole('button', { name: 'rear_slip_ratio' }).click();
@@ -57,16 +61,14 @@ test('A1 → A2: hints cost runs, A2 passes, progress survives a reload', async 
 
   // Fix both levers and pass with the grid optimum's neighbourhood: a short ramp, pressure on peak.
   await setLever(page, 'throttle_ramp', '0.2');
-  await setLever(page, 'tire_pressure', '1.6');
+  await setLever(page, 'tire_pressure', '1.7');
   await page.getByTestId('run-button').click();
   await expect(page.getByTestId('chip-target')).toBeVisible({ timeout: 30_000 });
-  await expect(pips).toHaveAttribute('aria-label', '3 of 6 runs left, 1 spent on hints');
+  await expect(count).toHaveAttribute('aria-label', '2 runs made, 1 hint opened');
 
   await page.getByRole('button', { name: 'Continue to debrief' }).click();
   await expect(page.getByTestId('convergence').locator('tbody tr')).toHaveCount(2);
-  await expect(page.getByTestId('debrief-summary')).toContainText(
-    'Target met in 2 runs, 1 hint tier',
-  );
+  await expect(page.getByTestId('debrief-summary')).toHaveText('Target met in 2 runs · 1 hint.');
 
   // Progress persists across a reload.
   await page.reload();
@@ -90,9 +92,12 @@ test('a forced engine error shows the fault panel and does not consume the run',
   const fault = page.getByTestId('fault-panel');
   await expect(fault).toBeVisible({ timeout: 30_000 });
   await expect(fault).toContainText('SimInputError');
-  await expect(fault).toContainText('did not count against the run budget');
+  await expect(fault).toContainText('did not count as a run');
   await expect(page.getByTestId('copy-repro')).toBeVisible();
-  await expect(page.getByTestId('run-pips')).toHaveAttribute('aria-label', '5 of 5 runs left');
+  await expect(page.getByTestId('run-count')).toHaveAttribute(
+    'aria-label',
+    '0 runs made, 0 hints opened',
+  );
 
   await page.evaluate(() => {
     (globalThis as unknown as { __SIGNAL_FORCE_FAULT__?: boolean }).__SIGNAL_FORCE_FAULT__ = false;
@@ -100,7 +105,10 @@ test('a forced engine error shows the fault panel and does not consume the run',
   await page.getByTestId('run-button').click();
   await expect(page.getByTestId('rh-time')).toBeVisible({ timeout: 30_000 });
   await expect(fault).toBeHidden();
-  await expect(page.getByTestId('run-pips')).toHaveAttribute('aria-label', '4 of 5 runs left');
+  await expect(page.getByTestId('run-count')).toHaveAttribute(
+    'aria-label',
+    '1 run made, 0 hints opened',
+  );
 });
 
 test('strip layout persists across reloads; ⌘K adds a channel; R runs', async ({ page }) => {
@@ -112,7 +120,10 @@ test('strip layout persists across reloads; ⌘K adds a channel; R runs', async 
   await page.keyboard.press('Control+k');
   const palette = page.getByTestId('palette');
   await expect(palette).toBeVisible();
+  // Type only once the filter has focus (keys typed earlier would reach the global map).
+  await expect(palette.locator('.palette__input')).toBeFocused();
   await page.keyboard.type('drag_force');
+  await expect(palette.locator('.palette__item--on')).toContainText('drag_force');
   await page.keyboard.press('Enter');
   await expect(palette).toBeHidden();
   await page.keyboard.press('r');

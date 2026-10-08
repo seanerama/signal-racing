@@ -1,16 +1,19 @@
-/* Strip stack (design-system "Strip", "Cursor"). Tokens only. */
+/* Strip stack (design-system "Strip", "Cursor"; Stage 10 style guide "Recommended stacked-strip
+   treatment"): flat on the panel surface, persistent labels outside the plot, quiet grids, one
+   shared x scale and cursor. Tokens only. */
 .strips {
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background: var(--panel);
   min-height: 100%;
-  padding-bottom: var(--s4);
+  padding: var(--s2) 0 var(--s4);
 }
 .strips:focus-visible {
   outline-offset: -2px;
 }
 .strips__empty {
-  padding: var(--s6) var(--s4);
+  padding: var(--s6) var(--pad-panel);
+  color: var(--text-dim);
 }
 
 .strip {
@@ -18,8 +21,8 @@
   display: grid;
   grid-template-columns: var(--strip-gutter-w) minmax(0, 1fr) var(--strip-readout-w);
   align-items: start;
-  border-bottom: 1px solid var(--line);
-  background: var(--bg);
+  padding-top: var(--s2);
+  background: var(--panel);
 }
 .strip--enter {
   animation: strip-in var(--dur-ui) var(--ease-ui);
@@ -30,11 +33,11 @@
     max-height: 0;
   }
   to {
-    max-height: 200px;
+    max-height: 240px;
   }
 }
 
-/* ---- gutter ---- */
+/* ---- gutter: the persistent label ---- */
 .strip__gutter {
   position: relative;
   display: flex;
@@ -42,10 +45,9 @@
   gap: var(--s1);
   height: 100%;
   min-height: var(--row-h);
-  padding: var(--s1) var(--s1) var(--s1) var(--s1);
-  border-left: 3px solid var(--strip-hue, var(--line));
-  border-right: 1px solid var(--line);
-  background: var(--panel);
+  padding: var(--s1) var(--s2) var(--s1) var(--s1);
+  border-radius: var(--r1);
+  background: transparent;
   cursor: grab;
   user-select: none;
 }
@@ -58,44 +60,65 @@
 .strip__handle {
   color: var(--text-faint);
   font-size: var(--fs-micro);
-  line-height: var(--lh-data);
+  line-height: var(--lh-h2);
   letter-spacing: -0.2em;
   width: 10px;
   flex: none;
+  opacity: 0;
+}
+.strip__gutter:hover .strip__handle,
+.strip__gutter:focus-visible .strip__handle {
+  opacity: 1;
 }
 .strip__names {
   display: flex;
   flex-direction: column;
+  gap: 2px;
   min-width: 0;
   flex: 1;
 }
-.strip__id {
+.strip__label {
   color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .strip__meta {
   display: flex;
-  gap: var(--s2);
+  flex-wrap: wrap;
+  gap: 0 var(--s2);
   color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
 }
-.strip__slot {
-  color: var(--text-faint);
+.strip__id {
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.strip__unit {
+  color: var(--text-dim);
 }
 .strip__remove {
   position: absolute;
   top: var(--s1);
   right: var(--s1);
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   border: 0;
   border-radius: var(--r1);
   background: transparent;
   color: var(--text-dim);
   font-size: var(--fs-micro);
-  line-height: 18px;
+  line-height: 20px;
   opacity: 0;
 }
 .strip__gutter:hover .strip__remove,
@@ -127,7 +150,7 @@
   padding: 0 var(--s1);
   border-radius: var(--r1);
   background: var(--raised);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--line);
   color: var(--text);
   white-space: nowrap;
   pointer-events: none;
@@ -139,14 +162,13 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  padding: var(--s1) var(--s2) 0 0;
-  border-left: 1px solid var(--line);
+  gap: 1px;
+  padding: var(--s1) var(--pad-panel) 0 0;
   height: 100%;
   min-height: var(--row-h);
-  background: var(--bg);
 }
 .strip__rd-cur {
-  color: var(--strip-hue, var(--text));
+  color: var(--trace-current);
 }
 .strip__rd-best {
   color: var(--text-dim);
@@ -168,10 +190,12 @@
 }
 
 /* ---- states ---- */
-.strip--selected {
-  outline: 1px solid var(--focus);
-  outline-offset: -1px;
-  z-index: 1;
+/* Selected: lime label marker plus a quiet outline (border, not just colour). */
+.strip--selected .strip__gutter {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.strip--selected .strip__label {
+  color: var(--accent);
 }
 .strip--dragging {
   opacity: 0.4;
@@ -211,9 +235,7 @@
   grid-template-columns: 1fr;
 }
 .strip--placeholder .strip__gutter {
-  border-left-color: var(--line);
-  border-right: 0;
-  background: var(--bg);
+  background: transparent;
   align-items: center;
 }
 .strip__placeholder-text {
@@ -232,7 +254,7 @@
   border-right: 1px solid var(--text);
 }
 .strips .u-select {
-  background: color-mix(in srgb, var(--focus) 14%, transparent);
+  background: var(--accent-soft);
 }
 .strips .u-over {
   cursor: crosshair;

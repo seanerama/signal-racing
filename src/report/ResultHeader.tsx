@@ -1,23 +1,30 @@
 /**
- * Result header (contract 07, design-system "Result header"), above the stack.
+ * Result header (contract 07, design-system "Result header"; Stage 10 style guide "Result bar"),
+ * above the stack. Laid out like the guide's specimen: labelled metric cells.
  *
- * Line 1: run time (Readout XL; `--best` with a PB chip on a new personal best), Δbest and
- * Δtarget (Readout L, glyph + sign + colour), TARGET chip on a pass, extra chips (e.g. the
- * compromise gap) and `RUN n`.
+ * Line 1: LAP TIME (Barlow Condensed, ≥ 34 px, with its unit; a `PB` chip with a lime outline on
+ * a new personal best), Δ BEST and Δ TARGET (sign + "faster"/"slower" + colour), RUNS
+ * (`n · h hints`; no budget), a `TARGET MET` chip on a pass, extra chips (e.g. the compromise
+ * gap), then the playback controls slot.
  * Line 2: the setup used as compact chips; levers changed since the previous run get an
  * `--accent` underline, locked levers are `--text-faint` with 🔒. At its right end, the actions
- * (Export CSV) and the debrief CTA on a pass (Stage 8 moved it here so a Phase B header with
- * PB, TARGET and two gap chips still fits on one line).
+ * (Export CSV) and the debrief CTA on a pass.
  *
- * A new run is announced through the `aria-live` region.
+ * During the first playback of a run (`live`), the time cell counts up with the playhead and a
+ * live speed takes the delta cells' place; the results appear when playback ends. A finished run
+ * is announced through the `aria-live` region.
  */
+import type { ComponentChildren } from 'preact';
 import { useEffect } from 'preact/hooks';
 import type { LeverId, Quantity } from '@/engine/types';
-import { formatValue, unitLabel } from '@/units';
+import type { RunTelemetry } from '@/telemetry/types';
+import { formatValue, unitLabel, type UnitSystem } from '@/units';
 import { Button } from '@/app/components/Button';
 import { announce, runAnnouncement } from './a11y';
 import { DeltaValue } from './DeltaValue';
 import { LockGlyph } from './LockGlyph';
+import { playhead } from './playback';
+import { plural } from './RunCount';
 import type { ResultHeaderProps } from './types';
 import './report.css';
 
@@ -78,54 +85,178 @@ export function setupChips(
   return chips;
 }
 
+/** Time (s) and speed (m/s) of a run at sample `idx` (speed: the clean `speed` channel, or ds/dt). */
+export function liveSample(rt: RunTelemetry, idx: number): { t: number; speed: number } {
+  const i = Math.max(0, Math.min(rt.n - 1, idx));
+  const t = rt.t[i] as number;
+  if (rt.channelIds.includes('speed')) {
+    try {
+      const v = rt.getClean('speed')[i] as number;
+      if (Number.isFinite(v)) return { t, speed: v };
+    } catch {
+      /* fall through to ds/dt */
+    }
+  }
+  const a = Math.max(0, i - 1);
+  const b = Math.min(rt.n - 1, i + 1);
+  const dt = (rt.t[b] as number) - (rt.t[a] as number);
+  const ds = (rt.s[b] as number) - (rt.s[a] as number);
+  return { t, speed: dt > 0 ? ds / dt : 0 };
+}
+
+function Cell({
+  label,
+  children,
+  class: cls,
+  testId,
+}: {
+  label: ComponentChildren;
+  children: ComponentChildren;
+  class?: string;
+  testId?: string;
+}) {
+  return (
+    <div class={`rh__cell${cls ? ` ${cls}` : ''}`} data-testid={testId}>
+      <span class="rh__label meta">{label}</span>
+      <span class="rh__value">{children}</span>
+    </div>
+  );
+}
+
+/** The live counters while a run plays back: they subscribe to the playhead, not the header. */
+function LiveCells({ rt, units, index }: { rt: RunTelemetry; units: UnitSystem; index: number }) {
+  const idx = playhead.value ?? rt.n - 1;
+  const { t, speed } = liveSample(rt, idx);
+  return (
+    <>
+      <Cell
+        label={
+          <>
+            <span class="rh__run">{`RUN ${index}`}</span>
+            <span class="rh__livetag"> · LIVE</span>
+          </>
+        }
+        class="rh__cell--time"
+      >
+        <span class="rh__time rh__time--live metric" data-testid="rh-live-time">
+          {formatValue('time', units, t, { withUnit: false })}
+          <span class="rh__unit">{unitLabel('time', units)}</span>
+        </span>
+      </Cell>
+      <Cell label="Speed" testId="rh-live-speed">
+        <span class="rh__metric-m metric">
+          {formatValue('speed', units, speed, { withUnit: false })}
+          <span class="rh__unit">{unitLabel('speed', units)}</span>
+        </span>
+      </Cell>
+      <Cell label="Result">
+        <span class="rh__pending">at the finish</span>
+      </Cell>
+    </>
+  );
+}
+
 export function ResultHeader(props: ResultHeaderProps) {
   const { run, bestTime, target, isPB, passed, units, extra, onDebrief, actions } = props;
+  const runs = props.runs ?? run?.index ?? 0;
+  const hints = props.hints ?? 0;
+  const live = props.live ?? null;
 
   useEffect(() => {
-    if (!run) return;
+    if (!run || live) return;
     announce(runAnnouncement({ index: run.index, time: run.time, bestTime, target }));
-    // Announce once per run, not on unrelated re-renders.
-  }, [run?.index]);
+    // Announce once per revealed run, not on unrelated re-renders.
+  }, [run?.index, !!live]);
 
-  if (!run) {
+  const runsCell = (
+    <Cell label="Runs" class="rh__cell--runs" testId="rh-runs">
+      <span class="rh__metric-m metric">{runs}</span>
+      <span class="rh__hints">{`· ${plural(hints, 'hint')}`}</span>
+    </Cell>
+  );
+
+  if (!run && !live) {
     return (
-      <header class="rh rh--empty" data-testid="result-header">
-        <span class="rh__time rh__time--none">—</span>
-        <span class="data faint">No run yet. Set up the car and press RUN.</span>
+      <header class="rh rh--empty" data-testid="result-header" data-run="0">
+        <div class="rh__line1">
+          <Cell label="Lap time" class="rh__cell--time">
+            <span class="rh__time rh__time--none metric">—</span>
+          </Cell>
+          <p class="rh__hint-empty">No run yet. Set up the car and press RUN.</p>
+          <span class="rh__spacer" />
+          {props.controls}
+        </div>
       </header>
     );
   }
 
   const chips = setupChips(props);
-  const timeText = formatValue('time', units, run.time, { withUnit: false });
   return (
-    <header class="rh" data-testid="result-header">
+    <header
+      class={`rh${live ? ' rh--live' : ''}`}
+      data-testid="result-header"
+      data-run={live ? `${live.index}-live` : String(run!.index)}
+    >
       <div class="rh__line1">
-        <span class={`rh__time${isPB ? ' rh__time--pb' : ''}`} data-testid="rh-time">
-          {timeText}
-          <span class="rh__unit micro">{unitLabel('time', units)}</span>
-        </span>
-        {isPB && (
-          <span class="chip chip--best" data-testid="chip-pb">
-            PB
-          </span>
+        {live ? (
+          <LiveCells rt={live.telemetry} units={units} index={live.index} />
+        ) : (
+          <>
+            <Cell
+              label={
+                <>
+                  <span class="rh__run">{`RUN ${run!.index}`}</span>
+                  {isPB && (
+                    <span class="chip chip--best" data-testid="chip-pb" title="Personal best">
+                      PB
+                    </span>
+                  )}
+                </>
+              }
+              class="rh__cell--time"
+            >
+              <span class={`rh__time metric${isPB ? ' rh__time--pb' : ''}`} data-testid="rh-time">
+                {formatValue('time', units, run!.time, { withUnit: false })}
+                <span class="rh__unit">{unitLabel('time', units)}</span>
+              </span>
+            </Cell>
+            <Cell label="Δ best">
+              <DeltaValue
+                value={bestTime === null ? null : run!.time - bestTime}
+                label="best"
+                size="l"
+                unit={unitLabel('time', units)}
+              />
+            </Cell>
+            <Cell
+              label={
+                <>
+                  Δ target
+                  {passed && (
+                    <span class="chip chip--best" data-testid="chip-target">
+                      TARGET MET
+                    </span>
+                  )}
+                </>
+              }
+            >
+              <DeltaValue
+                value={target === null ? null : run!.time - target}
+                label="target"
+                size="l"
+                unit={unitLabel('time', units)}
+              />
+            </Cell>
+          </>
         )}
-        <DeltaValue value={bestTime === null ? null : run.time - bestTime} label="best" />
-        <DeltaValue value={target === null ? null : run.time - target} label="target" />
-        {passed && (
-          <span class="chip chip--best" data-testid="chip-target">
-            TARGET
-          </span>
-        )}
+        {runsCell}
+      </div>
+      <div class="rh__line2" aria-label="Setup used">
         {extra?.map((x) => (
           <span key={x.label} class={`chip chip--extra${x.tone ? ` chip--${x.tone}` : ''}`}>
             <span class="chip__label">{x.label}</span> {x.value}
           </span>
         ))}
-        <span class="rh__spacer" />
-        <span class="rh__run micro dim">{`RUN ${run.index}`}</span>
-      </div>
-      <div class="rh__line2" aria-label="Setup used">
         {chips.map((c) => (
           <span
             key={c.id}
@@ -144,10 +275,11 @@ export function ResultHeader(props: ResultHeaderProps) {
             {c.locked && <LockGlyph class="setchip__lock" />}
           </span>
         ))}
-        {(actions || (passed && onDebrief)) && (
+        {(props.controls || (!live && (actions || (passed && onDebrief)))) && (
           <span class="rh__actions">
-            {actions}
-            {passed && onDebrief && (
+            {props.controls}
+            {!live && actions}
+            {!live && passed && onDebrief && (
               <Button variant="secondary" size="compact" onClick={() => onDebrief()}>
                 Continue to debrief
               </Button>

@@ -252,6 +252,7 @@ export function createResponseSurface(
     const { grid, level, runs, units } = props;
     const model = buildResponse({
       levers: level.levers,
+      ...(level.surfaceLevers ? { surfaceLevers: level.surfaceLevers } : {}),
       samples: grid.samples,
       optimum: { setup: grid.optimum.setup, totalTime: grid.optimum.outcome.totalTime },
       runs,

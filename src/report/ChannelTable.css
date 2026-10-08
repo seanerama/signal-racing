@@ -1,4 +1,5 @@
-/* Channel table (design-system "Channel table"). Tokens only. */
+/* Channel browser (design-system "Channel table"; Stage 10: inside a flat panel, 30 px rows,
+   lime for channels in the stack). Tokens only. */
 .ct {
   display: flex;
   flex-direction: column;
@@ -10,7 +11,7 @@
   display: flex;
   align-items: center;
   gap: var(--s2);
-  padding: var(--s2) var(--s3);
+  padding: var(--s3) var(--s4);
   border-bottom: 1px solid var(--line);
 }
 .ct__title {
@@ -25,9 +26,14 @@
   height: var(--control-h-compact);
   padding: 0 var(--s2);
   border: 1px solid var(--line);
-  border-radius: var(--r1);
-  background: var(--raised);
+  border-radius: var(--r2);
+  background: var(--bg);
   color: var(--text);
+  font-size: var(--fs-data);
+}
+.ct__filter:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 0;
 }
 .ct__filter::placeholder {
   color: var(--text-faint);
@@ -145,9 +151,9 @@
 .ct__chk input {
   margin: 0;
   vertical-align: middle;
-  accent-color: var(--focus);
-  width: 12px;
-  height: 12px;
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
 }
 .ct__swatch {
   display: inline-block;

@@ -1,48 +1,57 @@
 /*
- * Design tokens: the single source of every color, size and duration (design-system.md).
- * Components never use raw hex. `src/report/uplot-theme.ts` reads these via getComputedStyle.
- * Projector mode overrides live under [data-projector] at the bottom.
+ * Design tokens: the single source of every color, size and duration (design-system.md, Stage 10
+ * "Look & Feel": the charcoal-and-lime visual style guide). Components never use raw hex.
+ * `src/report/uplot-theme.ts` (charts), the track view, the grip circle and `src/viz3d/colors.ts`
+ * read these via getComputedStyle, so one token change restyles the plots too.
+ *
+ * Layers, bottom to top: base tokens (:root) → Compact density ([data-density='compact']) →
+ * Projector mode ([data-projector]); projector works on top of either density.
  */
 :root {
-  /* ---- Neutral (chrome) ---- */
-  --bg: #0a0c0f; /* app background, strip plot area */
-  --panel: #11141a; /* side panels, header bar */
-  --raised: #181c23; /* popovers, modals, hovered rows, input wells */
-  --line: #222832; /* panel borders, table row dividers */
-  --grid: #1a1f27; /* chart gridlines */
-  --rule: #3a4250; /* segment boundary rules, axis baseline */
-  --text: #d8dde4; /* primary text, numeric readouts */
-  --text-dim: #8c95a3; /* labels, units, secondary values */
-  --text-faint: #5b6472; /* locked lever values, disabled, placeholder */
+  /* ---- Surfaces & text (style guide "Color tokens") ---- */
+  --bg: #101516; /* page background, behind panels */
+  --panel: #192022; /* controls and report containers */
+  --raised: #212a2c; /* popovers, modals, hovered rows, input wells (one step above --panel) */
+  --line: #303b3c; /* panel edges and separators */
+  --grid: #2a3638; /* plot gridlines: quiet 1 px */
+  --rule: #435253; /* segment boundary rules, axis baseline, slider rails */
+  --text: #edf2eb; /* headings and measurements */
+  --text-dim: #9aa8a8; /* units and supporting labels */
+  --text-faint: #788686; /* locked lever values, disabled (with a glyph / aria-disabled) */
 
-  /* ---- Accent ---- */
-  --accent: #ffb020; /* the single action color: RUN, active focus, "changed since last run" */
-  --accent-dim: #ffb0201f; /* hint window shading (12% amber) */
-  --focus: #4cc9f0; /* keyboard focus ring, selected strip outline */
-  --cursor: #e8ecf2b3; /* synced vertical cursor (70%) */
-  --on-accent: #0a0c0f; /* text on an --accent fill (primary button) */
+  /* ---- Action & selection ---- */
+  --accent: #c9f36a; /* lime: the primary action, selected controls, the current run */
+  --on-accent: #1a2510; /* text on a lime fill */
+  --accent-dim: #c9f36a0b; /* hint window shading (style guide) */
+  --accent-soft: #c9f36a1f; /* selected-control fill, PB/target chip fill */
+  --focus: #c9f36a; /* keyboard focus ring (2 px + offset) */
+  --link: #dfe8e3; /* channel-id links in hint / call / assist text */
+  --cursor: #ffffff55; /* inspection cursor: thin vertical line */
 
-  /* ---- Trace palette (current run), assigned by strip slot, cycling after 8 ---- */
-  --t1: #4cc9f0; /* cyan */
-  --t2: #ffb020; /* amber */
-  --t3: #f062c0; /* magenta */
-  --t4: #9be564; /* lime */
-  --t5: #a78bfa; /* violet */
-  --t6: #2dd4bf; /* teal */
-  --t7: #ff7a45; /* orange */
-  --t8: #e8ecf2; /* white */
-  --trace-best: #7a8494b3; /* best run on every strip: #7A8494 @ 70% */
-  --trace-history: #7a849440; /* older runs: #7A8494 @ 25% */
+  /* ---- Plot layer (style guide "Plot colors are a separate layer") ---- */
+  --trace-current: #c9f36a; /* current run: 1.5 px continuous, every strip */
+  --trace-best: #7b9092; /* reference (best) run: 1 px dashed [5, 5] */
+  --trace-support: #dfe8e3; /* supporting model trace (pale) */
+  --trace-history: #7b909240; /* older runs, when "all runs" is drawn */
+  --blue: #77c7df; /* reserved supporting series */
+  --ghost-car: #718489; /* the best run's car on the track (60 % alpha) */
+  /* Track art (Lap Lab treatment; optional-circuit shades, not main component tokens). */
+  --track-grid: #233032;
+  --track-verge: #344244;
+  --track-asphalt: #0f1618;
+  --track-line: #50747b; /* racing line, neutral (no faster/slower) */
+  --track-start: #dfe8e3;
+  --car-cockpit: #0e1617;
 
-  /* ---- Semantic (never the only carrier: always with a sign/glyph/chip) ---- */
-  --best: #b46cff; /* personal best, target achieved, optimum ("purple sector") */
-  --gain: #3ddc84; /* negative delta (faster) */
-  --loss: #ff5c5c; /* positive delta (slower) */
-  --warn: #ffb020; /* hint available, noise-band warning (shares the accent on purpose) */
-  --fault: #ff5c5c; /* engine fault panel, invalid input */
-  --info: #8c95a3; /* neutral notices */
+  /* ---- Semantic (never the only carrier: always a sign, a word or a labelled chip) ---- */
+  --best: #c9f36a; /* PB / TARGET MET chip outline (no purple; Vision Lead) */
+  --gain: #c9f36a; /* faster: lime + "faster" + sign */
+  --loss: #ffac71; /* slower: orange + "slower" + sign */
+  --warn: #ffac71; /* noise-band warning, Make the call edge */
+  --fault: #ff8f7e; /* engine fault panel, invalid input */
+  --info: #9aa8a8; /* neutral notices */
 
-  /* ---- Sequential ramp (viridis), 3D surface and run-age shading ---- */
+  /* ---- Sequential ramp (viridis), 3D surface and colour-by-channel ---- */
   --seq-0: #440154;
   --seq-1: #472d7b;
   --seq-2: #3b528b;
@@ -54,26 +63,32 @@
   --seq-8: #fde725;
 
   /* ---- Typography ---- */
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'DM Sans', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
-  --font-sans: 'Inter', system-ui, sans-serif;
 
-  --fs-xl: 28px; /* Readout XL: run time (mono 600) */
-  --lh-xl: 32px;
-  --fs-l: 18px; /* Readout L: Δbest, Δtarget, runs left (mono 500) */
-  --lh-l: 22px;
-  --fs-h1: 18px; /* level title (Inter 600) */
-  --lh-h1: 24px;
-  --fs-h2: 13px; /* panel headers (Inter 600, uppercase, +0.06em) */
-  --lh-h2: 18px;
-  --ls-h2: 0.06em;
-  --fs-body: 13px; /* brief, hint text, debrief prose (Inter 400) */
-  --lh-body: 19px;
-  --fs-data: 12px; /* strip labels, table cells, lever values (mono 400) */
-  --lh-data: 16px;
-  --fs-micro: 10px; /* axis ticks, units, pip labels (mono 500) */
+  --fs-display: 64px; /* briefing title (Barlow Condensed 700, 46–76 px) */
+  --lh-display: 64px;
+  --fs-xl: 40px; /* large performance value (Barlow Condensed 600, ≥ 34 px) */
+  --lh-xl: 40px;
+  --fs-l: 30px; /* deltas and run count beside it (Barlow Condensed 600) */
+  --lh-l: 32px;
+  --fs-h1: 22px; /* report / mission title (DM Sans 500) */
+  --lh-h1: 28px;
+  --fs-h2: 14px; /* panel heading (DM Sans 700) */
+  --lh-h2: 20px;
+  --ls-h2: 0.04em;
+  --fs-body: 15px; /* instructions and controls (DM Sans 400) */
+  --lh-body: 22px;
+  --fs-data: 13px; /* table cells, lever values, readouts (mono) */
+  --lh-data: 18px;
+  --fs-meta: 11px; /* small metadata: tracked uppercase labels (DM Sans 500) */
+  --lh-meta: 14px;
+  --ls-meta: 0.08em;
+  --fs-micro: 10px; /* plot labels, ticks, units, cursor values (mono, canvas px) */
   --lh-micro: 12px;
 
-  /* ---- Spacing & sizing (4px base) ---- */
+  /* ---- Spacing ---- */
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
@@ -82,29 +97,34 @@
   --s6: 24px;
   --s7: 32px;
   --s8: 48px;
+  --gap-panel: 14px; /* between workbench panels */
+  --pad-panel: 20px; /* inside a panel */
 
-  --r1: 2px; /* inputs, chips */
-  --r2: 4px; /* buttons, popovers */
-  --shadow-popover: 0 8px 24px #000a;
+  /* ---- Radius & surfaces: flat, no decorative shadow ---- */
+  --r1: 4px; /* chips, inputs */
+  --r2: 5px; /* buttons (the primary button: 5 px) */
+  --r-tab: 7px; /* tabs, segmented controls, popovers */
+  --r-panel: 9px; /* panels */
+  --shadow-popover: 0 10px 28px #0009;
 
-  --row-h: 22px; /* table row */
-  --strip-h: 72px; /* strip default (resizable 48–160px) */
-  --strip-h-min: 48px;
-  --strip-h-max: 160px;
-  --control-h: 28px; /* default control */
-  --control-h-compact: 24px;
-  --control-h-run: 32px; /* RUN button */
-  --topbar-h: 40px;
-  --result-header-h: 56px;
-  --strip-gutter-w: 148px;
-  --strip-readout-w: 64px;
-  --track-view-h: 200px;
-  /* Stage 9: the grip circle band under the track view (Wide 120px). */
-  --grip-circle-h: 96px;
+  /* ---- Density (default "readable working density") ---- */
+  --row-h: 30px; /* table rows */
+  --strip-h: 104px; /* default strip */
+  --strip-h-min: 56px;
+  --strip-h-max: 200px;
+  --control-h: 38px; /* regular controls */
+  --control-h-compact: 30px; /* small controls, table actions */
+  --control-h-run: 46px; /* full-width RUN */
+  --topbar-h: 52px;
+  --result-header-h: 96px;
+  --strip-gutter-w: 156px;
+  --strip-readout-w: 72px;
+  --track-view-h: 232px;
+  --grip-circle-h: 184px;
 
-  /* Layout column widths (Standard 1280–1679px) */
-  --setup-w: 264px;
-  --table-w: 320px;
+  /* Workbench columns */
+  --setup-w: 300px;
+  --table-w: 300px;
 
   /* ---- Trace line widths ---- */
   --trace-w-current: 1.5px;
@@ -114,26 +134,57 @@
   --focus-ring-w: 2px;
   --focus-ring-offset: 2px;
 
-  /* ---- Motion (UI state only; data never animates) ---- */
-  --dur-ui: 120ms; /* popover, drawer, modal, strip insert/remove */
+  /* ---- Motion (UI state; run playback is player-controlled and skippable) ---- */
+  --dur-ui: 120ms;
   --ease-ui: cubic-bezier(0.2, 0, 0, 1);
-  --dur-flash: 300ms; /* gutter flash pulse (×2) */
+  --dur-flash: 300ms;
 }
 
-/* Compact 960–1279px */
-@media (max-width: 1279px) {
-  :root {
-    --setup-w: 240px;
-  }
+/* ---- Compact density: the pre-Stage-10 dense metrics, for experienced users (⌘K, persisted) */
+:root[data-density='compact'] {
+  --fs-body: 13px;
+  --lh-body: 19px;
+  --fs-h1: 18px;
+  --lh-h1: 24px;
+  --fs-h2: 13px;
+  --lh-h2: 18px;
+  --fs-data: 12px;
+  --lh-data: 16px;
+  --fs-xl: 32px;
+  --lh-xl: 34px;
+  --fs-l: 22px;
+  --lh-l: 24px;
+  --row-h: 22px;
+  --strip-h: 72px;
+  --strip-h-min: 48px;
+  --control-h: 28px;
+  --control-h-compact: 24px;
+  --control-h-run: 32px;
+  --topbar-h: 40px;
+  --result-header-h: 64px;
+  --strip-gutter-w: 140px;
+  --strip-readout-w: 64px;
+  --track-view-h: 200px;
+  --grip-circle-h: 164px;
+  --setup-w: 264px;
+  --table-w: 300px;
+  --gap-panel: 8px;
+  --pad-panel: 12px;
 }
 
 /* Wide ≥ 1680px */
 @media (min-width: 1680px) {
   :root {
+    --table-w: 360px;
+    --track-view-h: 280px;
+    --grip-circle-h: 200px;
+  }
+}
+
+/* Laptop < 1280px: the channel browser becomes a drawer (screens.css). */
+@media (max-width: 1279px) {
+  :root {
     --setup-w: 280px;
-    --table-w: 400px;
-    --track-view-h: 240px;
-    --grip-circle-h: 120px;
   }
 }
 
@@ -144,28 +195,32 @@
   }
 }
 
-/* ---- Projector mode: for the meeting (toggled with P, persisted) ---- */
+/* ---- Projector mode: for the meeting (toggled with P, persisted), on top of either density */
 [data-projector] {
-  --bg: #14181e; /* projectors crush near-black */
-  --grid: #262c36;
+  --bg: #161d1e; /* projectors crush near-black */
+  --panel: #1e2729;
+  --grid: #34433f;
+  --line: #3a4748;
 
-  /* type scale ×1.25 */
-  --fs-xl: 36px;
-  --lh-xl: 40px;
-  --fs-l: 22.5px;
-  --lh-l: 27.5px;
-  --fs-h1: 22.5px;
-  --lh-h1: 30px;
-  --fs-h2: 16.25px;
-  --lh-h2: 22.5px;
-  --fs-body: 16.25px;
-  --lh-body: 23.75px;
-  --fs-data: 15px;
-  --lh-data: 20px;
+  /* type scale ×1.25 of the density in force */
+  --fs-xl: 48px;
+  --lh-xl: 50px;
+  --fs-l: 36px;
+  --lh-l: 38px;
+  --fs-h1: 26px;
+  --lh-h1: 32px;
+  --fs-h2: 17px;
+  --lh-h2: 24px;
+  --fs-body: 18px;
+  --lh-body: 26px;
+  --fs-data: 16px;
+  --lh-data: 21px;
+  --fs-meta: 13px;
+  --lh-meta: 16px;
   --fs-micro: 12.5px;
   --lh-micro: 15px;
 
-  --strip-h: 96px;
+  --strip-h: 120px;
   --trace-w-current: 2.5px;
   --trace-w-best: 1.5px;
 }

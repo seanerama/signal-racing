@@ -8,6 +8,10 @@
  * → the assist shows five rows → (Stage 9) the grip circle is up and the call panel asks about run 2's
  * spike: flag it, cross-check → finish (the target) → the debrief shows the with/without numbers
  * and the call → the Model page.
+ *
+ * Stage 10: the demo plays every run back in real time at `DEMO_SPEED` (4× by default; set
+ * `SIGNAL_DEMO_SPEED=1` to time it at 1×). Results, the assist rows and Make the call appear when
+ * a run's playback ends, so `runAndWait` waits for the revealed header.
  */
 import { readFileSync } from 'node:fs';
 import { mkdirSync } from 'node:fs';
@@ -22,10 +26,24 @@ export async function shot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: resolve(SHOT_DIR, `${name}.png`) });
 }
 
-/** Clicks RUN and waits for the header to show run `n`. */
+/** Playback speed for the meeting demo (Stage 10): 4× unless `SIGNAL_DEMO_SPEED` says 1 or 2. */
+export const DEMO_SPEED: 1 | 2 | 4 = (() => {
+  const v = Number(process.env['SIGNAL_DEMO_SPEED'] ?? 4);
+  return v === 1 || v === 2 ? v : 4;
+})();
+/** Generous enough for three B4L laps played back at 1×. */
+export const DEMO_TIMEOUT_MS = DEMO_SPEED === 1 ? 420_000 : 200_000;
+
+/**
+ * Clicks RUN and waits for run `n`'s results to be revealed (instant, or at the end of its
+ * playback: the header's `data-run` is `n`, not `n-live`).
+ */
 export async function runAndWait(page: Page, n: number): Promise<void> {
   await page.getByTestId('run-button').click();
-  await expect(page.locator('.rh__run')).toHaveText(`RUN ${n}`, { timeout: 30_000 });
+  await expect(page.getByTestId('result-header')).toHaveAttribute('data-run', String(n), {
+    timeout: 150_000,
+  });
+  await expect(page.locator('.rh__run')).toHaveText(`RUN ${n}`);
 }
 
 export interface DemoOptions {
@@ -37,8 +55,13 @@ export interface DemoOptions {
 
 export async function playMeetingDemo(page: Page, { url, suffix }: DemoOptions): Promise<void> {
   await page.goto(url);
-  // Fresh demo state (the context is fresh; this guards a reused profile).
-  await page.evaluate(() => localStorage.clear());
+  // Fresh demo state (the context is fresh; this guards a reused profile), with real-time
+  // playback at the demo speed.
+  await page.evaluate((speed) => {
+    localStorage.clear();
+    localStorage.setItem('signal.v1.playbackMode', JSON.stringify({ v: 1, data: 'realtime' }));
+    localStorage.setItem('signal.v1.playbackSpeed', JSON.stringify({ v: 1, data: speed }));
+  }, DEMO_SPEED);
   await page.reload();
 
   const chip = page.getByTestId('demo-chip');
@@ -113,11 +136,11 @@ export async function playMeetingDemo(page: Page, { url, suffix }: DemoOptions):
   ).toHaveCount(1);
   await shot(page, `b4l-call${suffix}`);
 
-  // 5. Finish: the setup the earlier levels teach reaches the target.
+  // 5. Finish: a setup that meets the target on run 3's seed (Stage 11 physics).
   for (const [id, v] of [
-    ['throttle_ramp', '0'],
-    ['tire_pressure', '1.6'],
-    ['weight_dist', '0.52'],
+    ['throttle_ramp', '0.2'],
+    ['tire_pressure', '1.7'],
+    ['weight_dist', '0.46'],
     ['wing', '3'],
   ] as const) {
     await setLever(page, id, v);
@@ -131,8 +154,11 @@ export async function playMeetingDemo(page: Page, { url, suffix }: DemoOptions):
   await expect(cmp).toBeVisible();
   await expect(page.getByTestId('cmp-with')).toContainText('3');
   await expect(page.getByTestId('cmp-with')).toContainText('your attempts');
-  await expect(page.getByTestId('cmp-without')).toContainText('8');
+  await expect(page.getByTestId('cmp-without')).toContainText('4');
   await expect(page.getByTestId('cmp-without')).toContainText('recorded attempt (demo profile)');
+  await expect(page.getByTestId('cmp-anecdote')).toContainText(
+    'One attempt each is an anecdote, not a measurement.',
+  );
   await expect(page.getByTestId('spurious-note')).toBeVisible();
   await expect(page.getByTestId('debrief-call-verdict')).toHaveText('✓ The call.');
   await shot(page, `b4l-debrief-comparison${suffix}`);

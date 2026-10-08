@@ -4,9 +4,10 @@
  * hint-tier opens attributed to the run they followed (for the debrief convergence table), and
  * persisted progress as a signal.
  *
- * A session's result is recorded to progress once, when it first reaches `passed` or
- * `exhausted`. Retrying a level starts a fresh session; the old session's runs are kept (as
- * lightweight records) for the assist, which ranks every run so far on the track.
+ * A session's result is folded into progress after every run (Stage 10: no budget, so there is
+ * no "exhausted" end; five runs without a pass also unlock the next level). Retrying a level
+ * starts a fresh session; the old session's runs are kept (as lightweight records) for the
+ * assist, which ranks every run so far on the track.
  *
  * Demo profile (`?demo=1`, `demo.ts`): every level is unlocked and the re-simulated recorded
  * attempt joins the assist pool.
@@ -73,6 +74,8 @@ export interface LevelState {
   hintOpens: Signal<Record<number, number>>;
   /** Shown once per session, before the first run. */
   briefSeen: Signal<boolean>;
+  /** Stage 10: the docked hint box is open (persists for the session; `H` toggles). */
+  hintBoxOpen: Signal<boolean>;
   dispose(): void;
 }
 
@@ -83,11 +86,12 @@ function create(level: LevelConfig): LevelState {
   const draft = signal<Setup>(effectiveSetup(level, {}));
   const hintOpens = signal<Record<number, number>>({});
   const briefSeen = signal(false);
-  let recorded = false;
+  const hintBoxOpen = signal(true);
+  let recordedRuns = 0;
   const stop = effect(() => {
-    const st = session.status.value;
-    if (recorded || (st !== 'passed' && st !== 'exhausted')) return;
-    recorded = true;
+    const n = session.runs.value.length;
+    if (n === recordedRuns) return;
+    recordedRuns = n;
     try {
       recordResult(level.id, session);
     } catch (err) {
@@ -95,7 +99,7 @@ function create(level: LevelConfig): LevelState {
     }
     refreshProgress();
   });
-  return { session, draft, hintOpens, briefSeen, dispose: stop };
+  return { session, draft, hintOpens, briefSeen, hintBoxOpen, dispose: stop };
 }
 
 /** The live state for a level, created on first use. */
@@ -132,6 +136,7 @@ export function retryLevel(id: LevelId): LevelState | null {
   if (st && old) {
     st.draft.value = old.draft.value;
     st.briefSeen.value = true;
+    st.hintBoxOpen.value = old.hintBoxOpen.value;
   }
   return st;
 }

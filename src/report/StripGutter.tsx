@@ -1,7 +1,9 @@
 /**
- * Strip gutter (design-system "Strip"): drag handle `⋮⋮`, channel id (mono), unit (micro, dim),
- * slot tag, and a remove `✕` revealed on hover/focus. A 3px left border in the trace hue ties the
- * label to the line. The gutter is the strip's keyboard focus target.
+ * Strip gutter (design-system "Strip"; Stage 10 style guide): a persistent label outside the
+ * plot area, like the specimen's "Speed / km/h": the channel's name (sans), then its id (mono)
+ * and unit (dim). Drag handle `⋮⋮` and remove `✕` are revealed on hover/focus. There is no
+ * per-strip hue any more: identity comes from the label, the current run is lime everywhere.
+ * The gutter is the strip's keyboard focus target.
  */
 import type { ComponentChildren, JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
@@ -11,17 +13,15 @@ export interface StripGutterProps {
   id: string;
   label: string;
   unit: string;
-  /** 0-based slot; shown as `T1…T8`. Null for placeholders. */
+  /** 0-based slot (position in the stack). Null for placeholders. */
   slot: number | null;
-  /** CSS colour (a token reference) for the hue border. */
-  hue?: string;
   onRemove(): void;
   onDragStart(ev: DragEvent): void;
   onDragEnd(): void;
   onKeyDown(ev: JSX.TargetedKeyboardEvent<HTMLDivElement>): void;
   onFocus(): void;
   gutterRef?: (el: HTMLDivElement | null) => void;
-  /** Collapsed "not on this car" row (see StripPlaceholder). */
+  /** Collapsed "not logged on this level" row (see StripPlaceholder). */
   placeholder?: boolean;
   /** Optional menu behind a `⋯` button (revealed on hover/focus, like remove). */
   menu?: GutterMenuItem[];
@@ -121,8 +121,7 @@ export function StripGutter({
   id,
   label,
   unit,
-  slot,
-  hue,
+  slot: _slot,
   onRemove,
   onDragStart,
   onDragEnd,
@@ -142,7 +141,6 @@ export function StripGutter({
       role="group"
       aria-label={`${id} strip${unit ? `, ${unit}` : ''}. Alt+Up/Down reorders, Delete removes.${menu?.length ? ' Shift+F10 opens the menu.' : ''}`}
       data-strip-gutter={id}
-      style={hue ? { borderLeftColor: hue } : undefined}
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
@@ -163,21 +161,21 @@ export function StripGutter({
       </span>
       {placeholder ? (
         <span class="strip__placeholder-text data" data-testid={`strip-placeholder-${id}`}>
-          {`${id}: not on this car`}
+          {`${id}: not logged on this level`}
         </span>
       ) : (
         <div class="strip__names">
-          <span class="strip__id data">
-            {id}
-            {smoothed && (
-              <span class="strip__smooth" title="Smoothed: 5-point centred mean (display only)">
-                ~
-              </span>
-            )}
-          </span>
-          <span class="strip__meta micro">
+          <span class="strip__label">{label}</span>
+          <span class="strip__meta">
+            <span class="strip__id">
+              {id}
+              {smoothed && (
+                <span class="strip__smooth" title="Smoothed: 5-point centred mean (display only)">
+                  ~
+                </span>
+              )}
+            </span>
             <span class="strip__unit">{unit || '—'}</span>
-            {slot !== null && <span class="strip__slot">{`T${(slot % 8) + 1}`}</span>}
           </span>
           {children}
         </div>

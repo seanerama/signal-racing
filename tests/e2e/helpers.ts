@@ -1,10 +1,14 @@
 /** Shared e2e helpers (not a spec). */
 import { expect, type Page } from '@playwright/test';
 
+/**
+ * A fresh profile with instant playback (Stage 10: `?playback=instant` sets the persisted
+ * playback pref, so runs render complete at once and the suite stays fast).
+ */
 export async function fresh(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/?playback=instant');
   await page.evaluate(() => localStorage.clear());
-  await page.goto('/');
+  await page.goto('/?playback=instant');
   await expect(page.getByTestId('level-select')).toBeVisible();
 }
 

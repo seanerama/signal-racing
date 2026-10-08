@@ -1,6 +1,9 @@
 /**
- * The workbench (design-system "Workbench"): setup panel · result header + strip stack · track
- * view above the channel table, composed around the level's `LevelSession`.
+ * The workbench (design-system "Workbench"; Stage 10 style guide): three flat panel columns on
+ * the page background: setup (300 px) with Make the call and the docked hint box under it ·
+ * result header + strip stack (the rest) · track view, grip circle and channel browser (300 px).
+ * Below 1280 px the right column becomes a drawer behind a "Channels" tab; below 960 px the
+ * setup stacks under the report.
  *
  * - Strip layout is the global `stripLayout` pref. On entry, an empty layout is filled with the
  *   level's `defaultStrips`; otherwise the persisted layout stays, and channels missing from this
@@ -8,16 +11,20 @@
  * - The stack shows the latest run over the best *other* run (the best before it, or the best
  *   overall when the latest is not the best), so the gap between two lines is always meaningful.
  * - `colorBy` on the track view follows the selected strip.
- * - A failed run shows the fault panel in place of the stack; the session does not consume it.
+ * - A failed run shows the fault panel in place of the stack; the session does not count it.
  * - Stage 8 extends it through `headerExtra`, `tableHeader` and `segmentBoundaries`
  *   (`LevelRoute.tsx` composes them), and adds Export CSV to the result header on every level.
+ * - Stage 10 playback: a new run is computed instantly, then played back in real time (unless
+ *   the `instant` playback pref or `prefers-reduced-motion` is set). While its first playback
+ *   runs, its results are gated: the header shows a live time and speed, and the deltas, hints,
+ *   Make the call, the channel-table stats and the assist appear when it ends. RUN is disabled
+ *   while playing. Replay plays any finished run again (results stay visible).
  */
 import type { ComponentChildren } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { trackGeometry } from '@/engine/index';
 import type { ChannelId, LeverId, Setup } from '@/engine/types';
-import { stripLayout, stripSmooth } from '@/game/prefs';
-import { BudgetError } from '@/game/session';
+import { playbackMode, playbackSpeed, stripLayout, stripSmooth } from '@/game/prefs';
 import type { RunRecord } from '@/game/types';
 import { renderTier, ruleFor } from '@/hints/engine';
 import type { LevelId } from '@/levels/types';
@@ -36,6 +43,15 @@ import { SetupPanel } from '@/setup/SetupPanel';
 import { runSeed } from '@/worker/build-input';
 import { WaterfallOverlay } from '@/viz3d/WaterfallOverlay';
 import { CsvButton } from '@/report/CsvButton';
+import { PlaybackControls } from '@/report/PlaybackControls';
+import {
+  isGated,
+  playState,
+  resetPlayback,
+  setPlaySpeed,
+  startPlayback,
+  type Speed,
+} from '@/report/playback';
 import { workbenchActions } from './actions';
 import { BriefModal } from './BriefModal';
 import { CallPanel } from './CallPanel';
@@ -68,6 +84,8 @@ export interface TableHeaderCtx {
   addChannel(id: ChannelId): void;
   /** Adds the strip if missing and flashes its gutter. */
   showChannel(id: ChannelId): void;
+  /** Stage 10: true while the latest run's results are still hidden by its first playback. */
+  gated: boolean;
 }
 
 declare global {
@@ -76,6 +94,31 @@ declare global {
 }
 
 const LEVER_IDS: LeverId[] = ['throttle_ramp', 'tire_pressure', 'weight_dist', 'wing'];
+
+/** Whether the OS asks for reduced motion (new runs then show complete; Replay still plays). */
+function prefersReducedMotion(): boolean {
+  try {
+    return globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  } catch {
+    return false;
+  }
+}
+
+/** Plays a run back from its first sample. `gating`: hide its results until the end. */
+export function playRun(rec: RunRecord, gating: boolean): void {
+  startPlayback({ runIndex: rec.index, n: rec.telemetry.n, dt: rec.telemetry.dt, gating });
+}
+
+/** Should a new run be played back (rather than shown complete)? */
+export function playsBack(): boolean {
+  return playbackMode.value === 'realtime' && !prefersReducedMotion();
+}
+
+/** Sets the playback speed now and persists it. */
+export function chooseSpeed(s: Speed): void {
+  setPlaySpeed(s);
+  playbackSpeed.value = s;
+}
 
 function bestOf(runs: RunRecord[]): RunRecord | null {
   let b: RunRecord | null = null;
@@ -92,24 +135,33 @@ export function Workbench({
   headerExtra,
   tableHeader,
   segmentBoundaries,
-  axis = 'time',
+  axis = 'distance',
 }: WorkbenchProps) {
   const st = levelState(levelId)!;
   const { session } = st;
   const level = session.level;
   const [running, setRunning] = useState(false);
   const [fault, setFault] = useState<FaultInfo | null>(null);
-  const [hintOpen, setHintOpen] = useState(false);
+  const [drawer, setDrawer] = useState(false);
   const [flash, setFlash] = useState<ChannelId | null>(null);
   const [briefOpen, setBriefOpen] = useState(!st.briefSeen.value);
   const [waterfall, setWaterfall] = useState<ChannelId | null>(null);
+  const hintOpen = st.hintBoxOpen.value;
+  const setHintOpen = (open: boolean) => {
+    st.hintBoxOpen.value = open;
+  };
 
   // Fill an empty layout with the level defaults (never replace a persisted one).
   useEffect(() => {
     if (stripLayout.value.length === 0) stripLayout.value = [...level.defaultStrips];
     resetCursor();
+    resetPlayback();
+    setPlaySpeed(playbackSpeed.value);
     selectedStrip.value = null;
-    return () => resetCursor();
+    return () => {
+      resetPlayback();
+      resetCursor();
+    };
   }, [level.id]);
 
   const runs = session.runs.value;
@@ -117,8 +169,16 @@ export function Workbench({
   const prev = runs[runs.length - 2] ?? null;
   const grid = session.grid.value;
   const status = session.status.value;
-  const runsLeft = session.runsLeft.value;
   const strips = stripLayout.value;
+  const playingNow = playState.value !== 'idle';
+  // The latest run's first playback hides its results until it ends.
+  const gated = isGated(latest?.index);
+  const shownRuns = gated ? runs.slice(0, -1) : runs;
+  const shown = shownRuns[shownRuns.length - 1] ?? null;
+  const shownPrev = shownRuns[shownRuns.length - 2] ?? null;
+  const rtt = session.runsToTarget.value;
+  const passedShown = rtt !== null && rtt <= shownRuns.length;
+  const hintsAt = session.hintsAtPass.value ?? 0;
 
   const priorBest = useMemo(() => bestOf(runs.slice(0, -1)), [runs]);
   const overallBest = session.best.value;
@@ -146,7 +206,7 @@ export function Workbench({
   };
 
   const doRun = async () => {
-    if (running || status === 'computing' || runsLeft <= 0) return;
+    if (running || status === 'computing' || playState.peek() !== 'idle') return;
     const setup: Setup = { ...st.draft.value };
     const sent: Setup = globalThis.__SIGNAL_FORCE_FAULT__
       ? { ...setup, throttle_ramp: Number.NaN }
@@ -154,11 +214,11 @@ export function Workbench({
     const runIndex = session.runs.value.length + 1;
     setRunning(true);
     setFault(null);
-    setHintOpen(false);
     try {
-      await session.run(sent);
+      const rec = await session.run(sent);
+      if (playsBack()) playRun(rec, true);
+      else resetCursor();
     } catch (err) {
-      if (err instanceof BudgetError) return;
       log.error('run failed', err);
       setFault({
         error: err,
@@ -173,17 +233,22 @@ export function Workbench({
     }
   };
 
-  // Hint state for the latest run.
-  const top = latest?.hints[0] ?? null;
+  // Hint state for the latest revealed run.
+  const top = shown?.hints[0] ?? null;
   const rule = top ? ruleFor(level, top) : undefined;
-  const tiers = session.hintTiersOpened.value;
+  const tiers = gated ? 0 : session.hintTiersOpened.value;
   const texts =
     rule && top
       ? [0, 1, 2].slice(0, tiers).map((t) => renderTier(rule, top, t as 0 | 1 | 2, units))
       : [];
   const hintWindow = top && tiers > 0 ? (top.window ?? null) : null;
+  const prevRules = new Set((shownPrev?.hints ?? []).map((h) => h.ruleId));
+  const newRules = (shown?.hints ?? []).filter((h) => !prevRules.has(h.ruleId)).length;
 
-  const toggleHint = () => setHintOpen((o) => !o);
+  const toggleHint = () => setHintOpen(!st.hintBoxOpen.value);
+  const replay = () => {
+    if (latest && playState.peek() === 'idle') playRun(latest, false);
+  };
 
   // Register for the global keyboard map and the palette.
   useEffect(() => {
@@ -192,6 +257,7 @@ export function Workbench({
       toggleHint,
       addChannel: showChannel,
       openBrief: () => setBriefOpen(true),
+      replay,
       channels: level.channelSet,
       inStack,
     };
@@ -203,8 +269,8 @@ export function Workbench({
     [],
   );
 
-  const runState: 'computing' | 'running' | 'ready' | 'spent' =
-    status === 'computing' ? 'computing' : running ? 'running' : runsLeft <= 0 ? 'spent' : 'ready';
+  const runState: 'computing' | 'running' | 'ready' | 'playing' =
+    status === 'computing' ? 'computing' : running ? 'running' : playingNow ? 'playing' : 'ready';
 
   const changed = latest && prev ? LEVER_IDS.filter((k) => latest.setup[k] !== prev.setup[k]) : [];
   const headerRun = latest
@@ -212,8 +278,9 @@ export function Workbench({
     : null;
   const isPB = !!latest && !!priorBest && latest.outcome.totalTime < priorBest.outcome.totalTime;
   const latestPassed = !!latest && !!grid && latest.outcome.totalTime <= grid.target;
+  const hintsOpened = session.hintsOpened.value;
 
-  const emptyReason = !latest
+  const emptyReason = !shown
     ? 'No run yet. Hints read the run you just made.'
     : 'Nothing in this run trips a rule. Compare it against your best on the strips.';
 
@@ -223,6 +290,7 @@ export function Workbench({
       if (!stripLayout.value.includes(id)) stripLayout.value = [...stripLayout.value, id];
     },
     showChannel,
+    gated,
   };
   const tableNode: ComponentChildren =
     typeof tableHeader === 'function'
@@ -230,7 +298,12 @@ export function Workbench({
       : tableHeader;
 
   return (
-    <div class="wb" data-testid="workbench" data-level={level.id}>
+    <div
+      class={`wb${drawer ? ' wb--drawer' : ''}`}
+      data-testid="workbench"
+      data-level={level.id}
+      data-playing={playingNow || undefined}
+    >
       <SetupPanel
         level={level}
         setup={st.draft.value}
@@ -249,6 +322,7 @@ export function Workbench({
               session={session}
               units={units}
               inStack={inStack}
+              shownRuns={shownRuns.length}
               onAdd={(id) => {
                 if (!stripLayout.value.includes(id)) stripLayout.value = [...stripLayout.value, id];
               }}
@@ -257,8 +331,6 @@ export function Workbench({
             <HintControls
               available={!!top}
               tiersOpened={top ? tiers : 0}
-              cost={level.hintCost}
-              runsLeft={runsLeft}
               texts={texts}
               open={hintOpen}
               onOpenChange={setHintOpen}
@@ -267,12 +339,15 @@ export function Workbench({
               }}
               onChannelClick={showChannel}
               emptyReason={emptyReason}
+              newCount={newRules}
+              hintsOpened={hintsOpened}
+              pending={gated}
             />
           </>
         }
       />
 
-      <div class="wb__center">
+      <div class="wb__center panel">
         <ResultHeader
           run={headerRun}
           bestTime={priorBest ? priorBest.outcome.totalTime : null}
@@ -282,7 +357,13 @@ export function Workbench({
           lockedLevers={level.lockedLevers}
           levers={level.levers}
           units={units}
-          {...(headerExtra ? { extra: headerExtra } : {})}
+          runs={runs.length}
+          hints={hintsOpened}
+          live={gated && latest ? { index: latest.index, telemetry: latest.telemetry } : null}
+          controls={
+            <PlaybackControls canReplay={!!latest} onReplay={replay} onSpeed={chooseSpeed} />
+          }
+          {...(headerExtra && !gated ? { extra: headerExtra } : {})}
           {...(latest
             ? {
                 actions: (
@@ -299,19 +380,17 @@ export function Workbench({
                 ),
               }
             : {})}
-          {...(status === 'passed' ? { onDebrief: () => navigate(debriefPath(level.id)) } : {})}
         />
-        {status === 'passed' && !latestPassed && (
-          <div class="wb__notice micro dim" data-testid="passed-notice">
-            Target met earlier in this session.
-          </div>
-        )}
-        {status === 'exhausted' && (
-          <div class="wb__notice" data-testid="exhausted-notice">
-            <span class="micro dim">Run budget spent. Target not met.</span>
+        {passedShown && (
+          <div class="wb__notice" data-testid="passed-notice">
+            <span class="chip chip--best">Target met</span>
+            <span class="wb__notice-text">
+              {`On run ${rtt} · ${hintsAt} hint${hintsAt === 1 ? '' : 's'}. Keep running, or read the debrief.`}
+            </span>
             <Button
               variant="secondary"
               size="compact"
+              class="wb__notice-cta"
               onClick={() => navigate(debriefPath(level.id))}
             >
               Continue to debrief
@@ -347,35 +426,47 @@ export function Workbench({
             />
           )}
           {!latest && !fault && (
-            <p class="wb__empty micro faint">
+            <p class="wb__empty">
               {status === 'computing'
                 ? `Computing the target: ${Math.round(session.gridProgress.value * 100)}%`
-                : 'Strips fill in after the first run. The table on the right lists every channel on this car.'}
+                : 'Strips fill in after the first run. The channel browser lists every channel on this car.'}
             </p>
           )}
         </div>
       </div>
 
-      <aside class="wb__right" aria-label="Track and channels">
-        <TrackView
-          geometry={geometry}
-          current={latest?.telemetry ?? null}
-          best={overlay?.telemetry ?? null}
-          colorBy={selectedStrip.value}
-          segmentLabels={segmentLabels}
-          units={units}
-          axis={axis}
-        />
-        <GripCircle
-          current={latest?.telemetry ?? null}
-          best={overlay?.telemetry ?? null}
-          axis={axis}
-          units={units}
-        />
-        <div class="wb__table">
+      <button
+        type="button"
+        class="wb__drawer-tab"
+        aria-expanded={drawer}
+        aria-controls="wb-right"
+        onClick={() => setDrawer(!drawer)}
+        data-testid="drawer-tab"
+      >
+        {drawer ? 'Close ▸' : '◂ Track & channels'}
+      </button>
+      <aside id="wb-right" class="wb__right" aria-label="Track and channels">
+        <div class="wb__track panel">
+          <TrackView
+            geometry={geometry}
+            current={latest?.telemetry ?? null}
+            best={overlay?.telemetry ?? null}
+            colorBy={selectedStrip.value}
+            segmentLabels={segmentLabels}
+            units={units}
+            axis={axis}
+          />
+          <GripCircle
+            current={latest?.telemetry ?? null}
+            best={overlay?.telemetry ?? null}
+            axis={axis}
+            units={units}
+          />
+        </div>
+        <div class="wb__table panel">
           <ChannelTable
             ids={level.channelSet}
-            current={latest?.summary ?? null}
+            current={gated ? null : (latest?.summary ?? null)}
             best={overlay?.summary ?? null}
             inStack={inStack}
             onToggle={(id) => setStrips(toggleStrip(stripLayout.value, id))}

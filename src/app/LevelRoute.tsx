@@ -1,9 +1,9 @@
 /**
  * The level route: the Workbench plus the Stage 8 extensions a level asks for.
  *
- * - Phase B: the Axis control is live (first entry forces the distance axis, contract 06), and
- *   the segment boundaries are drawn through every strip: segment start distances on the
- *   distance axis, or the latest run's segment start times on the time axis.
+ * - The axis is the persisted pref on every level (Stage 10: distance by default). Phase B draws
+ *   the segment boundaries through every strip: segment start distances on the distance axis, or
+ *   the latest run's segment start times on the time axis.
  * - `scoreTarget: 'compromise_gap'` (B1L): header chips `Compromise gap +0.412 s` (best-toned when
  *   it passes, loss-toned when not) and the best achievable gap against the engine floors.
  * - `assist` (B4L): the assist block in the channel table's header slot.
@@ -87,7 +87,9 @@ function AssistPanel({
   units: UnitSystem;
   ctx: TableHeaderCtx;
 }) {
-  const runs = session.runs.value;
+  // A run still playing back is not ranked until its results are revealed (Stage 10).
+  const all = session.runs.value;
+  const runs = useMemo(() => (ctx.gated ? all.slice(0, -1) : all), [all, ctx.gated]);
   const on = session.assistOn.value;
   const hist = assistHistory(level.id);
   const ids = useMemo(() => assistChannels(level), [level]);
@@ -133,7 +135,7 @@ export function LevelRoute({ id, units }: { id: LevelId; units: UnitSystem }) {
     if (phaseB) enterPhaseB();
   }, [id]);
 
-  const axis = phaseB ? axisMode.value : 'time';
+  const axis = axisMode.value;
   const runs = session.runs.value;
   const latest = runs[runs.length - 1] ?? null;
   const grid = session.grid.value;

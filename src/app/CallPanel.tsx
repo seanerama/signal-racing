@@ -25,10 +25,18 @@ export function callVars(level: LevelConfig, rec: RunRecord | undefined): Record
   return { value: rt.get(art.channel)[i] ?? NaN, at: rt.s[i] ?? NaN, t: rt.t[i] ?? NaN };
 }
 
-/** Whether the panel shows: unanswered once the run exists, or answered until the next run. */
-export function callVisible(call: CallSpec | undefined, session: LevelSession): boolean {
+/**
+ * Whether the panel shows: unanswered once the run exists, or answered until the next run.
+ * `shown` (Stage 10) is the number of runs whose results are revealed (a run still playing back
+ * is not); it defaults to every run.
+ */
+export function callVisible(
+  call: CallSpec | undefined,
+  session: LevelSession,
+  shown = session.runs.value.length,
+): boolean {
   if (!call) return false;
-  const n = session.runs.value.length;
+  const n = shown;
   const ans = session.call.value;
   if (!ans) return n >= call.afterRun;
   return n === ans.atRun;
@@ -41,6 +49,8 @@ export interface CallPanelProps {
   inStack: ReadonlySet<ChannelId>;
   onAdd(id: ChannelId): void;
   onChannelClick(id: ChannelId): void;
+  /** Stage 10: runs whose results are revealed (a run playing back is not). Default: all. */
+  shownRuns?: number;
 }
 
 export function CallPanel({
@@ -50,19 +60,20 @@ export function CallPanel({
   inStack,
   onAdd,
   onChannelClick,
+  shownRuns,
 }: CallPanelProps) {
   const call = level.call;
-  if (!call || !callVisible(call, session)) return null;
+  if (!call || !callVisible(call, session, shownRuns)) return null;
   const ans = session.call.value;
   const runs = session.runs.value;
   const vars = callVars(level, runs[call.afterRun - 1]);
   const chosen = ans ? call.options.find((o) => o.id === ans.optionId) : undefined;
 
   return (
-    <section class="call" aria-label="Make the call" data-testid="call-panel">
+    <section class="call panel" aria-label="Make the call" data-testid="call-panel">
       <header class="call__head">
         <h2 class="h2 call__title">Make the call</h2>
-        <span class="micro dim">{`run ${call.afterRun} · costs no runs`}</span>
+        <span class="meta">{`run ${call.afterRun} · free`}</span>
       </header>
       <RichText
         class="call__q"

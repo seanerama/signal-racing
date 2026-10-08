@@ -1,52 +1,46 @@
-/* Setup panel, lever widget and hint controls (design-system "Lever widget", "Workbench"). */
+/* Setup panel, lever widget and the docked hint box (design-system "Lever widget", "Workbench";
+   Stage 10 style guide: flat panels, 36–40 px controls, a full-width 46 px lime RUN). */
 
 .setup {
-  /* Above the centre column, so the hint popover can overhang it. */
-  position: relative;
-  z-index: 3;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  background: var(--panel);
-  border-right: 1px solid var(--line);
+  flex: none;
 }
 .setup__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--s2);
-  min-height: 36px;
-  padding: var(--s2) var(--s3);
-  border-bottom: 1px solid var(--line);
+  padding: var(--pad-panel) var(--pad-panel) var(--s2);
 }
 .setup__levers {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--s4);
-  padding: var(--s3) var(--s3) var(--s4);
+  gap: var(--s5);
+  padding: var(--s2) var(--pad-panel) var(--s4);
 }
 .setup__foot {
-  position: sticky;
-  bottom: 0;
   display: flex;
   flex-direction: column;
   gap: var(--s3);
-  padding: var(--s3);
-  background: var(--panel);
+  padding: var(--s4) var(--pad-panel) var(--pad-panel);
   border-top: 1px solid var(--line);
 }
 .setup__run {
   width: 100%;
+}
+.setup__runkey {
+  margin-left: var(--s2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-data);
+  opacity: 0.7;
 }
 
 /* ---- Lever ---- */
 .lever {
   display: flex;
   flex-direction: column;
-  gap: var(--s1);
+  gap: var(--s2);
 }
 .lever__head {
   display: flex;
@@ -57,14 +51,15 @@
 .lever__label {
   font-family: var(--font-sans);
   font-size: var(--fs-body);
-  color: var(--text-dim);
+  font-weight: 500;
+  color: var(--text);
   display: inline-flex;
   align-items: center;
   gap: var(--s1);
 }
 .lever__dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--accent);
 }
@@ -72,11 +67,16 @@
   display: flex;
   align-items: center;
   gap: var(--s1);
+  height: var(--control-h);
+  padding: 0 var(--s1);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  background: var(--bg);
 }
 .lever__step {
-  width: 24px;
-  height: var(--control-h-compact);
-  border: 1px solid transparent;
+  width: 30px;
+  height: calc(var(--control-h) - 10px);
+  border: 0;
   border-radius: var(--r1);
   background: transparent;
   color: var(--text-dim);
@@ -93,11 +93,12 @@
 }
 .lever__value {
   flex: 1;
-  height: var(--control-h-compact);
+  height: calc(var(--control-h) - 10px);
   border: 1px solid transparent;
   border-radius: var(--r1);
   background: transparent;
   color: var(--text);
+  font-size: var(--fs-data);
   text-align: center;
   cursor: text;
 }
@@ -108,9 +109,9 @@
 .lever__input {
   flex: 1;
   min-width: 0;
-  height: var(--control-h-compact);
+  height: calc(var(--control-h) - 10px);
   padding: 0 var(--s2);
-  border: 1px solid var(--focus);
+  border: 1px solid var(--accent);
   border-radius: var(--r1);
   background: var(--raised);
   color: var(--text);
@@ -135,7 +136,7 @@
 
 .lever__track {
   position: relative;
-  height: 18px;
+  height: 22px;
   margin: 0 var(--s2);
   cursor: pointer;
   touch-action: none;
@@ -144,43 +145,55 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 8px;
-  height: 1px;
-  background: var(--rule);
+  top: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--line);
+}
+/* The selected value: a lime fill up to the thumb. */
+.lever__fill {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  pointer-events: none;
 }
 .lever__tick {
   position: absolute;
-  top: 5px;
+  top: 16px;
   width: 1px;
-  height: 7px;
+  height: 4px;
   margin-left: -0.5px;
   background: var(--rule);
 }
 .lever__ghost {
   position: absolute;
-  top: 0;
+  top: -1px;
   transform: translateX(-50%);
   font-family: var(--font-mono);
   font-size: 11px;
-  line-height: 18px;
+  line-height: 12px;
   color: var(--text-dim);
   pointer-events: none;
 }
 .lever__thumb {
   position: absolute;
   top: 4px;
-  width: 9px;
-  height: 9px;
-  margin-left: -4.5px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
   border-radius: 50%;
-  background: var(--text);
-  box-shadow: 0 0 0 2px var(--panel);
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--panel);
   pointer-events: none;
 }
-.lever__track:focus-visible .lever__thumb {
-  background: var(--focus);
+.lever__track:focus-visible {
+  outline-offset: 4px;
 }
-.lever--disabled .lever__thumb {
+.lever--disabled .lever__thumb,
+.lever--disabled .lever__fill {
   background: var(--text-faint);
 }
 
@@ -188,42 +201,98 @@
 .lever--locked .lever__value {
   color: var(--text-faint);
 }
+.lever--locked .lever__row {
+  border-color: transparent;
+  background: transparent;
+  padding: 0;
+  height: auto;
+}
 .lever--locked .lever__value {
   text-align: left;
   padding-left: 0;
   cursor: default;
 }
 
-/* ---- Hint controls ---- */
-.hintctl {
-  position: relative;
+/* ---- The docked hint box (Stage 10) ---- */
+.hintbox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  flex: none;
+  padding: var(--s4) var(--pad-panel) var(--pad-panel);
 }
-.hintctl__pop {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + var(--s2));
-  width: max(100%, 320px);
-  z-index: 20;
-  background: var(--raised);
-  border: 1px solid var(--line);
-  border-radius: var(--r2);
-  box-shadow: var(--shadow-popover);
-  animation: pop-in var(--dur-ui) var(--ease-ui);
-}
-@keyframes pop-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-}
-.hintctl__row {
+.hintbox__head {
   display: flex;
   align-items: center;
-  gap: var(--s1);
+  gap: var(--s2);
 }
-.hintctl__label {
-  margin-right: var(--s2);
-}
-.hintctl__key {
+.hintbox__free {
   margin-left: auto;
+}
+.hintbox__close {
+  width: 28px;
+  height: 28px;
+  margin-right: -6px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r2);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 18px;
+  line-height: 1;
+}
+.hintbox__close:hover {
+  border-color: var(--line);
+  background: var(--raised);
+  color: var(--text);
+}
+
+/* Closed: one line that reopens it, and `HINT · n new` when a new rule fired. */
+.hintbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex: none;
+  height: var(--control-h);
+  padding: 0 var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  background: var(--panel);
+  color: var(--text);
+  text-align: left;
+}
+.hintbar:hover {
+  border-color: var(--rule);
+  background: var(--raised);
+}
+.hintbar__label {
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-h2);
+}
+.hintbar__new {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: var(--fs-h2);
+}
+.hintbar--new {
+  border-color: var(--accent);
+}
+.hintbar__count {
+  margin-left: auto;
+}
+.hintbar__key,
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
 }

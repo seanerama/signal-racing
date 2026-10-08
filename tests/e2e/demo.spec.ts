@@ -1,20 +1,23 @@
 import { expect, test } from '@playwright/test';
 import { fresh, setLever } from './helpers';
-import { playMeetingDemo, runAndWait, shot } from './demo-path';
+import { DEMO_SPEED, DEMO_TIMEOUT_MS, playMeetingDemo, runAndWait, shot } from './demo-path';
 
 /**
  * Stage 8 Pipeline Test (standard build): the signal.md meeting demo end to end against
- * `vite preview`, plus the B1L join view and the in-browser live B4L grid-search timing.
- * Screenshots land in `test-results/stage-9/`.
+ * `vite preview` (Stage 10: with real-time playback at 4×, or `SIGNAL_DEMO_SPEED`), plus the B1L
+ * join view and the in-browser live B4L grid-search timing. Screenshots land in
+ * `test-results/stage-9/`.
  */
 
 test('the meeting demo: Puzzle, 200 channels, CSV, assist, with/without debrief', async ({
   page,
 }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(DEMO_TIMEOUT_MS);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  const t0 = Date.now();
   await playMeetingDemo(page, { url: '/?demo=1#/level/B4L', suffix: '' });
+  console.log(`[meeting demo] standard build at ${DEMO_SPEED}×: ${Date.now() - t0} ms wall`);
   expect(errors).toEqual([]);
 });
 
@@ -22,7 +25,7 @@ test('B1L: three runs, segment_delta strip, boundaries and the compromise-gap ch
   page,
 }) => {
   test.setTimeout(90_000);
-  await page.goto('/?demo=1#/level/B1L');
+  await page.goto('/?demo=1&playback=instant#/level/B1L');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.getByTestId('begin').click();
@@ -30,18 +33,18 @@ test('B1L: three runs, segment_delta strip, boundaries and the compromise-gap ch
   await expect(page.getByRole('radio', { name: 'Dist' })).toBeChecked();
   await expect(page.getByRole('radio', { name: 'Dist' })).toBeEnabled();
 
-  // The A4 answer (wing 7) first: the straight pays.
-  await setLever(page, 'throttle_ramp', '0');
-  await setLever(page, 'tire_pressure', '1.6');
-  await setLever(page, 'weight_dist', '0.52');
+  // A high wing first (Stage 11 physics: ramp 0.2, 1.7 bar, wd 0.48): the straight pays.
+  await setLever(page, 'throttle_ramp', '0.2');
+  await setLever(page, 'tire_pressure', '1.7');
+  await setLever(page, 'weight_dist', '0.48');
+  await setLever(page, 'wing', '7');
   await runAndWait(page, 1);
   await expect(page.locator('.chip--extra').first()).toContainText('Compromise gap');
   await expect(page.locator('.chip--extra').first()).toHaveClass(/chip--loss/);
-  await page.keyboard.press('h');
+  // The hint box is docked and open; hints are free: one click per tier.
   await page.getByTestId('hint-open').click();
-  await page.getByTestId('hint-open').click();
-  await expect(page.getByTestId('hint-popover')).toContainText('ended the straight');
-  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('hint-popover')).toContainText('Observe');
+  await expect(page.getByTestId('hint-box')).toContainText('free · 1 opened');
 
   // Lower the wing too far, then settle.
   await setLever(page, 'wing', '1');
@@ -69,7 +72,7 @@ test('B1L: three runs, segment_delta strip, boundaries and the compromise-gap ch
   await expect(page.getByTestId('join-table')).toContainText('Engine floor');
 });
 
-test('live B4L grid search in the browser stays under 4 s (logged)', async ({ page }) => {
+test('live B4L grid search in the browser stays under 4 s (logged) @perf', async ({ page }) => {
   test.setTimeout(60_000);
   await fresh(page);
   await page.goto('/#/dev/worker');

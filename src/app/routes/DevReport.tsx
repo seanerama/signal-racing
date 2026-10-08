@@ -14,11 +14,13 @@ import { HintPopover } from '@/report/HintPopover';
 import { LockGlyph } from '@/report/LockGlyph';
 import { setProjector, useProjectorMode } from '@/report/projector';
 import { ResultHeader } from '@/report/ResultHeader';
-import { RunPips } from '@/report/RunPips';
+import { RunCount } from '@/report/RunCount';
 import { selectedStrip } from '@/report/selection';
 import { StripStack } from '@/report/StripStack';
 import { toggleStrip } from '@/report/strip-ops';
 import { TrackView } from '@/report/TrackView';
+import { PlaybackControls } from '@/report/PlaybackControls';
+import { setPlaySpeed, startPlayback } from '@/report/playback';
 import {
   FIXTURE_HINTS,
   FIXTURE_LEVERS,
@@ -43,7 +45,7 @@ const DEFAULT_STRIPS: ChannelId[] = [
   'engine_rpm',
   'wheel_speed_rl',
   'rear_slip_ratio',
-  'clutch_temp', // not on this car: placeholder row
+  'clutch_temp', // not logged on this level: placeholder row
 ];
 
 const DIRECT_HINT: HintText = {
@@ -51,7 +53,6 @@ const DIRECT_HINT: HintText = {
   segments: [{ kind: 'text', value: 'Lengthen the throttle ramp.' }],
 };
 
-const BUDGET = 6;
 const RUNS_USED = 3;
 
 type OnOff = 'off' | 'on';
@@ -100,8 +101,6 @@ export function DevReport({ units, onUnitsChange }: DevReportProps) {
       : starts.map((s) => interpAt(fx.current.s, fx.current.t, s));
   }, [fx, axis]);
 
-  const usedByHints = tiers;
-  const runsLeft = BUDGET - RUNS_USED - usedByHints;
   const texts = [...FIXTURE_HINTS, DIRECT_HINT].slice(0, tiers);
   const hintWindow = tiers > 0 ? { channel: 'rear_slip_ratio', tStart: 0.3, tEnd: 1.1 } : null;
 
@@ -190,7 +189,7 @@ export function DevReport({ units, onUnitsChange }: DevReportProps) {
         <aside class="devr__setup" aria-label="Setup">
           <div class="devr__setup-head">
             <h2 class="h2 dim">Setup</h2>
-            <RunPips budget={BUDGET} usedByRuns={RUNS_USED} usedByHints={usedByHints} />
+            <RunCount runs={RUNS_USED} hints={tiers} />
           </div>
           <dl class="devr__levers data">
             {FIXTURE_LEVERS.map((l) => (
@@ -215,8 +214,6 @@ export function DevReport({ units, onUnitsChange }: DevReportProps) {
           <div class="devr__setup-foot">
             <HintPopover
               tiersOpened={tiers}
-              cost={[1, 1, 1]}
-              runsLeft={runsLeft}
               texts={texts}
               onOpenNext={() => setTiers((t) => Math.min(3, t + 1))}
               onChannelClick={onChannelClick}
@@ -274,6 +271,20 @@ export function DevReport({ units, onUnitsChange }: DevReportProps) {
         </div>
 
         <aside class="devr__right" aria-label="Track and channels">
+          <div class="devr__playback">
+            <PlaybackControls
+              canReplay
+              onReplay={() =>
+                startPlayback({
+                  runIndex: 1,
+                  n: fx.current.n,
+                  dt: fx.current.dt,
+                  gating: false,
+                })
+              }
+              onSpeed={setPlaySpeed}
+            />
+          </div>
           <TrackView
             geometry={fx.track}
             current={fx.current}
@@ -333,17 +344,15 @@ export function DevReport({ units, onUnitsChange }: DevReportProps) {
         </div>
         <div class="devr__row">
           <div class="devr__card devr__card--small">
-            <span class="micro faint">RunPips · fresh / spent / hints</span>
-            <RunPips budget={6} usedByRuns={0} usedByHints={0} />
-            <RunPips budget={6} usedByRuns={4} usedByHints={0} />
-            <RunPips budget={10} usedByRuns={5} usedByHints={3} />
+            <span class="micro faint">RunCount · fresh / runs / hints</span>
+            <RunCount runs={0} hints={0} />
+            <RunCount runs={4} hints={0} />
+            <RunCount runs={5} hints={3} />
           </div>
           <div class="devr__card devr__card--small">
-            <span class="micro faint">HintPopover · unaffordable</span>
+            <span class="micro faint">HintPopover · one tier open</span>
             <HintPopover
               tiersOpened={1}
-              cost={[1, 2, 2]}
-              runsLeft={1}
               texts={FIXTURE_HINTS.slice(0, 1)}
               onOpenNext={() => undefined}
               onChannelClick={onChannelClick}
@@ -353,8 +362,6 @@ export function DevReport({ units, onUnitsChange }: DevReportProps) {
             <span class="micro faint">HintPopover · none opened</span>
             <HintPopover
               tiersOpened={0}
-              cost={[1, 1, 1]}
-              runsLeft={3}
               texts={[]}
               onOpenNext={() => undefined}
               onChannelClick={onChannelClick}

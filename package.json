@@ -2,7 +2,7 @@
   "name": "signal",
   "private": true,
   "license": "MIT",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Signal: a racing game where telemetry is the only feedback.",
   "type": "module",
   "engines": {
@@ -34,7 +34,8 @@
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
-    "@fontsource/inter": "5.3.0",
+    "@fontsource/barlow-condensed": "5.3.0",
+    "@fontsource/dm-sans": "5.3.0",
     "@fontsource/jetbrains-mono": "5.3.0",
     "@playwright/test": "1.63.0",
     "@preact/preset-vite": "2.10.6",
