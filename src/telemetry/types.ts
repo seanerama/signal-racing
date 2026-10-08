@@ -101,6 +101,32 @@ export interface RunTelemetry {
   getClean(id: ChannelId): Float32Array;
 }
 
+/**
+ * A deliberately planted SENSOR artifact (Stage 9 "Make the call"; contract 03/04 amendment). It
+ * lives in the sensor layer only: `RunTelemetry.get()` applies it after noise, deterministically;
+ * `getClean()` never sees it, so the physics, hint rules, the assist and the outcome ignore it.
+ *
+ * - `spike`: the reading at `at` is offset by `magnitude` (SI) for one sample (or `durationS`).
+ * - `step`: the reading is offset by `magnitude` from `at` to the end of the run (or `durationS`).
+ * - `stuck`: the reading freezes at its value at `at` (plus `magnitude`) for `durationS`
+ *   (default one sample).
+ *
+ * `at` picks the first sample with `t ≥ at.t` (or, without `t`, `s ≥ at.s`). An artifact on a
+ * physical channel carries into the math channels computed from it (they read `get()`); an
+ * artifact on a math channel moves that channel only.
+ */
+export interface SensorArtifact {
+  /** 1-based run index the artifact is planted on. */
+  run: number;
+  channel: ChannelId;
+  kind: 'spike' | 'stuck' | 'step';
+  at: { t?: number; s?: number };
+  /** SI. */
+  magnitude: number;
+  /** s. */
+  durationS?: number;
+}
+
 /** Arguments to `createRunTelemetry()` (`src/telemetry/run-telemetry.ts`, Stage 3). */
 export interface CreateRunTelemetryArgs {
   physical: PhysicalColumns;
@@ -108,6 +134,11 @@ export interface CreateRunTelemetryArgs {
   seed: number;
   best?: PhysicalColumns;
   segmentFloors?: number[];
+  /**
+   * Stage 9, additive: sensor artifacts for THIS run (the caller filters by run index). Applied in
+   * `get()` only.
+   */
+  artifacts?: readonly SensorArtifact[];
 }
 
 /** Per-channel statistics. NaN-safe: dropouts are skipped and counted. */

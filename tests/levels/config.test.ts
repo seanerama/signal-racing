@@ -62,8 +62,8 @@ describe.each(LEVELS.map((l) => [l.id, l] as const))('%s config', (_id, level) =
       level.id === 'B4L' ? 10 : 2,
     );
     // From A4 on the axle forces are causal (+4).
-    const [lo, hi] =
-      { B4L: [10, 12], B1L: [9, 9], A4: [7, 9] }[level.id as 'B4L' | 'B1L' | 'A4'] ?? [3, 5];
+    const ranges: Record<string, [number, number]> = { B4L: [10, 12], B1L: [9, 9], A4: [7, 9] };
+    const [lo, hi] = ranges[level.id] ?? [3, 5];
     expect(causal.length).toBeGreaterThanOrEqual(lo);
     expect(causal.length).toBeLessThanOrEqual(hi);
     expect(new Set(level.debrief.causal)).toEqual(new Set(causal));

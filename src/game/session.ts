@@ -15,6 +15,9 @@
  * `bestAchievableGap = optimum.totalTime − Σ segmentFloors`. Other levels pass at
  * `totalTime ≤ grid.target`. `passOn: 'total'` is not in the meeting cut and is treated as
  * `'any_run'`.
+ *
+ * "Make the call" (Stage 9): `answerCall` records the player's answer to `level.call` once the
+ * named run exists. It costs no runs and can be given once per session.
  */
 import { batch, computed, signal } from '@preact/signals-core';
 import { log } from '@/app/log';
@@ -27,7 +30,7 @@ import { summarize } from '@/telemetry/summary';
 import { effectiveSetup } from '@/worker/build-input';
 import type { GridResult, SimClient } from '@/worker/types';
 import { loadGrid } from './grid-cache';
-import type { LevelSession, LevelStatus, RunRecord } from './types';
+import type { CallAnswer, LevelSession, LevelStatus, RunRecord } from './types';
 
 export type { LevelSession, RunRecord };
 
@@ -114,6 +117,7 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
   // Observed by run(); avoid an unhandled rejection if no run is ever requested.
   gridPromise.catch(() => undefined);
 
+  const call = signal<CallAnswer | null>(null);
   const runsUsed = computed(() => runs.value.length + hintRunsSpent.value);
   const runsLeft = computed(() => Math.max(0, level.runBudget - runsUsed.value));
 
@@ -152,14 +156,20 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
     const prevBest = best.value;
     const prevRun = prior[prior.length - 1];
     const bestPhysical = prevBest ? physicalOf.get(prevBest) : undefined;
-    const telemetry = createRunTelemetry({
+    const args = {
       physical: payload.physical,
       channelIds: [...level.channelSet],
       seed: payload.seed,
       ...(bestPhysical ? { best: bestPhysical } : {}),
       segmentFloors: g.segmentFloors,
-    });
+    };
+    // Stage 9: planted sensor artifacts live in what the player sees (`get()`, the report, the
+    // CSV). Hint rules read a summary of the same run WITHOUT them, so no rule can react to one
+    // (the assist reads clean stats, which never carry them).
+    const artifacts = (level.artifacts ?? []).filter((a) => a.run === runIndex);
+    const telemetry = createRunTelemetry({ ...args, artifacts });
     const summary = summarize(telemetry);
+    const ruleSummary = artifacts.length ? summarize(createRunTelemetry(args)) : summary;
     const fullSetup = effectiveSetup(level, setup);
     const ctx: NoiseCtx = {
       level,
@@ -168,7 +178,7 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
       ...(prevBest ? { bestOutcome: prevBest.outcome } : {}),
       ...(prevRun ? { previousOutcome: prevRun.outcome } : {}),
     };
-    const hints: HintMatch[] = evaluateHints(level, summary, ctx);
+    const hints: HintMatch[] = evaluateHints(level, ruleSummary, ctx);
     const record: RunRecord = {
       index: runIndex,
       setup: fullSetup,
@@ -204,6 +214,16 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
     hintTiersOpened,
     status,
     assistOn,
+    call,
+    answerCall(optionId) {
+      const spec = level.call;
+      if (!spec || call.value) return call.value;
+      if (runs.value.length < spec.afterRun) return null;
+      const option = spec.options.find((o) => o.id === optionId);
+      if (!option) return null;
+      call.value = { afterRun: spec.afterRun, optionId, correct: option.correct };
+      return call.value;
+    },
     run(setup) {
       if (runsLeft.value - inFlight.value <= 0) return Promise.reject(new BudgetError());
       inFlight.value++;

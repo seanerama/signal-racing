@@ -14,6 +14,9 @@
  *
  * The noise stream is `createRng(seed).fork('noise:' + id)`. Returned arrays are shared cache
  * entries: callers must not mutate them.
+ *
+ * Stage 9: `args.artifacts` (planted sensor artifacts, "Make the call") are applied to `get()`
+ * after the noise layer and never to `getClean()`.
  */
 import { createRng } from '@/engine/rng';
 import type { ChannelId, PhysicalColumns } from '@/engine/types';
@@ -21,10 +24,52 @@ import { segmentStartTimes } from './derived';
 import { generateDistractor } from './distractors';
 import { applyNoise } from './noise';
 import { channelQuantum, channelRange, getChannel, inRegistryOrder } from './registry';
-import type { CreateRunTelemetryArgs, DeriveCtx, RunTelemetry } from './types';
+import type { CreateRunTelemetryArgs, DeriveCtx, RunTelemetry, SensorArtifact } from './types';
+
+/** Sample index an artifact starts at: first `t ≥ at.t`, else first `s ≥ at.s`, else 0. */
+export function artifactIndex(
+  run: { n: number; t: ArrayLike<number>; s: ArrayLike<number> },
+  at: SensorArtifact['at'],
+): number {
+  const key = at.t !== undefined ? run.t : at.s !== undefined ? run.s : null;
+  const target = at.t ?? at.s;
+  if (!key || target === undefined) return 0;
+  for (let i = 0; i < run.n; i++) if ((key[i] as number) >= target) return i;
+  return Math.max(0, run.n - 1);
+}
+
+/**
+ * Applies sensor artifacts to a noisy series in place (Stage 9). Deterministic: no randomness.
+ * `clean` is the noise-free series, used where the noisy sample is a dropout so the artifact
+ * still shows.
+ */
+export function applyArtifacts(
+  out: Float32Array,
+  clean: Float32Array,
+  run: { n: number; dt: number; t: ArrayLike<number>; s: ArrayLike<number> },
+  artifacts: readonly SensorArtifact[],
+): void {
+  for (const a of artifacts) {
+    const i0 = artifactIndex(run, a.at);
+    const span =
+      a.durationS !== undefined
+        ? Math.max(1, Math.round(a.durationS / run.dt))
+        : a.kind === 'step'
+          ? run.n - i0
+          : 1;
+    const end = Math.min(run.n, i0 + span);
+    const base = (i: number): number => {
+      const v = out[i]!;
+      return Number.isNaN(v) ? clean[i]! : v;
+    };
+    const held = base(i0) + a.magnitude;
+    for (let i = i0; i < end; i++) out[i] = a.kind === 'stuck' ? held : base(i) + a.magnitude;
+  }
+}
 
 export function createRunTelemetry(args: CreateRunTelemetryArgs): RunTelemetry {
   const { physical, seed, best, segmentFloors } = args;
+  const artifacts = args.artifacts ?? [];
   const root = createRng(seed);
   const channelIds = Object.freeze(inRegistryOrder(args.channelIds));
   const clean = new Map<ChannelId, Float32Array>();
@@ -108,6 +153,9 @@ export function createRunTelemetry(args: CreateRunTelemetryArgs): RunTelemetry {
       },
       root.fork('noise:' + id),
     );
+    // Stage 9: planted sensor artifacts, after noise, in the sensor layer only.
+    const mine = artifacts.filter((a) => a.channel === id);
+    if (mine.length) applyArtifacts(out, getClean(id), physical, mine);
     noisy.set(id, out);
     return out;
   }

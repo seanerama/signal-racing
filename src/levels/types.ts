@@ -16,7 +16,9 @@ import type {
   Track,
 } from '@/engine/types';
 import type { HintRule } from '@/hints/types';
-import type { Role } from '@/telemetry/types';
+import type { Role, SensorArtifact } from '@/telemetry/types';
+
+export type { SensorArtifact };
 
 /** Level ids. `L` = meeting-cut "lite" variants. */
 export type LevelId = 'A1' | 'A2' | 'A3' | 'A4' | 'B1L' | 'B4L';
@@ -96,4 +98,36 @@ export interface LevelConfig {
   assist?: boolean;
   /** Join levels: per-segment optimum from grid search. */
   segmentFloorSource?: 'engine_optimum';
+  /**
+   * Stage 9, additive (contract 04 amendment): planted SENSOR artifacts. Applied in
+   * `RunTelemetry.get()` after noise on the named run; never in `getClean()`, hint rules, the
+   * assist or the outcome. Disclosed on the Model page.
+   */
+  artifacts?: SensorArtifact[];
+  /** Stage 9, additive: the "Make the call" judgment prompt after a run. */
+  call?: CallSpec;
+}
+
+/** One answer to a "Make the call" prompt. */
+export interface CallOption {
+  id: string;
+  text: string;
+  /** Exactly one option is correct: flag it and cross-check before acting. */
+  correct: boolean;
+  /** One sentence, shown after answering and in the debrief. */
+  why: string;
+}
+
+/**
+ * "Make the call" (Stage 9): after run `afterRun`'s report renders, a panel asks what to do about
+ * a reading. Answering costs no runs; the answer is recorded on the session and shown in the
+ * debrief. `question` uses the hint template syntax; vars: `value` (the planted reading, SI),
+ * `at` (its distance, m) and `t` (its time, s), from the first artifact on `afterRun`.
+ */
+export interface CallSpec {
+  afterRun: number;
+  question: string;
+  options: CallOption[];
+  /** Channels that tell a real effect from a sensor fault: one-click "add to stack". */
+  crossCheck: ChannelId[];
 }
