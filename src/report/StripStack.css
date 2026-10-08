@@ -1,0 +1,239 @@
+/* Strip stack (design-system "Strip", "Cursor"). Tokens only. */
+.strips {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  min-height: 100%;
+  padding-bottom: var(--s4);
+}
+.strips:focus-visible {
+  outline-offset: -2px;
+}
+.strips__empty {
+  padding: var(--s6) var(--s4);
+}
+
+.strip {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--strip-gutter-w) minmax(0, 1fr) var(--strip-readout-w);
+  align-items: start;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+.strip--enter {
+  animation: strip-in var(--dur-ui) var(--ease-ui);
+  overflow: hidden;
+}
+@keyframes strip-in {
+  from {
+    max-height: 0;
+  }
+  to {
+    max-height: 200px;
+  }
+}
+
+/* ---- gutter ---- */
+.strip__gutter {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s1);
+  height: 100%;
+  min-height: var(--row-h);
+  padding: var(--s1) var(--s1) var(--s1) var(--s1);
+  border-left: 3px solid var(--strip-hue, var(--line));
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+  cursor: grab;
+  user-select: none;
+}
+.strip__gutter:hover {
+  background: var(--raised);
+}
+.strip__gutter:focus-visible {
+  outline-offset: -2px;
+}
+.strip__handle {
+  color: var(--text-faint);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-data);
+  letter-spacing: -0.2em;
+  width: 10px;
+  flex: none;
+}
+.strip__names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.strip__id {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.strip__meta {
+  display: flex;
+  gap: var(--s2);
+  color: var(--text-dim);
+}
+.strip__slot {
+  color: var(--text-faint);
+}
+.strip__remove {
+  position: absolute;
+  top: var(--s1);
+  right: var(--s1);
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r1);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: var(--fs-micro);
+  line-height: 18px;
+  opacity: 0;
+}
+.strip__gutter:hover .strip__remove,
+.strip__gutter:focus-within .strip__remove {
+  opacity: 1;
+}
+.strip__remove:hover {
+  background: var(--line);
+  color: var(--text);
+}
+
+/* ---- plot ---- */
+.strip__plot {
+  position: relative;
+  min-width: 0;
+}
+.strip__canvas {
+  width: 100%;
+  height: 100%;
+}
+.strip__empty {
+  position: absolute;
+  left: var(--s3);
+  top: var(--s2);
+}
+.strip__xchip {
+  position: absolute;
+  transform: translateX(-50%);
+  padding: 0 var(--s1);
+  border-radius: var(--r1);
+  background: var(--raised);
+  border: 1px solid var(--rule);
+  color: var(--text);
+  white-space: nowrap;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+/* ---- readout ---- */
+.strip__readout {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: var(--s1) var(--s2) 0 0;
+  border-left: 1px solid var(--line);
+  height: 100%;
+  min-height: var(--row-h);
+  background: var(--bg);
+}
+.strip__rd-cur {
+  color: var(--strip-hue, var(--text));
+}
+.strip__rd-best {
+  color: var(--text-dim);
+}
+.strip__rd-delta {
+  color: var(--text-dim);
+  font-size: var(--fs-micro);
+}
+
+/* ---- resize handle (bottom edge) ---- */
+.strip__resize {
+  position: absolute;
+  left: var(--strip-gutter-w);
+  right: 0;
+  bottom: -3px;
+  height: 6px;
+  cursor: ns-resize;
+  z-index: 2;
+}
+
+/* ---- states ---- */
+.strip--selected {
+  outline: 1px solid var(--focus);
+  outline-offset: -1px;
+  z-index: 1;
+}
+.strip--dragging {
+  opacity: 0.4;
+}
+.strip--drop-before::before,
+.strip--drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 3;
+  pointer-events: none;
+}
+.strip--drop-before::before {
+  top: -1px;
+}
+.strip--drop-after::after {
+  bottom: -1px;
+}
+.strip--flash .strip__gutter {
+  animation: strip-flash var(--dur-flash) linear 2;
+}
+@keyframes strip-flash {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+  50% {
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+}
+
+/* ---- placeholder row ---- */
+.strip--placeholder {
+  grid-template-columns: 1fr;
+}
+.strip--placeholder .strip__gutter {
+  border-left-color: var(--line);
+  border-right: 0;
+  background: var(--bg);
+  align-items: center;
+}
+.strip__placeholder-text {
+  flex: 1;
+  color: var(--text-faint);
+}
+
+/* ---- uPlot overrides (tokens) ---- */
+.strips .uplot {
+  font-family: var(--font-mono);
+}
+.strips .u-cursor-x {
+  border-right: 1px solid var(--cursor);
+}
+.strips--pinned .u-cursor-x {
+  border-right: 1px solid var(--text);
+}
+.strips .u-select {
+  background: color-mix(in srgb, var(--focus) 14%, transparent);
+}
+.strips .u-over {
+  cursor: crosshair;
+}

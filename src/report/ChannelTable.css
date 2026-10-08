@@ -1,0 +1,170 @@
+/* Channel table (design-system "Channel table"). Tokens only. */
+.ct {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  background: var(--panel);
+}
+.ct__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  border-bottom: 1px solid var(--line);
+}
+.ct__title {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: var(--s1);
+}
+.ct__filter {
+  flex: 1;
+  min-width: 0;
+  height: var(--control-h-compact);
+  padding: 0 var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  background: var(--raised);
+  color: var(--text);
+}
+.ct__filter::placeholder {
+  color: var(--text-faint);
+}
+.ct__slot {
+  border-bottom: 1px solid var(--line);
+}
+.ct__scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.ct__table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+.ct__table th,
+.ct__table td {
+  height: var(--row-h);
+  padding: 0 var(--s1);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  text-align: left;
+  font-weight: 400;
+}
+.ct__table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--panel);
+  color: var(--text-dim);
+}
+.ct__table thead tr + tr th {
+  top: 16px;
+}
+.ct__group th {
+  border-bottom: 0;
+  height: 16px;
+  line-height: 16px;
+}
+.ct__grp {
+  text-align: center !important;
+  color: var(--text-faint) !important;
+  letter-spacing: var(--ls-h2);
+  border-bottom: 1px solid var(--line) !important;
+}
+.ct__grp--best,
+.ct__best-first {
+  border-left: 1px solid var(--line);
+}
+.ct__sort {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+}
+.ct__th--active {
+  color: var(--text) !important;
+}
+.ct__num {
+  min-width: 44px;
+  text-align: right !important;
+  color: var(--text);
+}
+.ct__unit {
+  color: var(--text-dim);
+}
+.ct__id {
+  color: var(--text);
+  max-width: 124px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Sticky first columns: checkbox + channel id stay put while stats scroll sideways. */
+.ct__stick {
+  position: sticky;
+  z-index: 1;
+  background: var(--panel);
+}
+.ct__table thead .ct__stick {
+  z-index: 3;
+}
+.ct__stick--0 {
+  left: 0;
+  width: 28px;
+  min-width: 28px;
+  padding: 0 0 0 var(--s1) !important;
+}
+.ct__stick--1 {
+  left: 28px;
+  border-right: 1px solid var(--line);
+}
+.ct__row {
+  cursor: pointer;
+}
+.ct__row:hover td,
+.ct__row:hover th {
+  background: var(--raised);
+}
+.ct__row--on .ct__id {
+  color: var(--text);
+}
+.ct__row:not(.ct__row--on) .ct__id {
+  color: var(--text-dim);
+}
+.ct__chk {
+  display: table-cell;
+}
+.ct__chk input {
+  margin: 0;
+  vertical-align: middle;
+  accent-color: var(--focus);
+  width: 12px;
+  height: 12px;
+}
+.ct__swatch {
+  display: inline-block;
+  width: 3px;
+  height: 12px;
+  margin-right: 4px;
+  vertical-align: middle;
+  background: transparent;
+}
+.ct__spacer td {
+  padding: 0;
+  border: 0;
+  height: auto;
+}
+.ct__none {
+  padding: var(--s3);
+}
+.ct__table--nobest .ct__grp--best {
+  display: none;
+}
