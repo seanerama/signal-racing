@@ -95,14 +95,19 @@ export function getProgress(): Record<LevelId, LevelProgress> {
   const v1 = load<unknown>(PROGRESS_KEY, 1, null);
   if (v1 === null) return {} as Record<LevelId, LevelProgress>;
   const migrated = sanitizeAll(v1, migrateV1Entry);
-  log.warn('progress: migrated version 1 to 2; scores (runs left) discarded, runs to target starts fresh');
+  log.warn(
+    'progress: migrated version 1 to 2; scores (runs left) discarded, runs to target starts fresh',
+  );
   save(PROGRESS_KEY, PROGRESS_VERSION, migrated);
   return migrated;
 }
 
 /** Runs to target for a session (the score); null if it has not met the target. */
 export function scoreOf(session: LevelSession): number | null {
-  return session.runsToTarget?.value ?? firstPassIndex(session.level, session.runs.value, session.grid.value);
+  return (
+    session.runsToTarget?.value ??
+    firstPassIndex(session.level, session.runs.value, session.grid.value)
+  );
 }
 
 /** What has already been folded into progress, per session. */

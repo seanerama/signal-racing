@@ -57,7 +57,7 @@ describe('grip circle helpers', () => {
     expect(trailWindow([], 3)).toEqual([0, -1]);
   });
   it('layout: two circles side by side; lateral right, drive up', () => {
-    const l = circleLayout(400, 96);
+    const l = circleLayout(400, 160);
     expect(l.front.cx).toBeLessThan(l.rear.cx);
     expect(l.front.cy).toBe(l.rear.cy);
     expect(l.front.r).toBeGreaterThan(10);

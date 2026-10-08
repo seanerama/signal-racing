@@ -12,7 +12,7 @@
  * Series layout of every strip: `[x, ...history, best, current]` (best first, so it is drawn
  * underneath). The current series' path can be cut at the playhead (real-time playback).
  */
-import uPlot from 'uplot';
+import type uPlot from 'uplot';
 import type { StripOptionsArgs } from './types';
 
 /** Width of the y-axis tick column, identical on every strip so plot areas line up. */
@@ -171,16 +171,19 @@ function axisFont(): string {
 }
 
 /**
- * A linear path builder whose drawing stops at `limit()` (a sample index; `Infinity` = draw it
- * all). Used for the current run during playback: the strip grows left to right while the
- * reference stays complete. Slicing the index range, not copying data, keeps a frame cheap.
+ * Wraps a path builder (uPlot's linear one) so drawing stops at `limit()` (a sample index;
+ * `Infinity` = draw it all). Used for the current run during playback: the strip grows left to
+ * right while the reference stays complete. Slicing the index range, not copying data, keeps a
+ * frame cheap.
  */
-export function progressivePaths(limit: () => number): uPlot.Series.PathBuilder {
-  const linear = uPlot.paths?.linear?.();
+export function progressivePaths(
+  base: uPlot.Series.PathBuilder | null | undefined,
+  limit: () => number,
+): uPlot.Series.PathBuilder {
   return (u, seriesIdx, idx0, idx1) => {
     const lim = limit();
     const end = Number.isFinite(lim) ? Math.max(idx0, Math.min(idx1, Math.floor(lim))) : idx1;
-    return linear ? linear(u, seriesIdx, idx0, end) : null;
+    return base ? base(u, seriesIdx, idx0, end) : null;
   };
 }
 
@@ -193,6 +196,8 @@ export function buildStripOptions(
   args: StripOptionsArgs & {
     minSpan?: number;
     limit?: () => number;
+    /** The base path builder `limit` wraps (Strip passes `uPlot.paths.linear()`). */
+    linear?: uPlot.Series.PathBuilder | null;
     xUnit?: string;
     bounds?: [number, number];
   },
@@ -264,7 +269,7 @@ export function buildStripOptions(
     spanGaps: false,
     points: { show: false },
   };
-  if (args.limit) current.paths = progressivePaths(args.limit);
+  if (args.limit) current.paths = progressivePaths(args.linear, args.limit);
 
   return {
     width: 600,

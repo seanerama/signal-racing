@@ -199,14 +199,6 @@ export function TrackView({
             ? poseAt(best, alignedBestIndex(current, best, idx, axis), geometry)
             : null,
         showCar: !!current,
-        caption: colouring
-          ? undefined
-          : current
-            ? best
-              ? 'RACING LINE · SPEED VS BEST'
-              : 'RACING LINE'
-            : 'NO RUN YET',
-        legend: !!current && !!best && !colouring,
       };
       drawScene(ctx, scene);
       canvas.dataset['cursorIdx'] = String(idx);
@@ -226,6 +218,23 @@ export function TrackView({
       <canvas ref={canvasRef} class="trackview__canvas" aria-hidden="true" />
       <div class="trackview__head">
         <span class="trackview__title h2">Track</span>
+        {!colouring && (
+          <span class="trackview__key" data-testid="trackview-key">
+            {!current ? (
+              'no run yet'
+            ) : best ? (
+              <>
+                <span class="trackview__swatch trackview__swatch--faster" aria-hidden="true" />
+                faster
+                <span class="trackview__swatch trackview__swatch--slower" aria-hidden="true" />
+                slower
+                <span class="trackview__vs">than best</span>
+              </>
+            ) : (
+              'racing line'
+            )}
+          </span>
+        )}
         {colouring && legendQ && (
           <span class="trackview__legend" data-testid="trackview-legend">
             <span class="trackview__legend-id">{colouring.id}</span>

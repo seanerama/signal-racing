@@ -114,7 +114,7 @@
 .rh__line1 {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: var(--s3) var(--s7);
   min-width: 0;
 }
@@ -140,7 +140,15 @@
   display: inline-flex;
   align-items: baseline;
   gap: var(--s2);
+  min-height: var(--lh-xl);
   white-space: nowrap;
+}
+/* Smaller values sit on the same bottom line as the large time. */
+.rh__value > .delta,
+.rh__value > .rh__metric-m,
+.rh__value > .rh__hints,
+.rh__value > .rh__pending {
+  align-self: flex-end;
 }
 .rh__time {
   color: var(--text);

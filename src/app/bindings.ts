@@ -28,9 +28,7 @@ export function readPlaybackFlag(
 }
 
 declare global {
-  var __SIGNAL_PLAYBACK__:
-    | { stats: typeof frameStats; reset: typeof resetFrameStats }
-    | undefined;
+  var __SIGNAL_PLAYBACK__: { stats: typeof frameStats; reset: typeof resetFrameStats } | undefined;
 }
 
 export function installAppBindings(): () => void {

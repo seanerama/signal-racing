@@ -31,6 +31,31 @@
 .trackview__title {
   color: var(--text);
 }
+.trackview__key {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+}
+.trackview__swatch {
+  display: inline-block;
+  width: 12px;
+  height: 2px;
+  margin-left: 4px;
+}
+.trackview__swatch--faster {
+  background: var(--gain);
+}
+.trackview__swatch--slower {
+  background: var(--loss);
+}
+.trackview__vs {
+  margin-left: 2px;
+}
 .trackview__legend {
   flex: 1;
   min-width: 0;

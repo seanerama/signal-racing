@@ -223,6 +223,7 @@ export function Strip(props: StripProps) {
       xUnit: unitLabel(axis === 'time' ? 'time' : 'distance', units),
       // Playback: the current trace stops at the playhead; the reference stays complete.
       limit: () => playhead.peek() ?? Infinity,
+      linear: uPlot.paths?.linear?.() ?? null,
     });
     if (segBand && opts.axes?.[0]) {
       opts.axes[0].size = X_AXIS_H + X_AXIS_SEG_H;

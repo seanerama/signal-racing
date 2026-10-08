@@ -21,8 +21,8 @@ import type { TrackGeometry } from '@/engine/types';
 export const TRACK_PAD = 18;
 /** Top padding: room for the view's header row (title, legend) above the path. */
 export const TRACK_PAD_TOP = 36;
-/** Bottom padding: room for the caption / legend line. */
-export const TRACK_PAD_BOTTOM = 30;
+/** Bottom padding: room for the START / FINISH labels under the road. */
+export const TRACK_PAD_BOTTOM = 22;
 /** Car block, scaled from 5.0 × 2.0 m, never smaller than 10 × 4 px (hit-testing, tests). */
 export const BLOCK_LEN_M = 5;
 export const BLOCK_WID_M = 2;

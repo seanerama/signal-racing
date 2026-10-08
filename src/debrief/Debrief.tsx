@@ -187,8 +187,8 @@ export function Debrief({
     <section class="db" data-testid="debrief">
       <header class="db__head">
         <div>
-          <span class="micro dim">{`${level.id} · DEBRIEF`}</span>
-          <h1 class="h1">{level.title}</h1>
+          <span class="meta">{`${level.id} · Debrief`}</span>
+          <h1 class="display db__title">{level.title}</h1>
         </div>
         <div class="db__actions">
           <a

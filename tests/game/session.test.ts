@@ -4,12 +4,11 @@ import { SimInputError } from '@/engine/errors';
 import type { Outcome, Setup } from '@/engine/types';
 import { clearGridCache } from '@/game/grid-cache';
 import {
-  BudgetError,
   bestAchievableGap,
   compromiseGap,
+  firstPassIndex,
   gapPassLimit,
   runPasses,
-  scoreAtPass,
   scoreValue,
   startLevel,
 } from '@/game/session';
@@ -51,10 +50,12 @@ describe('level session', () => {
     const s = await ready();
     expect(s.status.value).toBe('ready');
     expect(s.gridProgress.value).toBe(1);
-    expect(s.runsLeft.value).toBe(STUB_A2.runBudget);
+    expect(s.runsUsed.value).toBe(0);
+    expect(s.hintsOpened.value).toBe(0);
+    expect(s.runsToTarget.value).toBeNull();
   });
 
-  it('budget accounting: 2 runs + 2 hint tiers at [1,1,1] → runsUsed 4', async () => {
+  it('hints are free but counted (Stage 10): 2 runs + 2 tiers → runsUsed 2, hintsOpened 2', async () => {
     const s = await ready();
     const r1 = await s.run(SPIN);
     expect(r1.hints[0]?.ruleId).toBe('wheelspin');
@@ -63,11 +64,11 @@ describe('level session', () => {
     expect(s.hintTiersOpened.value).toBe(1); // same top rule → counter kept
     expect(s.openHintTier()?.ruleId).toBe('wheelspin');
     expect(s.hintTiersOpened.value).toBe(2);
-    expect(s.runsUsed.value).toBe(4);
-    expect(s.runsLeft.value).toBe(STUB_A2.runBudget - 4);
+    expect(s.runsUsed.value).toBe(2);
+    expect(s.hintsOpened.value).toBe(2);
   });
 
-  it('a failed simulation (forced SimInputError) does not consume budget', async () => {
+  it('a failed simulation (forced SimInputError) is not counted', async () => {
     const s = await ready();
     await expect(s.run(BAD)).rejects.toBeInstanceOf(SimInputError);
     expect(s.runsUsed.value).toBe(0);
@@ -77,33 +78,37 @@ describe('level session', () => {
     expect(s.runsUsed.value).toBe(1);
   });
 
-  it('rejects runs when none are left; status exhausted', async () => {
+  it('unlimited runs (Stage 10): runBudget is ignored and the session is never exhausted', async () => {
     const s = await ready({ ...STUB_A2, runBudget: 1 });
     await s.run(SPIN);
-    expect(s.status.value).toBe('exhausted');
-    await expect(s.run(SPIN)).rejects.toBeInstanceOf(BudgetError);
+    expect(s.status.value).toBe('ready');
+    const r2 = await s.run(SPIN);
+    const r3 = await s.run(SPIN);
+    expect([r2.index, r3.index]).toEqual([2, 3]);
+    expect(s.runsUsed.value).toBe(3);
+  });
+
+  it('hint cost in the config is ignored: every tier opens after one run', async () => {
+    const s = await ready({ ...STUB_A2, runBudget: 1, hintCost: [1, 2, 1] });
+    await s.run(SPIN);
+    expect(s.openHintTier()).not.toBeNull();
+    expect(s.openHintTier()).not.toBeNull();
+    expect(s.openHintTier()).not.toBeNull();
+    expect(s.hintTiersOpened.value).toBe(3);
+    expect(s.hintsOpened.value).toBe(3);
     expect(s.runsUsed.value).toBe(1);
   });
 
-  it('opening a tier when runsLeft < cost is refused', async () => {
-    const s = await ready({ ...STUB_A2, runBudget: 3, hintCost: [1, 2, 1] });
-    await s.run(SPIN); // runsLeft 2
-    expect(s.openHintTier()).not.toBeNull(); // cost 1 → runsLeft 1
-    expect(s.openHintTier()).toBeNull(); // cost 2 > 1: refused
-    expect(s.runsUsed.value).toBe(2);
-    expect(s.hintTiersOpened.value).toBe(1);
-  });
-
   it('no hint without a fired rule; at most 3 tiers', async () => {
-    const s = await ready({ ...STUB_A2, runBudget: 10 });
+    const s = await ready();
     expect(s.openHintTier()).toBeNull();
     await s.run(SPIN);
     expect([s.openHintTier(), s.openHintTier(), s.openHintTier()].every(Boolean)).toBe(true);
     expect(s.openHintTier()).toBeNull();
-    expect(s.runsUsed.value).toBe(4);
+    expect(s.hintsOpened.value).toBe(3);
   });
 
-  it('a new run with a different top rule resets the tier counter; spent runs stay spent', async () => {
+  it('a new run with a different top rule resets the tier counter; opened hints stay counted', async () => {
     const s = await ready();
     await s.run(SPIN);
     s.openHintTier();
@@ -112,18 +117,21 @@ describe('level session', () => {
     const r2 = await s.run(opt);
     expect(r2.hints).toEqual([]); // the optimum fires no fault
     expect(s.hintTiersOpened.value).toBe(0);
-    expect(s.runsUsed.value).toBe(3);
+    expect(s.hintsOpened.value).toBe(1);
   });
 
-  it('passing: optimum run → passed; best; score at pass; telemetry built against best', async () => {
+  it('passing: optimum run → passed; best; runs to target and hints at pass; telemetry built against best', async () => {
     const s = await ready();
     const r1 = await s.run(SPIN);
+    s.openHintTier();
     expect(s.best.value).toBe(r1);
     const r2 = await s.run(s.grid.value!.optimum.setup);
     expect(r2.outcome.totalTime).toBeLessThanOrEqual(s.grid.value!.target);
     expect(s.status.value).toBe('passed');
     expect(s.best.value).toBe(r2);
-    expect(scoreAtPass(s)).toBe(STUB_A2.runBudget - 2);
+    expect(s.runsToTarget.value).toBe(2);
+    expect(s.hintsAtPass.value).toBe(1);
+    expect(firstPassIndex(s.level, s.runs.value, s.grid.value)).toBe(2);
     // r2 was built with best = r1, so delta_best is non-trivial; r1 had no best.
     const d2 = r2.telemetry.getClean('delta_best');
     expect(d2.some((v) => Math.abs(v) > 1e-3)).toBe(true);
@@ -131,9 +139,11 @@ describe('level session', () => {
     expect(r1.seed).not.toBe(r2.seed);
     expect(r2.setup).toEqual({ ...s.grid.value!.optimum.setup });
     expect(r2.summary.clean.speed).toBeDefined();
-    // Running on after passing does not change the score.
+    // Running on (and opening hints) after passing does not change the score.
     await s.run(SPIN);
-    expect(scoreAtPass(s)).toBe(STUB_A2.runBudget - 2);
+    s.openHintTier();
+    expect(s.runsToTarget.value).toBe(2);
+    expect(s.hintsAtPass.value).toBe(1);
     expect(s.status.value).toBe('passed');
   });
 

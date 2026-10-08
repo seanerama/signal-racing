@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/preact';
+import { act, cleanup, render, screen } from '@testing-library/preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as TrackDraw from '@/report/track-draw';
 import type { Scene } from '@/report/track-draw';
@@ -15,8 +15,9 @@ vi.mock('@/report/track-draw', async (orig) => {
 });
 
 const { TrackView, alignedBestIndex } = await import('@/report/TrackView');
-const { cursorIdx, replaying, resetCursor, startReplay, stopReplay } =
-  await import('@/report/cursor-store');
+const { cursorIdx, resetCursor, startReplay, stopReplay } = await import('@/report/cursor-store');
+const { playState, resetPlayback, startPlayback } = await import('@/report/playback');
+const { deltaClass } = await import('@/report/track-draw');
 const { installFixtureChannelMeta, makeReportFixture } = await import('@/report/__fixtures__');
 
 beforeAll(() => {
@@ -96,41 +97,45 @@ describe('TrackView', () => {
     expect(legend.textContent).toContain('g');
   });
 
-  it('Replay sweeps the cursor in real time and stops at the end', () => {
+  it('playback (Stage 10) drives the car and draws the racing line only up to it', () => {
     vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
     const fx = renderView();
-    fireEvent.click(screen.getByRole('button', { name: /Replay/ }));
-    expect(replaying.value).toBe(true);
+    void act(() => {
+      startPlayback({ runIndex: 1, n: fx.current.n, dt: fx.current.dt, gating: true });
+    });
+    expect(playState.value).toBe('playing');
     void act(() => {
       vi.advanceTimersByTime(1000);
     });
     // ~1 s at 1× = ~100 samples at dt 0.01.
-    expect(cursorIdx.value).toBeGreaterThanOrEqual(90);
-    expect(cursorIdx.value).toBeLessThanOrEqual(101);
+    const idx = cursorIdx.value!;
+    expect(idx).toBeGreaterThanOrEqual(90);
+    expect(idx).toBeLessThanOrEqual(101);
+    const mid = draws.at(-1)!;
+    expect(mid.lineUpTo).toBeCloseTo(fx.current.s[idx]!, 3);
+    expect(mid.current.x).toBeCloseTo(fx.current.getClean('pos_x')[idx]!, 4);
     void act(() => {
       vi.advanceTimersByTime(60_000);
     });
-    expect(cursorIdx.value).toBe(fx.current.n - 1);
-    expect(replaying.value).toBe(false);
+    expect(playState.value).toBe('idle');
+    expect(draws.at(-1)!.lineUpTo).toBeNull();
+    resetPlayback();
   });
 
-  it('Shift+click replays at 4×; Esc stops', () => {
-    vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'performance'] });
-    renderView();
-    fireEvent.click(screen.getByRole('button', { name: /Replay/ }), { shiftKey: true });
-    void act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-    expect(cursorIdx.value).toBeGreaterThanOrEqual(380);
-    void act(() => {
-      fireEvent.keyDown(window, { key: 'Escape' });
-    });
-    expect(replaying.value).toBe(false);
-    const idx = cursorIdx.value;
-    void act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-    expect(cursorIdx.value).toBe(idx);
+  it('the racing line is coloured by speed against the best run (lime faster, orange slower)', () => {
+    const fx = renderView();
+    const scene = draws.at(-1)!;
+    expect(scene.lineDelta).not.toBeNull();
+    // The fixture's best run is faster, so most metres read slower (negative delta).
+    const d = Array.from(scene.lineDelta!).filter((v) => Number.isFinite(v));
+    expect(d.length).toBeGreaterThan(10);
+    expect(d.filter((v) => deltaClass(v) < 0).length).toBeGreaterThan(0);
+    expect(deltaClass(0.6)).toBe(1);
+    expect(deltaClass(-0.6)).toBe(-1);
+    expect(deltaClass(0.2)).toBe(0);
+    expect(deltaClass(NaN)).toBe(0);
+    expect(fx.best).toBeTruthy();
+    expect(screen.getByTestId('trackview-key').textContent).toContain('faster');
   });
 });
 

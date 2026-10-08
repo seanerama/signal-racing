@@ -35,14 +35,22 @@ describe('pipeline (Node, handler adapter)', () => {
     expect(rec.outcome.totalTime).toBeLessThanOrEqual(session.grid.value!.target);
     expect(session.grid.value!.optimum).toEqual(grid.optimum);
     expect(session.status.value).toBe('passed');
-    expect(scoreOf(session)).toBe(STUB_A2.runBudget - 1);
+    // Stage 10: the score is runs to target (here the first run), with no hints opened.
+    expect(scoreOf(session)).toBe(1);
+    expect(session.hintsAtPass.value).toBe(0);
 
     recordResult('A2', session);
     const p = getProgress().A2;
-    expect(p).toMatchObject({ passed: true, bestScore: STUB_A2.runBudget - 1, attempts: 1 });
+    expect(p).toMatchObject({
+      passed: true,
+      bestRunsToTarget: 1,
+      hintsOpenedThen: 0,
+      attempts: 1,
+      runs: 1,
+    });
     expect(p.bestTime).toBe(rec.outcome.totalTime);
     expect(JSON.parse(store.getItem('signal.v1.progress')!)).toMatchObject({
-      v: 1,
+      v: 2,
       data: { A2: { passed: true } },
     });
     expect(isUnlocked('A3')).toBe(true);

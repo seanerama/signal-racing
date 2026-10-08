@@ -29,12 +29,7 @@ export interface BriefModalProps {
 export function BriefModal({ level, target, progress, units, onBegin, started }: BriefModalProps) {
   const locked = Object.entries(level.lockedLevers) as Array<[keyof typeof LEVER_SHORT, number]>;
   return (
-    <Modal
-      label={`Brief: ${level.id} ${level.title}`}
-      onClose={onBegin}
-      testId="brief"
-      width={720}
-    >
+    <Modal label={`Brief: ${level.id} ${level.title}`} onClose={onBegin} testId="brief" width={720}>
       <div class="brief">
         <div class="brief__head">
           <span class="meta">{`${level.id} · Phase ${level.phase} · Brief`}</span>
