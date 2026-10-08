@@ -66,6 +66,16 @@ test.describe('single-file build from file://', () => {
 });
 
 test.describe('meeting demo on the single-file build, offline', () => {
+  test('pre-meeting checklist: A1 runs from file:// offline', async ({ page, context }) => {
+    await context.setOffline(true);
+    await page.goto(`${pathToFileURL(SINGLE).href}#/level/A1`);
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await page.getByTestId('begin').click();
+    await page.getByTestId('run-button').click();
+    await expect(page.getByTestId('rh-time')).toHaveText(/^\d+\.\d{3}/, { timeout: 30_000 });
+  });
+
   test('the signal.md demo path from file:// with the network blocked', async ({
     page,
     context,
