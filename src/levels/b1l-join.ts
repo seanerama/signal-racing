@@ -276,6 +276,7 @@ export const B1L: LevelConfig = {
   passOn: 'any_run',
   scoreTarget: 'compromise_gap',
   segmentFloorSource: 'engine_optimum',
+  surfaceLevers: ['wing', 'weight_dist'],
   debrief: {
     physics: [
       'Drag grows with v² and with the wing, so on a kilometre of straight a high wing costs time on every metre: `drag_force` caps `top_speed` long before the braking point.',

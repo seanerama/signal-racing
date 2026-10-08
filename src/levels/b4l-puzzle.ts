@@ -106,6 +106,8 @@ export const B4L: LevelConfig = {
   scoreTarget: 'time',
   assist: true,
   segmentFloorSource: 'engine_optimum',
+  // Stage 11: one wheelspin, two levers (the ramp and the rear weight).
+  surfaceLevers: ['weight_dist', 'throttle_ramp'],
   artifacts: [
     // Stage 9 "Make the call": a one-sample sensor spike mid-straight, where the rear tire is
     // only at its normal driven slip. Sensor layer only; disclosed on the Model page.

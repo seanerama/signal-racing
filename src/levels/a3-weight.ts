@@ -321,6 +321,8 @@ export const A3: LevelConfig = {
   conditions: DRY,
   passOn: 'any_run',
   scoreTarget: 'time',
+  // Stage 11: the surface shows the level's lever against the ramp it trades with.
+  surfaceLevers: ['weight_dist', 'throttle_ramp'],
   debrief: {
     physics: [
       'Acceleration moves load onto the rear axle and braking moves it onto the front, by m·a·h/L, so `load_front` and `load_rear` cross every time the car changes from driving to braking.',

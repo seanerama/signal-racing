@@ -112,6 +112,13 @@ describe.each(LEVELS.map((l) => [l.id, l] as const))('%s config', (_id, level) =
     expect(all).toEqual(new Set(['throttle_ramp', 'tire_pressure', 'weight_dist', 'wing']));
   });
 
+  it('surface levers (Stage 11), when set, are two different unlocked levers', () => {
+    if (!level.surfaceLevers) return;
+    const [a, b] = level.surfaceLevers;
+    expect(a).not.toBe(b);
+    for (const id of [a, b]) expect(level.levers.map((l) => l.id)).toContain(id);
+  });
+
   it('has fault and headroom rules with unique ids (A1 has no grip limit, so no fault)', () => {
     const ids = level.hintRules.map((r) => r.id);
     expect(new Set(ids).size).toBe(ids.length);
