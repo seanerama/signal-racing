@@ -70,7 +70,7 @@ export interface CarParams {
   cl0A: number;
   /** m², 0.4: wing-dependent lift coefficient in `ClA = cl0A + klA·w`. */
   klA: number;
-  /** b, 0.55: share of downforce on the rear axle. */
+  /** b, 0.48: share of downforce on the rear axle (Stage 11; was 0.55). */
   aeroBalanceRear: number;
   /** 1.6: peak tire friction coefficient. */
   muPeak: number;
@@ -84,13 +84,13 @@ export interface CarParams {
   trackWidth: number;
   /** 0.015: rolling resistance coefficient. */
   crr: number;
-  /** N, 13_000: total driver brake demand at full pedal. */
+  /** N, 11_500: total driver brake demand at full pedal (Stage 11; was 13_000). */
   brakeForceMax: number;
-  /** 0.60: front brake bias (fixed in the meeting cut). */
+  /** 0.70: front brake bias, fixed in the meeting cut (Stage 11; was 0.60). */
   brakeBiasFront: number;
-  /** bar, 1.65: optimal tire pressure (pressure → μ bell). */
+  /** bar, 1.7: optimal tire pressure, pressure → μ bell (Stage 11; was 1.65). */
   pOpt: number;
-  /** bar, 0.9: width of the pressure → μ bell. */
+  /** bar, 0.4: width of the pressure → μ bell (Stage 11; was 0.9). */
   sigmaP: number;
   /** °C, 90: optimal tire temperature. */
   tOpt: number;

@@ -5,8 +5,9 @@
  *
  * Direction note: in this engine a LONGER ramp reduces wheelspin, so tier 3 says "Lengthen".
  */
-import type { HintRule } from '@/hints/types';
+import type { HintCtx, HintRule } from '@/hints/types';
 import type { RunSummary } from '@/telemetry/types';
+import { setupHeadroomRule } from '@/hints/headroom';
 import type { LevelConfig } from './types';
 import {
   AXLE_FORCES,
@@ -53,12 +54,26 @@ export function drivePeakSlip(s: RunSummary): number {
   return brake ? peakInPhase(s, 'rear_slip_ratio', brake.tStart) : cleanMax(s, 'rear_slip_ratio');
 }
 
+/**
+ * Pressure is the lever this run: it is unlocked and off the top of its bell. A slide on such a
+ * run is the tires' doing as much as the ramp's, and a longer ramp only delays the same spin
+ * (Fable finding 3: following "lengthen the ramp" at 1.9 bar made the next run slower), so the
+ * ramp rules defer to the pressure rule.
+ */
+export function pressureIsTheLever(ctx: HintCtx): boolean {
+  return (
+    ctx.level.levers.some((l) => l.id === 'tire_pressure') &&
+    pressureGripRatio(ctx) < PRESSURE_RATIO_MIN
+  );
+}
+
 /** Fault: the driven tires slid under drive (shared by A2, A4, B1L and B4L). */
 export function wheelspinRule(): HintRule {
   return {
     id: 'wheelspin',
     kind: 'fault',
-    when(s) {
+    when(s, ctx) {
+      if (pressureIsTheLever(ctx)) return null;
       const w = driveSlide(s);
       if (!w) return null;
       return {
@@ -142,6 +157,8 @@ export function rampTooGentleRule(): HintRule {
     id: 'ramp_too_gentle',
     kind: 'headroom',
     when(s, ctx) {
+      // Off the pressure peak, a shorter ramp only spins sooner: pressure first.
+      if (pressureIsTheLever(ctx)) return null;
       const ramp = gentle(s, lever(ctx.level, 'throttle_ramp').step);
       if (!ramp) return null;
       return {
@@ -205,7 +222,14 @@ export const A2: LevelConfig = {
   channelRoles: {
     ...roles('correlated', AXLE_FORCES),
     ...roles('outcome', ['segment_time', 'delta_best', 'top_speed']),
-    ...roles('causal', ['rear_slip_ratio', 'speed_diff_rl', 'wheel_speed_rl', 'mu_rear']),
+    // Stage 11: `grip_used_rear` is causal too (the pressure rule reads it): 5 of 25, 1 in 5.
+    ...roles('causal', [
+      'rear_slip_ratio',
+      'speed_diff_rl',
+      'wheel_speed_rl',
+      'mu_rear',
+      'grip_used_rear',
+    ]),
     ...roles('correlated', [
       'speed',
       'long_g',
@@ -214,7 +238,6 @@ export const A2: LevelConfig = {
       'gear',
       'drag_force',
       'wheel_speed_fl',
-      'grip_used_rear',
     ]),
     ...roles('distractor', [
       'oil_temp',
@@ -226,7 +249,7 @@ export const A2: LevelConfig = {
     ]),
   },
   defaultStrips: ['segment_time', 'speed', 'throttle', 'engine_rpm', 'gear'],
-  hintRules: [wheelspinRule(), pressureOffPeakRule(), rampTooGentleRule()],
+  hintRules: [wheelspinRule(), pressureOffPeakRule(), rampTooGentleRule(), setupHeadroomRule()],
   conditions: DRY,
   passOn: 'any_run',
   scoreTarget: 'time',
@@ -235,6 +258,6 @@ export const A2: LevelConfig = {
       'A tire can push only μ times its load; ask for more and it slides, slip ratio climbs past about 0.10 and the force drops to a fraction of its peak.',
       'The fastest launch ramps in just slowly enough that `rear_slip_ratio` never passes its peak, on a pressure that keeps `mu_rear` at the top of its bell.',
     ],
-    causal: ['rear_slip_ratio', 'speed_diff_rl', 'wheel_speed_rl', 'mu_rear'],
+    causal: ['rear_slip_ratio', 'speed_diff_rl', 'wheel_speed_rl', 'mu_rear', 'grip_used_rear'],
   },
 };

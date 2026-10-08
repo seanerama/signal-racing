@@ -99,6 +99,13 @@ export interface LevelConfig {
   /** Join levels: per-segment optimum from grid search. */
   segmentFloorSource?: 'engine_optimum';
   /**
+   * Stage 11, additive: the two unlocked levers the debrief's response surface plots, the
+   * level's own lever first. Absent, the surface picks the two with the largest marginal range,
+   * which on A3 is pressure × ramp (pressure's bell has a ~29 s cliff at its ends) and leaves out
+   * the weight lever the level teaches (Fable finding 2). Read by `src/viz3d` (Stage 10).
+   */
+  surfaceLevers?: readonly [LeverId, LeverId];
+  /**
    * Stage 9, additive (contract 04 amendment): planted SENSOR artifacts. Applied in
    * `RunTelemetry.get()` after noise on the named run; never in `getClean()`, hint rules, the
    * assist or the outcome. Disclosed on the Model page.

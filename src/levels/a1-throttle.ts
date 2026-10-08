@@ -4,6 +4,7 @@
  * causal `speed`, `long_g` and `drag_force`: the brief tells the player to pull them in from the
  * table, which is the core move of the game.
  */
+import { setupHeadroomRule } from '@/hints/headroom';
 import type { LevelConfig } from './types';
 import {
   AXLE_FORCES,
@@ -29,7 +30,7 @@ export const A1: LevelConfig = {
   track: TRACK_STRAIGHT,
   flags: FLAGS_NO_GRIP_LIMIT,
   levers: [rampLever(1.0)],
-  lockedLevers: { tire_pressure: 1.65, weight_dist: 0.45, wing: 4 },
+  lockedLevers: { tire_pressure: 1.7, weight_dist: 0.45, wing: 4 },
   runBudget: 5,
   tolerance: 0.01,
   hintCost: [1, 1, 1],
@@ -51,8 +52,10 @@ export const A1: LevelConfig = {
   channelRoles: {
     ...roles('correlated', AXLE_FORCES),
     ...roles('outcome', ['segment_time', 'delta_best']),
-    ...roles('causal', ['speed', 'long_g', 'drag_force']),
-    ...roles('correlated', ['throttle', 'engine_rpm', 'gear', 'engine_force']),
+    // Stage 11: `engine_force` is causal too (the ramp acts on it directly): 4 of 16, the
+    // spec's 1 in 4 at level 1.
+    ...roles('causal', ['speed', 'long_g', 'drag_force', 'engine_force']),
+    ...roles('correlated', ['throttle', 'engine_rpm', 'gear']),
     ...roles('distractor', ['oil_temp', 'water_temp', 'battery_voltage']),
   },
   defaultStrips: ['segment_time', 'throttle', 'engine_rpm', 'gear'],
@@ -103,6 +106,7 @@ export const A1: LevelConfig = {
         'Shorten the throttle ramp and let the car reach full power sooner; drag itself is set by speed, not by the ramp.',
       ],
     },
+    setupHeadroomRule(),
   ],
   conditions: DRY,
   passOn: 'any_run',
@@ -112,6 +116,6 @@ export const A1: LevelConfig = {
       'Acceleration is engine force minus drag, divided by mass, and drag grows with the square of speed, so `long_g` falls as `speed` rises.',
       'With unlimited grip the fastest throttle ramp is no ramp at all: any time at part throttle is acceleration lost.',
     ],
-    causal: ['speed', 'long_g', 'drag_force'],
+    causal: ['speed', 'long_g', 'drag_force', 'engine_force'],
   },
 };

@@ -23,6 +23,11 @@ describe('MODEL_EQUATIONS', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  it('row labels are unique (the Model page numbers its rows by them)', () => {
+    const rows = MODEL_EQUATIONS.map((e) => e.row);
+    expect(new Set(rows).size).toBe(rows.length);
+  });
+
   it('every equation maps to an implemented engine function', () => {
     for (const e of MODEL_EQUATIONS) {
       expect(e.impl.length, e.id).toBeGreaterThan(0);

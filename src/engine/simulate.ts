@@ -417,6 +417,9 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
       out.rolling_force = roll;
       out.power_used = fEng * v;
       out.corner_limit_speed = Number.isFinite(vLim) ? vLim : 0;
+      // Stage 11: the conditions this run was simulated under (constant within a run).
+      out.track_temp = conditions.trackTemp;
+      out.grip_multiplier = conditions.gripMultiplier;
       recorder.push(st.t, st.s, st.seg, out);
     }
 

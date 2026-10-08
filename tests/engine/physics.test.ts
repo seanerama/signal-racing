@@ -52,8 +52,9 @@ describe('row 1–2: aero', () => {
 describe('row 3–4: loads', () => {
   it('static loads split weight by d and downforce by b', () => {
     const l = staticLoads(car, 0.45, 1000);
-    expect(l.front).toBeCloseTo(0.55 * 750 * G + 0.45 * 1000, 9);
-    expect(l.rear).toBeCloseTo(0.45 * 750 * G + 0.55 * 1000, 9);
+    const b = car.aeroBalanceRear;
+    expect(l.front).toBeCloseTo(0.55 * 750 * G + (1 - b) * 1000, 9);
+    expect(l.rear).toBeCloseTo(0.45 * 750 * G + b * 1000, 9);
   });
   it('longitudinal transfer ΔN = m·a·h/L moves load rearward under acceleration', () => {
     const l = transferLoads(car, 4000, 3000, 2);

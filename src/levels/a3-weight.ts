@@ -3,13 +3,22 @@
  * Static rear weight helps the launch and costs the stop. The player watches `load_front` and
  * `load_rear` trade places under acceleration and braking. `brake_temp_front` graduates from a
  * distractor to a correlated channel here (it now moves with the braking).
+ *
+ * Stage 11 (Fable finding 2): with the brake bias fixed at 70 % front the stop has two faults, one
+ * either side of the optimum. Too little rear weight and the rears lock in the stop (and spin on
+ * the launch); too much and the fronts lock. At the optimum (wd 0.44, ramp 0.2, 1.7 bar) neither
+ * axle slides at any point, so the debrief's "neither slides" is what the model does. The
+ * tolerance is 0.75 % so the tradeoff decides the pass: at otherwise optimal settings 3 of 8
+ * weights pass (0.42, 0.44, 0.46), and at the default ramp 2 of 8.
  */
-import type { HintRule } from '@/hints/types';
+import { setupHeadroomRule } from '@/hints/headroom';
+import type { HintCtx, HintRule } from '@/hints/types';
 import type { LevelConfig } from './types';
 import {
   AT_LIMIT,
   AXLE_FORCES,
   brakeWindow,
+  carOf,
   DRY,
   FLAGS_GRIP,
   peakInPhase,
@@ -25,12 +34,27 @@ import { pressureOffPeakRule } from './a2-grip';
 type Summary = Parameters<HintRule['when']>[0];
 
 /**
- * A front lock is a fault when the fronts slide for more than this fraction of the stop. Shorter
- * locks happen in the last part of the stop, as speed and aero load run out together, and cost
- * less than the launch gains from the rear weight that causes them (Stage 6 grid data: at the
- * optimum the fronts slide for at most about a quarter of the stop).
+ * A lock is a fault when the axle slides for more than this fraction of the braking. Stage 6 had
+ * 0.3, chosen so the rule stayed quiet at an optimum whose fronts locked for 1.3 s of a 4.7 s stop
+ * (Fable finding 2: the rule was tuned around the model). With the Stage 11 brake balance the
+ * A3 optimum locks neither axle at all, so the threshold only screens out a sample or two at the
+ * very end of a stop; every real lock (0.8 s or more on A3) fires.
  */
-export const LOCK_MIN_FRACTION = 0.3;
+export const LOCK_MIN_FRACTION = 0.05;
+
+/** Weight can still move rearward (+1) or forward (−1) on this level. */
+export function weightCanMove(ctx: HintCtx, dir: 1 | -1): boolean {
+  const l = ctx.level.levers.find((x) => x.id === 'weight_dist');
+  if (!l) return false;
+  const v = ctx.setup.weight_dist;
+  return dir > 0 ? v < l.max - 1e-9 : v > l.min + 1e-9;
+}
+
+/** Brake force shares in percent, from the level's car (the bias is fixed, not a lever). */
+function biasVars(ctx: HintCtx): { front_pct: number; rear_pct: number } {
+  const b = carOf(ctx.level).brakeBiasFront;
+  return { front_pct: Math.round(b * 100), rear_pct: Math.round((1 - b) * 100) };
+}
 
 /** Front slip window (above the peak-grip slip) that overlaps braking, or null. */
 function frontSlide(s: Summary) {
@@ -72,12 +96,13 @@ export function frontLockRule(where = 'in the stop'): HintRule {
   return {
     id: 'front_lock',
     kind: 'fault',
-    when(s) {
+    when(s, ctx) {
+      if (!weightCanMove(ctx, -1)) return null;
       const f = frontLock(s);
       if (!f) return null;
       return {
         ruleId: 'front_lock',
-        vars: { peak: f.peak, t_start: f.tStart, t_end: f.tEnd },
+        vars: { peak: f.peak, t_start: f.tStart, t_end: f.tEnd, ...biasVars(ctx) },
         window: { channel: 'front_slip_ratio', tStart: f.tStart, tEnd: f.tEnd },
         channels: ['front_slip_ratio', 'load_front', 'load_rear'],
       };
@@ -88,19 +113,31 @@ export function frontLockRule(where = 'in the stop'): HintRule {
     },
     tiers: [
       '`front_slip_ratio` peaked at {peak} under braking, between {t_start:time} and {t_end:time}.',
-      'Braking moves load forward: watch `load_front` climb and `load_rear` fall the moment the brakes go on. With 60% of the brake force on the front, the fronts lock when their load cannot carry it, and a locked tire stops the car less well than a gripping one.',
+      'Braking moves load forward: watch `load_front` climb and `load_rear` fall the moment the brakes go on. With {front_pct}% of the brake force on the front, the fronts lock when their load cannot carry it, and a locked tire stops the car less well than a gripping one.',
       `Move weight distribution toward the front until \`front_slip_ratio\` stays under 0.10 ${where}.`,
     ],
   };
 }
 
-/** Fault: the rears spun on the launch, before any braking (shared by A3 and B4L). */
-export function launchSpinRule(): HintRule {
+/**
+ * Fault: the rears spun on the launch, before any braking (A3, B1L and B4L): move weight rearward.
+ *
+ * Where the throttle ramp is free as well (B1L, B4L) the same wheelspin has two cures, a longer
+ * ramp or more rear weight. `withRamp` makes the weight cure speak only when the data say rear
+ * weight is affordable: the fronts did not lock in the braking, so the front axle has load to
+ * give. It then ranks just above the ramp's `wheelspin` rule; otherwise `wheelspin` speaks alone.
+ */
+export function launchSpinRule(opts: { withRamp?: boolean } = {}): HintRule {
+  const fires = (s: Summary, ctx: HintCtx) => {
+    if (!weightCanMove(ctx, 1)) return null;
+    if (opts.withRamp && frontSlide(s)) return null;
+    return launchSpin(s);
+  };
   return {
     id: 'launch_spin',
     kind: 'fault',
-    when(s) {
-      const l = launchSpin(s);
+    when(s, ctx) {
+      const l = fires(s, ctx);
       if (!l) return null;
       return {
         ruleId: 'launch_spin',
@@ -109,9 +146,10 @@ export function launchSpinRule(): HintRule {
         channels: ['rear_slip_ratio', 'load_rear', 'load_front'],
       };
     },
-    estTimeCost(s) {
-      const l = launchSpin(s);
-      return l ? 0.1 + 0.25 * (l.tEnd - l.tStart) : 0;
+    estTimeCost(s, ctx) {
+      const l = fires(s, ctx);
+      // The wheelspin rule's estimate (same slide), plus a hair so the weight cure ranks first.
+      return l ? 0.1 + 0.25 * (l.tEnd - l.tStart) + (opts.withRamp ? 0.01 : 0) : 0;
     },
     tiers: [
       '`rear_slip_ratio` peaked at {peak} on the launch, between {t_start:time} and {t_end:time}.',
@@ -121,13 +159,58 @@ export function launchSpinRule(): HintRule {
   };
 }
 
+/** Rear slide that overlaps braking for a real part of it, or null. */
+function rearLock(s: Summary) {
+  const brake = brakeWindow(s);
+  if (!brake) return null;
+  const peak = peakInPhase(s, 'rear_slip_ratio', brake.tStart, true);
+  if (!SLIDING(peak)) return null;
+  const w = s.window('rear_slip_ratio', SLIDING);
+  if (!w || w.tEnd < brake.tStart) return null;
+  const tStart = Math.max(w.tStart, brake.tStart);
+  const frac = (w.tEnd - tStart) / Math.max(1e-6, brake.tEnd - brake.tStart);
+  return frac > LOCK_MIN_FRACTION ? { tStart, tEnd: w.tEnd, peak } : null;
+}
+
+/**
+ * Fault (Stage 11): the rears locked under braking (A3, B4L). The brake bias is fixed, so the
+ * lever is the weight split: more static rear weight keeps the rears loaded in the stop.
+ */
+export function rearLockRule(): HintRule {
+  return {
+    id: 'rear_lock',
+    kind: 'fault',
+    when(s, ctx) {
+      if (!weightCanMove(ctx, 1)) return null;
+      const l = rearLock(s);
+      if (!l) return null;
+      return {
+        ruleId: 'rear_lock',
+        vars: { peak: l.peak, t_start: l.tStart, t_end: l.tEnd, ...biasVars(ctx) },
+        window: { channel: 'rear_slip_ratio', tStart: l.tStart, tEnd: l.tEnd },
+        channels: ['rear_slip_ratio', 'load_rear', 'load_front'],
+      };
+    },
+    estTimeCost(s) {
+      const l = rearLock(s);
+      return l ? 0.05 + 0.3 * (l.tEnd - l.tStart) : 0;
+    },
+    tiers: [
+      '`rear_slip_ratio` peaked at {peak} under braking, between {t_start:time} and {t_end:time}: the rears locked.',
+      'Braking moves load off the rears: `load_rear` falls the moment the brakes go on. The brake bias is fixed with {rear_pct}% of the force on the rear, so when too little static weight sits there the rears run out of load before the fronts and lock.',
+      'Move weight distribution toward the rear until `rear_slip_ratio` stays under 0.10 in the stop.',
+    ],
+  };
+}
+
 /** Headroom: nothing slid and the fronts had grip to spare in the braking (shared by A3 and B4L). */
 export function transferHeadroomRule(): HintRule {
   return {
     id: 'transfer_headroom',
     kind: 'headroom',
-    when(s) {
-      if (launchSpin(s) || frontLock(s)) return null;
+    when(s, ctx) {
+      if (!weightCanMove(ctx, 1)) return null;
+      if (launchSpin(s) || frontLock(s) || rearLock(s)) return null;
       const brake = brakeWindow(s);
       if (!brake) return null;
       const used = peakInPhase(s, 'grip_used_front', brake.tStart, true);
@@ -155,13 +238,15 @@ export const A3: LevelConfig = {
   title: 'Weight',
   concept: 'Longitudinal load transfer',
   brief:
-    'The car launches, then brakes to a stop exactly at the end of the kilometre. Weight distribution sets how much static load sits on the rear axle; acceleration moves load rearward and braking moves it forward. Brake bias is fixed at 60% front. Find the split that serves both the launch and the stop.',
+    'The car launches, then brakes to a stop exactly at the end of the kilometre. Weight distribution sets how much static load sits on the rear axle; acceleration moves load rearward and braking moves it forward. Brake bias is fixed at 70% front, so the stop wants the axles loaded in step with it. Find the split that serves both the launch and the stop.',
   track: TRACK_LAUNCH_STOP,
   flags: FLAGS_GRIP,
-  levers: [rampLever(0.4), pressureLever(1.7), weightLever(0.4)],
+  // Stage 11: the run starts with the rear weight high (a clean launch, locking fronts).
+  levers: [rampLever(0.4), pressureLever(1.7), weightLever(0.5)],
   lockedLevers: { wing: 4 },
   runBudget: 6,
-  tolerance: 0.01,
+  // Stage 11: 0.75 % (the spec's 1 % let 4 of 8 weights pass at otherwise optimal settings).
+  tolerance: 0.0075,
   hintCost: [1, 1, 1],
   channelSet: [
     ...AXLE_FORCES,
@@ -225,14 +310,23 @@ export const A3: LevelConfig = {
     ]),
   },
   defaultStrips: ['segment_time', 'speed', 'long_g', 'throttle', 'brake'],
-  hintRules: [frontLockRule(), launchSpinRule(), transferHeadroomRule(), pressureOffPeakRule()],
+  hintRules: [
+    frontLockRule(),
+    rearLockRule(),
+    launchSpinRule(),
+    transferHeadroomRule(),
+    pressureOffPeakRule(),
+    setupHeadroomRule(),
+  ],
   conditions: DRY,
   passOn: 'any_run',
   scoreTarget: 'time',
+  // Stage 11: the surface shows the level's lever against the ramp it trades with.
+  surfaceLevers: ['weight_dist', 'throttle_ramp'],
   debrief: {
     physics: [
       'Acceleration moves load onto the rear axle and braking moves it onto the front, by m·a·h/L, so `load_front` and `load_rear` cross every time the car changes from driving to braking.',
-      'Static rear weight feeds the driven tires on the launch but starves the fronts in the stop; the fastest split sits inside the range, where neither end of the run slides.',
+      'Static rear weight feeds the driven tires on the launch, but with the brake bias fixed too much of it locks the fronts in the stop and too little locks the rears; the fastest split sits inside the range, where neither the launch nor the stop slides, and the extra rear weight that would let a shorter ramp launch cleanly is the weight that locks the fronts.',
     ],
     causal: ['load_front', 'load_rear', 'front_slip_ratio', 'rear_slip_ratio'],
   },

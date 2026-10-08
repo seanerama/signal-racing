@@ -218,7 +218,7 @@ Eleven levels in two phases. Phase A tunes single segments in isolation, one eff
 
 **A2, Grip.** The same straight with the traction limit on. The ramp from A1 now spins the rear tires at low speed, where engine force exceeds μN, and the car is slower despite full power. Tire pressure sets μ on a bell curve around an optimum. The player must find a ramp that keeps rear\_slip\_ratio under its peak and a pressure near the optimum. The key discovery is wheel speed diverging from ground speed on two strips at the same instant.
 
-**A3, Weight.** The car launches, then brakes to a stop before the end of the straight. More static rear weight gives the rear tires more grip for the launch but less front load for braking, and the fronts lock. Brake bias is fixed at 60% front. The player watches load\_front and load\_rear trade places under acceleration and braking and learns the transfer equation from the shape of the lines. This is the first level with a real tradeoff and a true optimum inside the range.
+**A3, Weight.** The car launches, then brakes to a stop before the end of the straight. More static rear weight gives the rear tires more grip for the launch but less front load for braking, and the fronts lock. Brake bias is fixed at 70% front: the fronts lock first only when rear weight exceeds 1 − bias + μh/L, so the bias must leave that threshold inside the lever range. The player watches load\_front and load\_rear trade places under acceleration and braking and learns the transfer equation from the shape of the lines. This is the first level with a real tradeoff and a true optimum inside the range.
 
 **A4, Corner.** The first lateral load. A short run-up, one constant-radius corner, a short run-out, and the driver brakes to the corner's limit speed automatically. Wing angle buys corner speed through downforce and costs exit speed through drag; on a segment this short the balance tips toward wing, which sets up the surprise in B1. The player reads lat\_g, corner\_min\_speed and exit\_speed across runs.
 
@@ -242,7 +242,7 @@ Eleven levels in two phases. Phase A tunes single segments in isolation, one eff
 
 A level is passed by hitting its target time within the run budget. The score is how many runs were left.
 
-- **Target.** The level's optimum time times a tolerance: 1.0% for A1 to A3, 0.5% from A4. The optimum is computed by grid search over the unlocked levers when the level loads, so targets are always achievable and always consistent with the model.
+- **Target.** The level's optimum time times a tolerance: 1.0% for A1 and A2, 0.75% for A3 (so the weight tradeoff decides the pass), 0.5% from A4. The optimum is computed by grid search over the unlocked levers when the level loads, so targets are always achievable and always consistent with the model.
 - **Pass.** Any single run at or under target (A1 to B2). For B3 and The Puzzle, the total stint time.
 - **Compromise gap (Phase B).** The assembled time minus the sum of the player's isolated segment bests. Reported per run and per segment. It is the number the assembly levels are about, and the Phase B target is set on it: within 0.5% of the best achievable gap.
 - **Score.** Runs remaining at the moment of passing. Each hint tier opened subtracts one. Failing to pass scores zero but still unlocks the debrief and the next level, so nobody is stuck.

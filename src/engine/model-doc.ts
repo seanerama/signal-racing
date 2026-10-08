@@ -302,7 +302,7 @@ export const MODEL_EQUATIONS: readonly ModelEquation[] = Object.freeze([
       paren(mn(1), mo('−'), sub(mi('b'), txt('f'))),
     ),
     plain: 'F_bf = β·F_brk·b_f,  F_br = β·F_brk·(1 − b_f),  β ∈ {0, 1}',
-    note: 'The driver brakes at full pedal with a fixed 60/40 front bias.',
+    note: 'The driver brakes at full pedal with a fixed 70/30 front bias.',
     impl: ['brakeDemand'],
     module: 'physics',
   },
@@ -373,7 +373,9 @@ export const MODEL_EQUATIONS: readonly ModelEquation[] = Object.freeze([
   },
   {
     id: 'rolling',
-    row: '13',
+    // The last term of row 13's equation of motion, documented on its own line (was a second
+    // "13" on the Model page).
+    row: '13a',
     title: 'Rolling resistance',
     mathml: math(F('roll'), eq, sub(mi('c'), txt('rr')), times, mi('m'), times, mi('g')),
     plain: 'F_roll = crr·m·g',
