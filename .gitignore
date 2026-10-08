@@ -1,2 +1,13 @@
+# SDD working files (not part of the product)
 sdd-output/
+
+# Secrets
 .env
+
+# Dependencies and build output
+node_modules
+dist
+dist-single
+coverage
+test-results
+playwright-report

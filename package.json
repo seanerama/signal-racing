@@ -1,0 +1,52 @@
+{
+  "name": "signal",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Signal: a racing game where telemetry is the only feedback.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:single": "vite build --config vite.single.config.ts",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:e2e": "npm run build && npm run build:single && playwright test",
+    "check": "npm run typecheck && npm run lint && npm run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@preact/signals": "2.11.2",
+    "@preact/signals-core": "1.14.4",
+    "preact": "10.29.8",
+    "three": "0.186.0",
+    "uplot": "1.6.32"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@fontsource/inter": "5.3.0",
+    "@fontsource/jetbrains-mono": "5.3.0",
+    "@playwright/test": "1.63.0",
+    "@preact/preset-vite": "2.10.6",
+    "@testing-library/preact": "3.2.4",
+    "@types/node": "22.20.4",
+    "@types/three": "0.186.0",
+    "@vitest/coverage-v8": "5.0.1",
+    "eslint": "9.39.5",
+    "eslint-import-resolver-typescript": "4.4.5",
+    "eslint-plugin-import": "2.32.0",
+    "globals": "17.12.0",
+    "jsdom": "29.1.1",
+    "prettier": "3.9.9",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.1",
+    "vite": "8.3.0",
+    "vite-plugin-singlefile": "2.3.3",
+    "vitest": "5.0.1"
+  }
+}

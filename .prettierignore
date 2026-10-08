@@ -1,0 +1,9 @@
+dist
+dist-single
+coverage
+test-results
+playwright-report
+sdd-output
+package-lock.json
+*.woff2
+signal.md
