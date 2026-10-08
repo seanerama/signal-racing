@@ -66,6 +66,19 @@ test.describe('single-file build from file://', () => {
 });
 
 test.describe('meeting demo on the single-file build, offline', () => {
+  test('the Model page renders offline (MathML, car table, sources as text)', async ({
+    page,
+    context,
+  }) => {
+    await context.setOffline(true);
+    await page.goto(`${pathToFileURL(SINGLE).href}#/model`);
+    const model = page.getByTestId('model-page');
+    await expect(model).toBeVisible();
+    expect(await model.locator('math').count()).toBeGreaterThanOrEqual(20);
+    await expect(page.getByTestId('car-table').locator('tbody tr')).toHaveCount(26);
+    await expect(page.getByTestId('sources')).toContainText('https://');
+  });
+
   test('pre-meeting checklist: A1 runs from file:// offline', async ({ page, context }) => {
     await context.setOffline(true);
     await page.goto(`${pathToFileURL(SINGLE).href}#/level/A1`);

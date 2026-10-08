@@ -35,7 +35,7 @@ First e2e run: `npx playwright install chromium`.
 Dev route `#/dev/worker` pings the sim worker and shows the round-trip time; "live grid B4L"
 times the worker search the game falls back to when a level has no precomputed target.
 
-## The meeting demo (v0.2.0)
+## The meeting demo (v0.3.0)
 
 Levels: A1–A4 (Phase A), B1L "Join: straight + fast corner" and B4L "The Puzzle" (Phase B).
 
@@ -43,9 +43,14 @@ Open `signal.html?demo=1#/level/B4L` (or `npm run preview` and `/?demo=1#/level/
 `DEMO PROFILE` chip shows while the profile is active: every level is unlocked and a recorded
 unassisted Puzzle attempt (`src/app/demo-history.json`: setups and seeds only) is re-simulated on
 load, so the debrief's with/without-assist comparison exists on a fresh laptop. Then: run at the
-defaults, scroll the channel table (219 channels), Export CSV, switch the assist on, run again.
-`tests/e2e/demo.spec.ts` and `tests/e2e/single-file.spec.ts` play exactly this path.
+defaults, scroll the channel table (223 channels), Export CSV, switch the assist on, run again.
+After run 2 the MAKE THE CALL panel asks about a planted one-sample `speed_diff_rl` spike (flag it
+and cross-check); the grip circle sits under the track view; `#/model` (ⓘ menu, level-select
+footer, debrief) documents every equation, the car and the sources. `tests/e2e/demo.spec.ts` and `tests/e2e/single-file.spec.ts` play exactly this path.
 `docs/playtest.md` is the observer's note for a first playtest.
+
+Independent educational prototype. Not affiliated with any racing team or company. The car is
+approximate and does not model any real vehicle.
 
 ## Layout and rules
 

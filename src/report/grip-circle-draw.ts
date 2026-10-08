@@ -69,11 +69,20 @@ export function axlePoint(rt: RunTelemetry, axle: Axle, i: number): GripPoint {
   );
 }
 
-/** Does this run carry what the grip circle needs? */
+/**
+ * Does this run carry what the grip circle needs? The force channels must be on the level; the
+ * budget is read from the run's clean model columns whether or not the level lists
+ * `grip_budget_*` as a channel (the circle is a model plot, not a sensor view).
+ */
 export function hasGripChannels(rt: RunTelemetry): boolean {
-  return AXLES.every((a) =>
-    [`fx_${a}`, `fy_${a}`, `grip_budget_${a}`].every((id) => rt.channelIds.includes(id)),
-  );
+  return AXLES.every((a) => {
+    if (![`fx_${a}`, `fy_${a}`].every((id) => rt.channelIds.includes(id))) return false;
+    try {
+      return rt.getClean(`grip_budget_${a}`).length === rt.n;
+    } catch {
+      return false;
+    }
+  });
 }
 
 /** Centre and radius (px) of each axle's circle: the canvas split in two halves. */
@@ -189,7 +198,7 @@ export function drawGripCircle(ctx: CanvasRenderingContext2D, s: GripScene): voi
         ctx.lineWidth = 1;
         dot(ctx, x, y, 6, null, colors.loss);
       }
-      // Grip used, right of the label.
+      // Grip used, under the label.
       ctx.fillStyle = out ? colors.loss : colors.text;
       ctx.fillText(radiusOf(a.current).toFixed(2), c.cx - c.r - 6, c.cy + 7);
     }

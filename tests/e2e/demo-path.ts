@@ -5,7 +5,9 @@
  *
  * Open the Puzzle with the demo profile → run at defaults → scroll the 200-channel table to the
  * bottom → export the CSV (download fires; header > 200 commas; units row) → assist on → run again
- * → the assist shows five rows → finish (the target) → the debrief shows the with/without numbers.
+ * → the assist shows five rows → (Stage 9) the grip circle is up and the call panel asks about run 2's
+ * spike: flag it, cross-check → finish (the target) → the debrief shows the with/without numbers
+ * and the call → the Model page.
  */
 import { readFileSync } from 'node:fs';
 import { mkdirSync } from 'node:fs';
@@ -13,7 +15,7 @@ import { resolve } from 'node:path';
 import { expect, type Page } from '@playwright/test';
 import { setLever } from './helpers';
 
-export const SHOT_DIR = resolve(process.cwd(), 'test-results/stage-8');
+export const SHOT_DIR = resolve(process.cwd(), 'test-results/stage-9');
 
 export async function shot(page: Page, name: string): Promise<void> {
   mkdirSync(SHOT_DIR, { recursive: true });
@@ -98,6 +100,19 @@ export async function playMeetingDemo(page: Page, { url, suffix }: DemoOptions):
   await table.locator('.ct__scroll').evaluate((el) => (el.scrollTop = 0));
   await shot(page, `b4l-assist${suffix}`);
 
+  // 4b. Stage 9 beats: the grip circle under the track view, and Make the call on run 2.
+  await expect(page.getByTestId('grip-circle')).toBeVisible();
+  const call = page.getByTestId('call-panel');
+  await expect(call).toBeVisible();
+  await expect(call).toContainText('speed_diff_rl');
+  await page.getByTestId('call-opt-flag').click();
+  await expect(page.getByTestId('call-result')).toContainText('The call');
+  await page.getByTestId('call-add-rear_slip_ratio').click();
+  await expect(
+    page.locator('[data-testid="strip-stack"] [data-strip="rear_slip_ratio"]'),
+  ).toHaveCount(1);
+  await shot(page, `b4l-call${suffix}`);
+
   // 5. Finish: the setup the earlier levels teach reaches the target.
   for (const [id, v] of [
     ['throttle_ramp', '0'],
@@ -119,5 +134,13 @@ export async function playMeetingDemo(page: Page, { url, suffix }: DemoOptions):
   await expect(page.getByTestId('cmp-without')).toContainText('8');
   await expect(page.getByTestId('cmp-without')).toContainText('recorded attempt (demo profile)');
   await expect(page.getByTestId('spurious-note')).toBeVisible();
+  await expect(page.getByTestId('debrief-call-verdict')).toHaveText('✓ The call.');
   await shot(page, `b4l-debrief-comparison${suffix}`);
+
+  // 7. The model page is one click from the debrief (and renders offline).
+  await page.getByTestId('debrief-model-link').click();
+  await expect(page.getByTestId('model-page')).toBeVisible();
+  expect(await page.getByTestId('model-page').locator('math').count()).toBeGreaterThanOrEqual(20);
+  await expect(page.getByTestId('disclaimer-model')).toBeVisible();
+  await shot(page, `model-page${suffix}`);
 }

@@ -20,11 +20,16 @@ const mn = (x: string | number): string => `<mn>${esc(x)}</mn>`;
 const mo = (x: string): string => `<mo>${esc(x)}</mo>`;
 const row = (...xs: string[]): string => `<mrow>${xs.join('')}</mrow>`;
 const sub = (a: string, b: string): string => `<msub>${a}${b}</msub>`;
-const sup = (a: string, b: string): string => `<msup>${a}${b}</msup>`;
+const sup = (a: string, b: string): string => {
+  // x_i² reads better as one msubsup than a superscript on a subscripted base.
+  const m = /^<msub>(.*)<\/msub>$/.exec(a);
+  return m ? `<msubsup>${m[1]}${b}</msubsup>` : `<msup>${a}${b}</msup>`;
+};
 const frac = (a: string, b: string): string => `<mfrac>${row(a)}${row(b)}</mfrac>`;
 const sqrt = (...xs: string[]): string => `<msqrt>${xs.join('')}</msqrt>`;
 const paren = (...xs: string[]): string => row(mo('('), ...xs, mo(')'));
-const txt = (x: string): string => `<mtext>${esc(x)}</mtext>`;
+/** Text; spaces become no-break spaces, since MathML trims edge whitespace in `<mtext>`. */
+const txt = (x: string): string => `<mtext>${esc(x).replace(/ /g, '\u00a0')}</mtext>`;
 /** `F` with a text subscript, e.g. F_drag. */
 const F = (s: string): string => sub(mi('F'), txt(s));
 const half = frac(mn(1), mn(2));
@@ -33,7 +38,7 @@ const v2 = sup(mi('v'), mn(2));
 const eq = mo('=');
 const times = mo('·');
 const math = (...xs: string[]): string =>
-  `<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">${row(...xs)}</math>`;
+  `<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline" displaystyle="true">${row(...xs)}</math>`;
 
 export interface ModelEquation {
   /** Stable id, e.g. `aero-coeffs`. */
@@ -115,16 +120,6 @@ export const MODEL_EQUATIONS: readonly ModelEquation[] = Object.freeze([
     plain: 'F_drag = ½ρ·CdA·v²,  F_down = ½ρ·ClA·v²',
     note: 'Both grow with the square of speed, which is why the wing matters more on fast corners and costs more on long straights.',
     impl: ['dragForce', 'downforce'],
-    module: 'physics',
-  },
-  {
-    id: 'rolling',
-    row: '13',
-    title: 'Rolling resistance',
-    mathml: math(F('roll'), eq, sub(mi('c'), txt('rr')), times, mi('m'), times, mi('g')),
-    plain: 'F_roll = crr·m·g',
-    note: 'A small constant drag from the tires deforming as they roll.',
-    impl: ['rollingForce'],
     module: 'physics',
   },
   {
@@ -375,6 +370,16 @@ export const MODEL_EQUATIONS: readonly ModelEquation[] = Object.freeze([
     note: 'One equation of motion along the path, stepped at the 100 Hz logging rate.',
     impl: ['simulate'],
     module: 'simulate',
+  },
+  {
+    id: 'rolling',
+    row: '13',
+    title: 'Rolling resistance',
+    mathml: math(F('roll'), eq, sub(mi('c'), txt('rr')), times, mi('m'), times, mi('g')),
+    plain: 'F_roll = crr·m·g',
+    note: 'A small constant drag from the tires deforming as they roll.',
+    impl: ['rollingForce'],
+    module: 'physics',
   },
   {
     id: 'wheel-speeds',
