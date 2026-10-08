@@ -37,6 +37,7 @@ export default defineConfig(
       'playwright-report/',
       'sdd-output/',
       'node_modules/',
+      '.claude/',
     ],
   },
   js.configs.recommended,

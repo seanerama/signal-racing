@@ -11,3 +11,4 @@ dist-single
 coverage
 test-results
 playwright-report
+.claude/
