@@ -59,6 +59,19 @@ describe('segment_time and segment_delta', () => {
     expect(sd[pc.n - 1]).toBeCloseTo(pc.t[pc.n - 1]! - startT[2]! - floors[2]!, 4);
   });
 
+  it('segment_delta is monotone within a segment (no standing-start hump)', () => {
+    const sd = rt.getClean('segment_delta');
+    for (let k = 0; k < 3; k++) {
+      const i0 = starts[k]!;
+      const i1 = k < 2 ? starts[k + 1]! - 1 : pc.n - 1;
+      const up = sd[i1]! >= 0;
+      for (let i = i0 + 1; i <= i1; i++) {
+        if (up) expect(sd[i]!, `segment ${k} @${i}`).toBeGreaterThanOrEqual(sd[i - 1]! - 1e-6);
+        else expect(sd[i]!, `segment ${k} @${i}`).toBeLessThanOrEqual(sd[i - 1]! + 1e-6);
+      }
+    }
+  });
+
   it('segment_delta is all NaN when the level has no floors', () => {
     const plain = createRunTelemetry({ physical: pc, channelIds: ['segment_delta'], seed: 1 });
     expect(plain.getClean('segment_delta').every(Number.isNaN)).toBe(true);

@@ -63,6 +63,90 @@ function launchSpin(s: Summary) {
   return { tStart: w.tStart, tEnd, peak };
 }
 
+/**
+ * Fault: the fronts locked for a real part of the braking (shared by A3, B1L and B4L). `where`
+ * finishes tier 3: "in the stop" on A3, "under braking" where the braking is into a corner.
+ */
+export function frontLockRule(where = 'in the stop'): HintRule {
+  return {
+    id: 'front_lock',
+    kind: 'fault',
+    when(s) {
+      const f = frontLock(s);
+      if (!f) return null;
+      return {
+        ruleId: 'front_lock',
+        vars: { peak: f.peak, t_start: f.tStart, t_end: f.tEnd },
+        window: { channel: 'front_slip_ratio', tStart: f.tStart, tEnd: f.tEnd },
+        channels: ['front_slip_ratio', 'load_front', 'load_rear'],
+      };
+    },
+    estTimeCost(s) {
+      const f = frontLock(s);
+      return f ? 0.05 + 0.3 * (f.tEnd - f.tStart) : 0;
+    },
+    tiers: [
+      '`front_slip_ratio` peaked at {peak} under braking, between {t_start:time} and {t_end:time}.',
+      'Braking moves load forward: watch `load_front` climb and `load_rear` fall the moment the brakes go on. With 60% of the brake force on the front, the fronts lock when their load cannot carry it, and a locked tire stops the car less well than a gripping one.',
+      `Move weight distribution toward the front until \`front_slip_ratio\` stays under 0.10 ${where}.`,
+    ],
+  };
+}
+
+/** Fault: the rears spun on the launch, before any braking (shared by A3 and B4L). */
+export function launchSpinRule(): HintRule {
+  return {
+    id: 'launch_spin',
+    kind: 'fault',
+    when(s) {
+      const l = launchSpin(s);
+      if (!l) return null;
+      return {
+        ruleId: 'launch_spin',
+        vars: { peak: l.peak, t_start: l.tStart, t_end: l.tEnd },
+        window: { channel: 'rear_slip_ratio', tStart: l.tStart, tEnd: l.tEnd },
+        channels: ['rear_slip_ratio', 'load_rear', 'load_front'],
+      };
+    },
+    estTimeCost(s) {
+      const l = launchSpin(s);
+      return l ? 0.1 + 0.25 * (l.tEnd - l.tStart) : 0;
+    },
+    tiers: [
+      '`rear_slip_ratio` peaked at {peak} on the launch, between {t_start:time} and {t_end:time}.',
+      'Under acceleration load moves rearward, so `load_rear` rises above its static value and `load_front` falls; the rears grip in proportion to their load. With too little static weight on the rear, the driven tires run out of load before the launch is done and spin.',
+      'Move weight distribution toward the rear until `rear_slip_ratio` stays under 0.10 on the launch.',
+    ],
+  };
+}
+
+/** Headroom: nothing slid and the fronts had grip to spare in the braking (shared by A3 and B4L). */
+export function transferHeadroomRule(): HintRule {
+  return {
+    id: 'transfer_headroom',
+    kind: 'headroom',
+    when(s) {
+      if (launchSpin(s) || frontLock(s)) return null;
+      const brake = brakeWindow(s);
+      if (!brake) return null;
+      const used = peakInPhase(s, 'grip_used_front', brake.tStart, true);
+      if (!(used < AT_LIMIT)) return null;
+      return {
+        ruleId: 'transfer_headroom',
+        vars: { used_pct: Math.round(used * 100), load: s.clean.load_front?.max ?? NaN },
+        window: { channel: 'load_front', tStart: brake.tStart, tEnd: brake.tEnd },
+        channels: ['load_front', 'grip_used_front', 'load_rear'],
+      };
+    },
+    estTimeCost: () => 0.05,
+    tiers: [
+      '`load_front` peaked at {load:force} in the stop and the fronts never used more than {used_pct}% of their grip: the stop had grip to spare.',
+      'Load the front axle does not need in the stop is load the rear could have used on the launch. Static weight moves the whole `load_rear` line up or down; braking transfer then moves load forward on top of it.',
+      'Move weight distribution toward the rear until the fronts just reach their limit in the stop.',
+    ],
+  };
+}
+
 export const A3: LevelConfig = {
   id: 'A3',
   configVersion: 1,
@@ -138,78 +222,7 @@ export const A3: LevelConfig = {
     ]),
   },
   defaultStrips: ['segment_time', 'speed', 'long_g', 'throttle', 'brake'],
-  hintRules: [
-    {
-      id: 'front_lock',
-      kind: 'fault',
-      when(s) {
-        const f = frontLock(s);
-        if (!f) return null;
-        return {
-          ruleId: 'front_lock',
-          vars: { peak: f.peak, t_start: f.tStart, t_end: f.tEnd },
-          window: { channel: 'front_slip_ratio', tStart: f.tStart, tEnd: f.tEnd },
-          channels: ['front_slip_ratio', 'load_front', 'load_rear'],
-        };
-      },
-      estTimeCost(s) {
-        const f = frontLock(s);
-        return f ? 0.05 + 0.3 * (f.tEnd - f.tStart) : 0;
-      },
-      tiers: [
-        '`front_slip_ratio` peaked at {peak} under braking, between {t_start:time} and {t_end:time}.',
-        'Braking moves load forward: watch `load_front` climb and `load_rear` fall the moment the brakes go on. With 60% of the brake force on the front, the fronts lock when their load cannot carry it, and a locked tire stops the car less well than a gripping one.',
-        'Move weight distribution toward the front until `front_slip_ratio` stays under 0.10 in the stop.',
-      ],
-    },
-    {
-      id: 'launch_spin',
-      kind: 'fault',
-      when(s) {
-        const l = launchSpin(s);
-        if (!l) return null;
-        return {
-          ruleId: 'launch_spin',
-          vars: { peak: l.peak, t_start: l.tStart, t_end: l.tEnd },
-          window: { channel: 'rear_slip_ratio', tStart: l.tStart, tEnd: l.tEnd },
-          channels: ['rear_slip_ratio', 'load_rear', 'load_front'],
-        };
-      },
-      estTimeCost(s) {
-        const l = launchSpin(s);
-        return l ? 0.1 + 0.25 * (l.tEnd - l.tStart) : 0;
-      },
-      tiers: [
-        '`rear_slip_ratio` peaked at {peak} on the launch, between {t_start:time} and {t_end:time}.',
-        'Under acceleration load moves rearward, so `load_rear` rises above its static value and `load_front` falls; the rears grip in proportion to their load. With too little static weight on the rear, the driven tires run out of load before the launch is done and spin.',
-        'Move weight distribution toward the rear until `rear_slip_ratio` stays under 0.10 on the launch.',
-      ],
-    },
-    {
-      id: 'transfer_headroom',
-      kind: 'headroom',
-      when(s) {
-        if (launchSpin(s) || frontLock(s)) return null;
-        const brake = brakeWindow(s);
-        if (!brake) return null;
-        const used = peakInPhase(s, 'grip_used_front', brake.tStart, true);
-        if (!(used < AT_LIMIT)) return null;
-        return {
-          ruleId: 'transfer_headroom',
-          vars: { used_pct: Math.round(used * 100), load: s.clean.load_front?.max ?? NaN },
-          window: { channel: 'load_front', tStart: brake.tStart, tEnd: brake.tEnd },
-          channels: ['load_front', 'grip_used_front', 'load_rear'],
-        };
-      },
-      estTimeCost: () => 0.05,
-      tiers: [
-        '`load_front` peaked at {load:force} in the stop and the fronts never used more than {used_pct}% of their grip: the stop had grip to spare.',
-        'Load the front axle does not need in the stop is load the rear could have used on the launch. Static weight moves the whole `load_rear` line up or down; braking transfer then moves load forward on top of it.',
-        'Move weight distribution toward the rear until the fronts just reach their limit in the stop.',
-      ],
-    },
-    pressureOffPeakRule(),
-  ],
+  hintRules: [frontLockRule(), launchSpinRule(), transferHeadroomRule(), pressureOffPeakRule()],
   conditions: DRY,
   passOn: 'any_run',
   scoreTarget: 'time',

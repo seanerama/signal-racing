@@ -9,6 +9,7 @@ import type { HintRule } from '@/hints/types';
 import type { RunSummary } from '@/telemetry/types';
 import type { LevelConfig } from './types';
 import {
+  brakeWindow,
   DRY,
   FLAGS_GRIP,
   TRACK_STRAIGHT,
@@ -31,13 +32,26 @@ export const LIMIT_REACHED = 0.99;
 /** The ramp counts as too gentle when it is longer than this many lever steps. */
 export const RAMP_SLACK_STEPS = 1.5;
 
-/** Fault: the driven tires slid (shared by A2 and A4). */
+/**
+ * The rear slide that counts as wheelspin: one that starts under drive, before the first brake
+ * application. `rear_slip_ratio` is unsigned, so a rear lock under braking (B4L's stop) also reads
+ * above the peak; that is not wheelspin and the ramp cannot cure it.
+ */
+export function driveSlide(s: RunSummary): Window | null {
+  const w = slidingWindow(s, 'rear_slip_ratio');
+  if (!w) return null;
+  const brake = brakeWindow(s);
+  if (brake && w.tStart >= brake.tStart) return null;
+  return brake ? { tStart: w.tStart, tEnd: Math.min(w.tEnd, brake.tStart) } : w;
+}
+
+/** Fault: the driven tires slid under drive (shared by A2, A4, B1L and B4L). */
 export function wheelspinRule(): HintRule {
   return {
     id: 'wheelspin',
     kind: 'fault',
     when(s) {
-      const w = slidingWindow(s, 'rear_slip_ratio');
+      const w = driveSlide(s);
       if (!w) return null;
       return {
         ruleId: 'wheelspin',
@@ -47,7 +61,7 @@ export function wheelspinRule(): HintRule {
       };
     },
     estTimeCost(s) {
-      const w = slidingWindow(s, 'rear_slip_ratio');
+      const w = driveSlide(s);
       return w ? 0.1 + 0.25 * (w.tEnd - w.tStart) : 0;
     },
     tiers: [

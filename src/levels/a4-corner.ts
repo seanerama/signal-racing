@@ -3,6 +3,8 @@
  * Wing buys corner speed through downforce and costs exit speed through drag; on a segment this
  * short the balance tips toward wing (which sets up B1). The brief points at the track view.
  */
+import type { HintCtx, HintRule } from '@/hints/types';
+import type { RunSummary } from '@/telemetry/types';
 import type { LevelConfig } from './types';
 import {
   AT_LIMIT,
@@ -28,6 +30,70 @@ const RUNOUT = 2;
  * give is worth more in the corner than the drag costs on 350 m of straight.
  */
 export const A4_LOW_WING = 5;
+
+/** Headroom: low wing and the tires at their limit through the corner (A4; segment 1 is the corner). */
+export function cornerGripLimitedRule(gate?: (s: RunSummary, ctx: HintCtx) => boolean): HintRule {
+  return {
+    id: 'corner_grip_limited',
+    kind: 'headroom',
+    when(s, ctx) {
+      if (!(ctx.setup.wing <= A4_LOW_WING)) return null;
+      if (gate && !gate(s, ctx)) return null;
+      const seg = s.perSegment[CORNER];
+      const used = Math.max(seg?.grip_used_front?.max ?? 0, seg?.grip_used_rear?.max ?? 0);
+      if (!(used >= AT_LIMIT)) return null;
+      const vmin = cleanMin(s, 'corner_min_speed');
+      const lat = s.window('lat_g', (v) => Math.abs(v) >= 0.97 * (s.clean.lat_g?.max ?? 0));
+      return {
+        ruleId: 'corner_grip_limited',
+        vars: { vmin, lat: s.clean.lat_g?.max ?? NaN },
+        ...(lat ? { window: { channel: 'lat_g', ...lat } } : {}),
+        channels: ['lat_g', 'corner_min_speed', 'downforce'],
+      };
+    },
+    estTimeCost: (_s, ctx) => 0.02 * (A4_LOW_WING + 1 - ctx.setup.wing),
+    tiers: [
+      '`lat_g` sits flat at {lat:accel_g} through the corner and `corner_min_speed` bottoms out at {vmin:speed}: the tires are at their limit the whole way round.',
+      'In a corner the tires spend their grip budget on lateral force, and the budget is μ times load. `downforce` adds load that grows with v², so more of it raises the speed the corner allows.',
+      'Raise the wing until exit speed stops improving.',
+    ],
+  };
+}
+
+/** Headroom: wing near the top and the run-out slower than on the best run (A4; segment 2 is the run-out). */
+export function dragCostRule(): HintRule {
+  return {
+    id: 'drag_cost',
+    kind: 'headroom',
+    when(s, ctx) {
+      const wing = lever(ctx.level, 'wing');
+      if (!(ctx.setup.wing >= wing.max - 1)) return null;
+      const best = ctx.bestOutcome;
+      const mine = ctx.outcome.segmentTimes[RUNOUT];
+      const theirs = best?.segmentTimes[RUNOUT];
+      if (mine === undefined || theirs === undefined || !(mine > theirs)) return null;
+      return {
+        ruleId: 'drag_cost',
+        vars: {
+          exit: s.clean.exit_speed?.max ?? NaN,
+          drag: s.clean.drag_force?.max ?? NaN,
+          lost: mine - theirs,
+        },
+        channels: ['exit_speed', 'drag_force', 'downforce'],
+      };
+    },
+    estTimeCost: (_s, ctx) => {
+      const mine = ctx.outcome.segmentTimes[RUNOUT] ?? 0;
+      const theirs = ctx.bestOutcome?.segmentTimes[RUNOUT] ?? mine;
+      return Math.max(0, mine - theirs);
+    },
+    tiers: [
+      '`exit_speed` was {exit:speed}, and the run-out took {lost:time} longer than on your best run while `drag_force` reached {drag:force}.',
+      'Drag grows with the square of the wing setting, downforce only linearly. Past some point the extra corner speed is worth less than the drag costs on the straights either side.',
+      'Lower the wing.',
+    ],
+  };
+}
 
 export const A4: LevelConfig = {
   id: 'A4',
@@ -122,65 +188,7 @@ export const A4: LevelConfig = {
     ]),
   },
   defaultStrips: ['segment_time', 'speed', 'throttle', 'brake', 'steering_angle'],
-  hintRules: [
-    {
-      id: 'corner_grip_limited',
-      kind: 'headroom',
-      when(s, ctx) {
-        if (!(ctx.setup.wing <= A4_LOW_WING)) return null;
-        const seg = s.perSegment[CORNER];
-        const used = Math.max(seg?.grip_used_front?.max ?? 0, seg?.grip_used_rear?.max ?? 0);
-        if (!(used >= AT_LIMIT)) return null;
-        const vmin = cleanMin(s, 'corner_min_speed');
-        const lat = s.window('lat_g', (v) => Math.abs(v) >= 0.97 * (s.clean.lat_g?.max ?? 0));
-        return {
-          ruleId: 'corner_grip_limited',
-          vars: { vmin, lat: s.clean.lat_g?.max ?? NaN },
-          ...(lat ? { window: { channel: 'lat_g', ...lat } } : {}),
-          channels: ['lat_g', 'corner_min_speed', 'downforce'],
-        };
-      },
-      estTimeCost: (_s, ctx) => 0.02 * (A4_LOW_WING + 1 - ctx.setup.wing),
-      tiers: [
-        '`lat_g` sits flat at {lat:accel_g} through the corner and `corner_min_speed` bottoms out at {vmin:speed}: the tires are at their limit the whole way round.',
-        'In a corner the tires spend their grip budget on lateral force, and the budget is μ times load. `downforce` adds load that grows with v², so more of it raises the speed the corner allows.',
-        'Raise the wing until exit speed stops improving.',
-      ],
-    },
-    {
-      id: 'drag_cost',
-      kind: 'headroom',
-      when(s, ctx) {
-        const wing = lever(ctx.level, 'wing');
-        if (!(ctx.setup.wing >= wing.max - 1)) return null;
-        const best = ctx.bestOutcome;
-        const mine = ctx.outcome.segmentTimes[RUNOUT];
-        const theirs = best?.segmentTimes[RUNOUT];
-        if (mine === undefined || theirs === undefined || !(mine > theirs)) return null;
-        return {
-          ruleId: 'drag_cost',
-          vars: {
-            exit: s.clean.exit_speed?.max ?? NaN,
-            drag: s.clean.drag_force?.max ?? NaN,
-            lost: mine - theirs,
-          },
-          channels: ['exit_speed', 'drag_force', 'downforce'],
-        };
-      },
-      estTimeCost: (_s, ctx) => {
-        const mine = ctx.outcome.segmentTimes[RUNOUT] ?? 0;
-        const theirs = ctx.bestOutcome?.segmentTimes[RUNOUT] ?? mine;
-        return Math.max(0, mine - theirs);
-      },
-      tiers: [
-        '`exit_speed` was {exit:speed}, and the run-out took {lost:time} longer than on your best run while `drag_force` reached {drag:force}.',
-        'Drag grows with the square of the wing setting, downforce only linearly. Past some point the extra corner speed is worth less than the drag costs on the straights either side.',
-        'Lower the wing.',
-      ],
-    },
-    wheelspinRule(),
-    pressureOffPeakRule(),
-  ],
+  hintRules: [cornerGripLimitedRule(), dragCostRule(), wheelspinRule(), pressureOffPeakRule()],
   conditions: DRY,
   passOn: 'any_run',
   scoreTarget: 'time',

@@ -11,6 +11,7 @@ import type { RunPayload, SimClient } from '@/worker/types';
 import { createInProcessWorker } from './adapter';
 import { gridSize } from '@/game/grid-search';
 import { A2 } from '@/levels/index';
+import type { LevelId } from '@/levels/types';
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -77,7 +78,7 @@ describe('sim client over the worker loop', () => {
 
   it('an unknown level rejects with SimInputError(field = levelId)', async () => {
     client = createSimClient(createInProcessWorker());
-    const err = await client.gridSearch({ levelId: 'B4L' }).catch((e: unknown) => e);
+    const err = await client.gridSearch({ levelId: 'B9' as LevelId }).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(SimInputError);
     expect((err as SimInputError).field).toBe('levelId');
   });
