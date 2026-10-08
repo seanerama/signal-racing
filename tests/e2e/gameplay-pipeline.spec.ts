@@ -61,7 +61,7 @@ test('A1 → A2: hints are free but counted, A2 passes, progress survives a relo
 
   // Fix both levers and pass with the grid optimum's neighbourhood: a short ramp, pressure on peak.
   await setLever(page, 'throttle_ramp', '0.2');
-  await setLever(page, 'tire_pressure', '1.6');
+  await setLever(page, 'tire_pressure', '1.7');
   await page.getByTestId('run-button').click();
   await expect(page.getByTestId('chip-target')).toBeVisible({ timeout: 30_000 });
   await expect(count).toHaveAttribute('aria-label', '2 runs made, 1 hint opened');
@@ -120,7 +120,10 @@ test('strip layout persists across reloads; ⌘K adds a channel; R runs', async 
   await page.keyboard.press('Control+k');
   const palette = page.getByTestId('palette');
   await expect(palette).toBeVisible();
+  // Type only once the filter has focus (keys typed earlier would reach the global map).
+  await expect(palette.locator('.palette__input')).toBeFocused();
   await page.keyboard.type('drag_force');
+  await expect(palette.locator('.palette__item--on')).toContainText('drag_force');
   await page.keyboard.press('Enter');
   await expect(palette).toBeHidden();
   await page.keyboard.press('r');

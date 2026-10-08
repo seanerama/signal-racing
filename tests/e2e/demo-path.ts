@@ -136,11 +136,11 @@ export async function playMeetingDemo(page: Page, { url, suffix }: DemoOptions):
   ).toHaveCount(1);
   await shot(page, `b4l-call${suffix}`);
 
-  // 5. Finish: the setup the earlier levels teach reaches the target.
+  // 5. Finish: a setup that meets the target on run 3's seed (Stage 11 physics).
   for (const [id, v] of [
-    ['throttle_ramp', '0'],
-    ['tire_pressure', '1.6'],
-    ['weight_dist', '0.52'],
+    ['throttle_ramp', '0.2'],
+    ['tire_pressure', '1.7'],
+    ['weight_dist', '0.46'],
     ['wing', '3'],
   ] as const) {
     await setLever(page, id, v);
@@ -154,8 +154,11 @@ export async function playMeetingDemo(page: Page, { url, suffix }: DemoOptions):
   await expect(cmp).toBeVisible();
   await expect(page.getByTestId('cmp-with')).toContainText('3');
   await expect(page.getByTestId('cmp-with')).toContainText('your attempts');
-  await expect(page.getByTestId('cmp-without')).toContainText('8');
+  await expect(page.getByTestId('cmp-without')).toContainText('4');
   await expect(page.getByTestId('cmp-without')).toContainText('recorded attempt (demo profile)');
+  await expect(page.getByTestId('cmp-anecdote')).toContainText(
+    'One attempt each is an anecdote, not a measurement.',
+  );
   await expect(page.getByTestId('spurious-note')).toBeVisible();
   await expect(page.getByTestId('debrief-call-verdict')).toHaveText('✓ The call.');
   await shot(page, `b4l-debrief-comparison${suffix}`);

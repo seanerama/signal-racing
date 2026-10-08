@@ -33,16 +33,18 @@ test('B1L: three runs, segment_delta strip, boundaries and the compromise-gap ch
   await expect(page.getByRole('radio', { name: 'Dist' })).toBeChecked();
   await expect(page.getByRole('radio', { name: 'Dist' })).toBeEnabled();
 
-  // The A4 answer (wing 7) first: the straight pays.
-  await setLever(page, 'throttle_ramp', '0');
-  await setLever(page, 'tire_pressure', '1.6');
-  await setLever(page, 'weight_dist', '0.52');
+  // A high wing first (Stage 11 physics: ramp 0.2, 1.7 bar, wd 0.48): the straight pays.
+  await setLever(page, 'throttle_ramp', '0.2');
+  await setLever(page, 'tire_pressure', '1.7');
+  await setLever(page, 'weight_dist', '0.48');
+  await setLever(page, 'wing', '7');
   await runAndWait(page, 1);
   await expect(page.locator('.chip--extra').first()).toContainText('Compromise gap');
   await expect(page.locator('.chip--extra').first()).toHaveClass(/chip--loss/);
   // The hint box is docked and open; hints are free: one click per tier.
   await page.getByTestId('hint-open').click();
-  await expect(page.getByTestId('hint-popover')).toContainText('ended the straight');
+  await expect(page.getByTestId('hint-popover')).toContainText('Observe');
+  await expect(page.getByTestId('hint-box')).toContainText('free · 1 opened');
 
   // Lower the wing too far, then settle.
   await setLever(page, 'wing', '1');

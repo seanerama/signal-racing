@@ -89,9 +89,9 @@ test('B4L: make the call on run 2, cross-check, debrief, model page', async ({ p
 
   // Finish with the setup the earlier levels teach, then the debrief shows the call.
   for (const [id, v] of [
-    ['throttle_ramp', '0'],
-    ['tire_pressure', '1.6'],
-    ['weight_dist', '0.52'],
+    ['throttle_ramp', '0.2'],
+    ['tire_pressure', '1.7'],
+    ['weight_dist', '0.46'],
     ['wing', '3'],
   ] as const) {
     await setLever(page, id, v);

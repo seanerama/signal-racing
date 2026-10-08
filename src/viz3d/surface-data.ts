@@ -79,12 +79,19 @@ export function marginalRanges(
 
 /**
  * The (up to) two most influential unlocked levers, by marginal range, in level order.
- * Ties keep level order. One lever in → one lever out.
+ * Ties keep level order. One lever in → one lever out. A level's `surfaceLevers` (Stage 11:
+ * the axes its lesson is about) win when both are unlocked, in the order given.
  */
 export function pickLeverPair(
   levers: readonly LeverSpec[],
   samples: readonly Sample[],
+  preferred?: readonly [LeverId, LeverId],
 ): LeverSpec[] {
+  if (preferred) {
+    const a = levers.find((l) => l.id === preferred[0]);
+    const b = levers.find((l) => l.id === preferred[1]);
+    if (a && b && a !== b) return [a, b];
+  }
   if (levers.length <= 2) return [...levers];
   const r = marginalRanges(levers, samples);
   const ranked = levers
@@ -162,6 +169,8 @@ export interface SurfaceInput {
   runs: readonly SurfaceRun[];
   units: UnitSystem;
   ramp: readonly string[];
+  /** Stage 11: the level's chosen surface axes (`LevelConfig.surfaceLevers`), if any. */
+  surfaceLevers?: readonly [LeverId, LeverId];
 }
 
 function rgb(css: string): [number, number, number] {
@@ -253,7 +262,7 @@ export function leverTicks(
 
 export function buildResponse(input: SurfaceInput): ResponseModel {
   const { levers, samples, optimum, units, ramp } = input;
-  const axes = pickLeverPair(levers, samples);
+  const axes = pickLeverPair(levers, samples, input.surfaceLevers);
   const others = levers.filter((l) => !axes.includes(l));
   const lookup = makeLookup(levers, samples);
   const optIdx = levers.map((l) => stepIndex(l, optimum.setup[l.id]));

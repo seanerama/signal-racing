@@ -168,6 +168,7 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
     const ctx: NoiseCtx = {
       level,
       setup: fullSetup,
+      grid: g,
       outcome: payload.outcome,
       ...(prevBest ? { bestOutcome: prevBest.outcome } : {}),
       ...(prevRun ? { previousOutcome: prevRun.outcome } : {}),

@@ -170,6 +170,7 @@ test('the hint box closes and reopens (× and H), and says when a new rule fired
 test('Compact density from ⌘K, persisted', async ({ page }) => {
   await fresh(page);
   await page.keyboard.press('Control+k');
+  await expect(page.getByTestId('palette').locator('.palette__input')).toBeFocused();
   await page.keyboard.type('Density');
   await page.keyboard.press('Enter');
   await expect(page.locator('html')).toHaveAttribute('data-density', 'compact');
