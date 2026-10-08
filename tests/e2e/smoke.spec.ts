@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-/** Smoke (stub, Stage 1): runs against `vite preview` of `dist/`. Stage 6 extends it. */
-test('app loads with the top bar', async ({ page }) => {
+/** Smoke: runs against `vite preview` of `dist/`. The unit samples live on `#/dev` since Stage 6. */
+test('app loads with the top bar and the level select', async ({ page }) => {
   await page.goto('/');
+  await expect(page.getByTestId('level-select')).toBeVisible();
   const bar = page.getByTestId('topbar');
   await expect(bar).toBeVisible();
   await expect(bar.getByText('SIGNAL')).toBeVisible();
@@ -10,7 +11,7 @@ test('app loads with the top bar', async ({ page }) => {
 });
 
 test('units toggle switches displayed units', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#/dev');
   await expect(page.getByTestId('sample-speed')).toHaveText('100.0 km/h');
   await page.getByRole('radio', { name: 'Imperial' }).click();
   await expect(page.getByTestId('sample-speed')).toHaveText('62.1 mph');

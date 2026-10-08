@@ -37,7 +37,10 @@ async function runPipeline(page: Page): Promise<PipelineReport> {
 }
 
 function expectPassing(r: PipelineReport): void {
-  expect(r.grid.evaluated).toBe(176);
+  // A2 (Stage 6): 11 pressure points × the ramp grid (0.2 s steps; 0–1.4 s on the pre-2b
+  // engine's validated range = 8 points, 0–3.0 s after Stage 2b = 16 points).
+  expect(r.grid.evaluated % 11).toBe(0);
+  expect([88, 176]).toContain(r.grid.evaluated);
   expect(r.directRun.totalTime).toBeLessThanOrEqual(r.grid.target);
   expect(r.directRun.n).toBeGreaterThan(100);
   expect(r.session.passes).toBe(true);
@@ -63,7 +66,7 @@ test('pipeline: grid A2 + run optimum passes and persists a score (vite preview)
     `[stage-5 pipeline] browser grid A2: ${report.grid.ms} ms in worker, ${report.grid.wallMs} ms wall, ${report.grid.evaluated} setups`,
   );
   expect(report.grid.ms).toBeLessThan(1000);
-  expect(debugLines.some((l) => /grid search A2: \d+ ms, 176 setups/.test(l))).toBe(true);
+  expect(debugLines.some((l) => /grid search A2: \d+ ms, (88|176) setups/.test(l))).toBe(true);
   // Progress survives a reload.
   await page.reload();
   const stored = await page.evaluate(() => localStorage.getItem('signal.v1.progress'));
