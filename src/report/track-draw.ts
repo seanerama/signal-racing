@@ -20,7 +20,7 @@ import type { TrackGeometry } from '@/engine/types';
 
 export const TRACK_PAD = 18;
 /** Top padding: room for the view's header row (title, legend) above the path. */
-export const TRACK_PAD_TOP = 36;
+export const TRACK_PAD_TOP = 44;
 /** Bottom padding: room for the START / FINISH labels under the road. */
 export const TRACK_PAD_BOTTOM = 22;
 /** Car block, scaled from 5.0 × 2.0 m, never smaller than 10 × 4 px (hit-testing, tests). */
@@ -197,6 +197,17 @@ export function normalize(v: number, min: number, max: number): number {
 export function deltaClass(dv: number, threshold = LINE_DELTA_MS): -1 | 0 | 1 {
   if (!Number.isFinite(dv)) return 0;
   return dv > threshold ? 1 : dv < -threshold ? -1 : 0;
+}
+
+interface LabelRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+function overlaps(a: LabelRect, b: LabelRect): boolean {
+  return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 }
 
 export interface SceneColors {
@@ -382,8 +393,38 @@ export function drawScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
     }
   }
 
-  // 4. Start (and finish) bars, segment ticks and labels.
-  const bar = (d: number, label: string, above: boolean) => {
+  // 4. Start (and finish) bars, segment ticks and labels. Labels never overlap one another or
+  //    the header row: each tries the outside of the road, then the inside, then further out,
+  //    and is left out if nothing fits (the strips' segment rules still name it).
+  const placed: LabelRect[] = [];
+  const minY = TRACK_PAD_TOP - 2;
+  // The road, as small boxes every few metres: labels keep off it where they can.
+  const road: LabelRect[] = [];
+  const stepM = Math.max(2, Math.floor(verge / Math.max(tf.scale, 1e-6) / 2));
+  for (let i = 0; i < count; i += stepM) {
+    const [x, y] = toCanvas(tf, pts[i * 2] as number, pts[i * 2 + 1] as number);
+    road.push({ x: x - verge / 2, y: y - verge / 2, w: verge, h: verge });
+  }
+  const place = (text: string, cands: Array<[number, number]>, font: string): void => {
+    ctx.font = font;
+    const tw = ctx.measureText(text).width;
+    // First pass: clear of other labels and of the road; second pass: clear of labels only.
+    for (const avoidRoad of [true, false]) {
+      for (const [left0, cy] of cands) {
+        const left = Math.max(2, Math.min(width - tw - 2, left0));
+        const r = { x: left - 2, y: cy - 6, w: tw + 4, h: 12 };
+        if (r.y < minY || r.y + r.h > height - 2) continue;
+        if (placed.some((q) => overlaps(q, r))) continue;
+        if (avoidRoad && road.some((q) => overlaps(q, r))) continue;
+        placed.push(r);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, left, cy);
+        return;
+      }
+    }
+  };
+  const bar = (d: number, label: string) => {
     const p = poseOnGeometry(geometry, d);
     const [x, y] = toCanvas(tf, p.x, p.y);
     const th = (p.heading * Math.PI) / 180;
@@ -393,22 +434,29 @@ export function drawScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
     ctx.fillStyle = colors.start;
     ctx.fillRect(-2, -(verge + 6) / 2, 4, verge + 6);
     ctx.restore();
-    ctx.font = colors.smallFont;
     ctx.fillStyle = colors.label;
-    ctx.textBaseline = 'middle';
+    ctx.font = colors.smallFont;
     const tw = ctx.measureText(label).width;
-    const lx = Math.max(2, Math.min(width - tw - 2, x - tw / 2));
-    const ly = above ? y - verge / 2 - 11 : y + verge / 2 + 11;
-    ctx.textAlign = 'left';
-    ctx.fillText(label, lx, Math.max(8, Math.min(height - 8, ly)));
+    const below = y + verge / 2 + 10;
+    const above = y - verge / 2 - 10;
+    place(
+      label,
+      [
+        [x - tw / 2, below],
+        [x - tw / 2, above],
+        [x + verge / 2 + 6, y],
+        [x - verge / 2 - 6 - tw, y],
+      ],
+      colors.smallFont,
+    );
   };
   const first = poseOnGeometry(geometry, 0);
   const last = poseOnGeometry(geometry, geometry.totalLength);
   const [sx, sy] = toCanvas(tf, first.x, first.y);
   const [ex, ey] = toCanvas(tf, last.x, last.y);
   const closed = Math.hypot(ex - sx, ey - sy) < verge * 2;
-  bar(0, closed ? 'START / FINISH' : 'START', false);
-  if (!closed) bar(geometry.totalLength, 'FINISH', false);
+  bar(0, closed ? 'START / FINISH' : 'START');
+  if (!closed) bar(geometry.totalLength, 'FINISH');
 
   const [cxm, cym] = toCanvas(
     tf,
@@ -416,10 +464,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
     (geometry.bounds.minY + geometry.bounds.maxY) / 2,
   );
   ctx.strokeStyle = colors.faint;
-  ctx.fillStyle = colors.label;
   ctx.lineWidth = 1;
-  ctx.font = colors.font;
-  ctx.textBaseline = 'middle';
   const starts = geometry.segmentStarts;
   const off = verge / 2 + 10;
   starts.forEach((start, k) => {
@@ -435,13 +480,16 @@ export function drawScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
       ctx.lineTo(x + nx * h, y + ny * h);
       ctx.stroke();
     }
+  });
+  ctx.fillStyle = colors.label;
+  starts.forEach((start, k) => {
     const label = scene.segmentLabels[k];
     if (!label) return;
     const end = starts[k + 1] ?? geometry.totalLength;
     const mid = poseOnGeometry(geometry, (start + end) / 2);
     const [mx, my] = toCanvas(tf, mid.x, mid.y);
     const th = (mid.heading * Math.PI) / 180;
-    // Canvas-space normal; pick the side away from the track's centre (the outside).
+    // Canvas-space normal; prefer the side away from the track's centre (the outside).
     let nx = Math.sin(th);
     let ny = Math.cos(th);
     if ((mx - cxm) * nx + (my - cym) * ny < 0) {
@@ -454,23 +502,25 @@ export function drawScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
       ny = -ny;
     }
     const text = label.toUpperCase();
+    ctx.font = colors.font;
     const tw = ctx.measureText(text).width;
-    const fits = (sx2: number, sy2: number) => {
-      const lx0 = mx + sx2 * off;
-      const ly0 = my + sy2 * off;
-      const left = sx2 > 0.5 ? lx0 : sx2 < -0.5 ? lx0 - tw : lx0 - tw / 2;
-      return ly0 >= TRACK_PAD_TOP - 6 && ly0 <= height - 20 && left >= 2 && left + tw <= width - 2;
+    const at = (sxn: number, syn: number, dist: number): [number, number] => {
+      const ax = mx + sxn * dist;
+      const left = sxn > 0.5 ? ax : sxn < -0.5 ? ax - tw : ax - tw / 2;
+      return [left, my + syn * dist];
     };
-    if (!fits(nx, ny) && fits(-nx, -ny)) {
-      nx = -nx;
-      ny = -ny;
-    }
-    const ax = mx + nx * off;
-    const ly = my + ny * off;
-    const left0 = nx > 0.5 ? ax : nx < -0.5 ? ax - tw : ax - tw / 2;
-    const left = Math.max(2, Math.min(width - tw - 2, left0));
-    ctx.textAlign = 'left';
-    ctx.fillText(text, left, Math.max(TRACK_PAD_TOP - 6, Math.min(height - 20, ly)));
+    place(
+      text,
+      [
+        at(nx, ny, off),
+        at(-nx, -ny, off),
+        at(nx, ny, off + 12),
+        at(-nx, -ny, off + 12),
+        at(nx, ny, off + 26),
+        at(-nx, -ny, off + 26),
+      ],
+      colors.font,
+    );
   });
 
   // Caption and the faster/slower key, bottom-left.
