@@ -1,7 +1,7 @@
 {
   "name": "signal",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Signal: a racing game where telemetry is the only feedback.",
   "type": "module",
   "engines": {
@@ -9,12 +9,16 @@
   },
   "scripts": {
     "dev": "vite",
+    "precompute": "tsx scripts/precompute-targets.ts",
+    "prebuild": "npm run precompute",
     "build": "vite build",
+    "prebuild:single": "npm run precompute",
     "build:single": "vite build --config vite.single.config.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:slow": "vitest run -c vitest.slow.config.ts",
     "test:e2e": "npm run build && npm run build:single && playwright test",
     "check": "npm run typecheck && npm run lint && npm run test",
     "format": "prettier --write .",
@@ -43,6 +47,7 @@
     "globals": "17.12.0",
     "jsdom": "29.1.1",
     "prettier": "3.9.9",
+    "tsx": "4.23.15",
     "typescript": "6.0.3",
     "typescript-eslint": "8.70.1",
     "vite": "8.3.0",
