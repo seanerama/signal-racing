@@ -117,7 +117,10 @@ export function buildEnvelope(
   v[n - 1] = next;
   for (let k = n - 2; k >= 0; k--) {
     let vk = cap[k] ?? V_UNBOUNDED;
-    if (next < V_UNBOUNDED) {
+    // `reach = √(next² + 2·max(a,0)·ds) ≥ next`, so when the cap is already ≤ next (inside a
+    // corner held at v_lim, or on the stopped tail) the min below cannot change `vk`: skip the
+    // braking-force solve. Exact, not an approximation (Stage 5 performance work).
+    if (next < V_UNBOUNDED && vk > next) {
       const s1 = (k + 1) * ENVELOPE_DS;
       hint = segmentAt(layout, Math.min(s1, total), hint);
       const seg = segments[hint];

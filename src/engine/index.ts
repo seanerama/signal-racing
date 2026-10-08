@@ -1,5 +1,5 @@
 /** Public engine API (contract 02). Pure: no I/O, no globals, no `Date`, no `Math.random`. */
-export { simulate } from './simulate';
+export { simulate, createSimCache, type SimCache } from './simulate';
 export { DEFAULT_CAR } from './car';
 export { validateInput, LEVER_RANGES } from './validate';
 export { trackGeometry, poseAt, trackLayout } from './track';
