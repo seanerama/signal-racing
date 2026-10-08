@@ -59,6 +59,15 @@ interface SimState {
   /** s, time of the last launch. */
   tLaunch: number;
   braking: boolean;
+  /** Row 12b: front axle sliding (locked) at the end of the previous step. */
+  slideFront: boolean;
+  /**
+   * Row 12b: rear axle sliding at the end of the previous step, and whether that slide was under
+   * drive (wheelspin) or braking (lock). Switching between drive and braking ends a slide: the
+   * wheel passes through zero slip on the way from spinning to locking.
+   */
+  slideRear: boolean;
+  slideRearDrive: boolean;
   /** °C fl, fr, rl, rr. */
   tireTemp: Float64Array;
   /** °C front, rear. */
@@ -154,7 +163,9 @@ interface DriverPlan {
 /**
  * Opaque memo for repeated `simulate` calls (grid search). The driver plan depends only on the
  * car, track, conditions, flags and the levers `tire_pressure`, `weight_dist` and `wing`, never on
- * `throttle_ramp` or the seed, so setups that differ only in ramp share it. Results are
+ * `throttle_ramp` or the seed, so setups that differ only in ramp share it. The row-12b slide
+ * state does not enter the plan: the envelope starts each braking zone with gripping axles and a
+ * drive-to-brake switch ends any wheelspin, so the key stays complete (Stage 2b). Results are
  * bit-identical with or without a cache (`tests/engine/golden.test.ts`). The caller owns the
  * cache (the engine keeps no module-level state).
  */
@@ -232,6 +243,9 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
     // A rolling start is treated as launched long ago (full throttle available).
     tLaunch: track.standingStart ? 0 : -1e9,
     braking: false,
+    slideFront: false,
+    slideRear: false,
+    slideRearDrive: false,
     tireTemp: new Float64Array(4).fill(conditions.trackTemp),
     brakeTemp: new Float64Array(2).fill(conditions.ambientTemp),
   };
@@ -289,7 +303,7 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
     const beta = pedals.brake;
     const theta = pedals.throttle;
 
-    // Rows 10–12.
+    // Rows 10–12, with the row-12b slide state carried from the previous step.
     const fEng = engineForce(car, theta, v);
     let fxFront = 0;
     let fxRear = 0; // signed: + drive, − braking
@@ -301,8 +315,8 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
     let fBrakeRear = 0;
     if (beta > 0) {
       brakeDemand(car, beta, demand);
-      tireForce(car, demand.front, grip.fxMaxFront, tfFront);
-      tireForce(car, demand.rear, grip.fxMaxRear, tfRear);
+      tireForce(car, demand.front, grip.fxMaxFront, tfFront, st.slideFront);
+      tireForce(car, demand.rear, grip.fxMaxRear, tfRear, st.slideRear && !st.slideRearDrive);
       fBrakeFront = tfFront.force;
       fBrakeRear = tfRear.force;
       fxFront = -fBrakeFront;
@@ -312,7 +326,7 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
       slideFront = tfFront.sliding;
       slideRear = tfRear.sliding;
     } else {
-      tireForce(car, fEng, grip.fxMaxRear, tfRear);
+      tireForce(car, fEng, grip.fxMaxRear, tfRear, st.slideRear && st.slideRearDrive);
       fxRear = tfRear.force;
       slipRear = tfRear.slip;
       slideRear = tfRear.sliding;
@@ -416,6 +430,9 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
     st.s = sNew;
     st.ax = axNew;
     st.braking = beta > 0;
+    st.slideFront = slideFront;
+    st.slideRear = slideRear;
+    st.slideRearDrive = beta === 0;
 
     if (
       !Number.isFinite(vNew) ||
@@ -438,6 +455,8 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
         st.v = 0;
         st.ax = 0;
         st.braking = false;
+        st.slideFront = false;
+        st.slideRear = false;
         boundaryTimes.push(t0 + f * DT);
         st.seg++;
         st.tLaunch = st.t;

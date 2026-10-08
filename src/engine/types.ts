@@ -56,7 +56,11 @@ export interface CarParams {
   mass: number;
   /** W, 500_000. */
   power: number;
-  /** N, 10_000: peak engine force (low-speed cap). */
+  /**
+   * N, 5_800: peak engine force (low-speed cap). Spec table once 10 kN; tuned so the A2 ramp
+   * optimum is interior (between the standstill and the fully load-transferred rear budget, see
+   * `car.ts`).
+   */
   fPeak: number;
   /** m², 0.68: `CdA = cd0A + kdA·w²` (1.0 m² at w = 4). */
   cd0A: number;
@@ -80,9 +84,9 @@ export interface CarParams {
   trackWidth: number;
   /** 0.015: rolling resistance coefficient. */
   crr: number;
-  /** N, 16_000: total driver brake demand at full pedal. */
+  /** N, 13_000: total driver brake demand at full pedal. */
   brakeForceMax: number;
-  /** 0.55: front brake bias (fixed in the meeting cut). */
+  /** 0.60: front brake bias (fixed in the meeting cut). */
   brakeBiasFront: number;
   /** bar, 1.65: optimal tire pressure (pressure → μ bell). */
   pOpt: number;
@@ -98,6 +102,11 @@ export interface CarParams {
   kSlide: number;
   /** 0.8: usable fraction of F_max while sliding. */
   slideFactor: number;
+  /**
+   * 0.85: slide hysteresis (contract 02 row 12b). A sliding axle regains grip only once its
+   * demand ratio `r = F_demand/F_max` falls below `kRegrip`. Must lie in `[slideFactor, 1]`.
+   */
+  kRegrip: number;
   /** kg, 0 in the meeting cut (fuel not modelled in mass). */
   fuelMass0: number;
   /** q, 0.5: share of lateral load transfer taken by the front axle (lever from A5, fixed now). */

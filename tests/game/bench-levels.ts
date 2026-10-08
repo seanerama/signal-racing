@@ -7,7 +7,9 @@ import type { LeverSpec, LevelConfig, LevelId } from '@/levels/types';
 import { STUB_A2 } from '@/levels/index';
 import { TRACK_A3, TRACK_A4, TRACK_B1, TRACK_B4 } from '../engine/fixtures';
 
-const [RAMP, PRESSURE] = STUB_A2.levers as [LeverSpec, LeverSpec];
+const [STUB_RAMP, PRESSURE] = STUB_A2.levers as [LeverSpec, LeverSpec];
+/** Stage 2b ramp range: 0–3.0 s, step 0.2 (Stage 6 owns the real level configs). */
+export const RAMP: LeverSpec = { ...STUB_RAMP, min: 0, max: 3.0, step: 0.2, default: 0 };
 export const WEIGHT: LeverSpec = {
   id: 'weight_dist',
   label: 'Weight distribution',
@@ -31,6 +33,7 @@ function variant(id: LevelId, patch: Partial<LevelConfig>): LevelConfig {
   return { ...STUB_A2, id, ...patch };
 }
 
+export const BENCH_A2 = variant('A2', { levers: [RAMP, PRESSURE] });
 export const BENCH_A3 = variant('A3', {
   track: TRACK_A3,
   levers: [RAMP, PRESSURE, WEIGHT],
@@ -66,7 +69,7 @@ export const BENCH_B4L = variant('B4L', {
 
 /** Budgets from contract 05 (A4 is not listed there; the stage brief gives "others < 4 s"). */
 export const BENCH_LEVELS: Array<{ level: LevelConfig; budgetMs: number }> = [
-  { level: STUB_A2, budgetMs: 1000 },
+  { level: BENCH_A2, budgetMs: 1000 },
   { level: BENCH_A3, budgetMs: 1000 },
   { level: BENCH_A4, budgetMs: 4000 },
   { level: BENCH_B1L, budgetMs: 2000 },

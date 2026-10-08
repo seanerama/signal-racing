@@ -7,7 +7,7 @@ import type { LeverId, SimInput } from './types';
 
 /** Lever ranges for the meeting cut (inclusive). `weight_dist` is checked as (0, 1) physically. */
 export const LEVER_RANGES: Readonly<Record<LeverId, readonly [number, number]>> = Object.freeze({
-  throttle_ramp: [0, 1.5],
+  throttle_ramp: [0, 3.0],
   tire_pressure: [1.2, 2.2],
   weight_dist: [0.38, 0.52],
   wing: [0, 8],
