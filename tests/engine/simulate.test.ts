@@ -218,7 +218,7 @@ describe('errors and determinism', () => {
     }
   });
 
-  it('the seed is accepted but does not change meeting-cut physics', () => {
+  it('the seed is accepted but does not change current physics', () => {
     const x = input(TRACK_A4, FLAGS_A2);
     const y = { ...input(TRACK_A4, FLAGS_A2), seed: 987654321 };
     expect(simulate(y, 'fast').outcome).toEqual(simulate(x, 'fast').outcome);

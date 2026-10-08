@@ -5,7 +5,7 @@
 import { SimInputError } from './errors';
 import type { LeverId, SimInput } from './types';
 
-/** Lever ranges for the meeting cut (inclusive). `weight_dist` is checked as (0, 1) physically. */
+/** Lever ranges for the current version (inclusive). `weight_dist` is checked as (0, 1) physically. */
 export const LEVER_RANGES: Readonly<Record<LeverId, readonly [number, number]>> = Object.freeze({
   throttle_ramp: [0, 3.0],
   tire_pressure: [1.2, 2.2],
@@ -53,7 +53,7 @@ export function validateInput(input: SimInput): void {
   if (track.segments.length > 255) {
     throw new SimInputError('track.segments', 'at most 255 segments (seg column is Uint8)');
   }
-  if (track.laps !== 1) throw new SimInputError('track.laps', 'must be 1 in the meeting cut');
+  if (track.laps !== 1) throw new SimInputError('track.laps', 'must be 1 in the current version');
   track.segments.forEach((seg, i) => {
     const f = `track.segments[${i}]`;
     const len = finite(`${f}.length`, seg.length);

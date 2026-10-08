@@ -1,5 +1,5 @@
 /**
- * B1L "Join: straight + fast corner" (signal.md "B1, Join"; meeting-cut lite). A kilometre of
+ * B1L "Join: straight + fast corner" (signal.md "B1, Join"; lite). A kilometre of
  * straight from a standing start, a 150 m radius 90° right, a 150 m run-out, one setup for all
  * three. The A4 wing (tuned on a short segment) now drags down the straight; lowering it moves
  * the cost into the corner. The best compromise balances the segments' `segment_delta`s.

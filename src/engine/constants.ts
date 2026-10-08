@@ -24,7 +24,7 @@ export const CORNER_V_MAX = 200;
  * over 1000 °C at some grid setups; the equilibrium of a gripping corner at 60 m/s was ~2700 °C).
  * kHeat 0.9 → 0.05 and the slide multiplier 4 → 2 keep every level's peak at or under 140 °C for
  * every setup in the lever grid (scripts/temps.ts), while a good B4L run still warms the rears
- * by ~30 °C. kCool is unchanged. Tire temperature does not affect grip in the meeting cut
+ * by ~30 °C. kCool is unchanged. Tire temperature does not affect grip in the current version
  * (`tempAffectsGrip` is off on every level), so no outcome changes.
  */
 /** Tire heating coefficient (row 15). */

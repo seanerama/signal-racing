@@ -157,7 +157,7 @@ export function engineForce(car: CarParams, theta: number, v: number): number {
 
 /**
  * Row 11: `F_bf = brakeBiasFront·β·brakeForceMax`, `F_br = (1 − brakeBiasFront)·β·brakeForceMax`,
- * β ∈ {0,1} (`brakeBiasFront` 0.70, fixed in the meeting cut).
+ * β ∈ {0,1} (`brakeBiasFront` 0.70, fixed in the current version).
  */
 export function brakeDemand(
   car: CarParams,

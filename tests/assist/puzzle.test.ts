@@ -1,7 +1,7 @@
 /**
  * The assist on the real Puzzle (B4L): the recorded unassisted attempt from the demo profile
  * (`src/app/demo-history.json`), re-simulated exactly as the app does it (worker handlers →
- * session → telemetry → summary → hints). Checks the guarantees that matter in the meeting:
+ * session → telemetry → summary → hints). Checks the guarantees that matter for the demo:
  * - no reason, at any run count, names a lever (id or label) or a setup value;
  * - the assist only ever returns channels of the level, never outcome channels;
  * - the recorded attempt reaches the target on run 4 (unassisted; re-recorded by hand in Stage 11);

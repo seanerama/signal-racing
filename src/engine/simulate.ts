@@ -222,7 +222,7 @@ function cachedPlan(
 export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimResult {
   validateInput(input);
   const { car, setup, track, conditions, flags } = input;
-  // `input.seed` is accepted for future in-physics noise; the meeting-cut physics has none.
+  // `input.seed` is accepted for future in-physics noise; the current physics has none.
 
   const layout = trackLayout(track);
   const nSeg = track.segments.length;

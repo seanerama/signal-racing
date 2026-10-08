@@ -2,10 +2,10 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { expect, test } from '@playwright/test';
-import { DEMO_SPEED, DEMO_TIMEOUT_MS, playMeetingDemo } from './demo-path';
+import { DEMO_SPEED, DEMO_TIMEOUT_MS, playGuidedDemo } from './demo-path';
 
 /**
- * Pipeline test for the meeting fallback: `dist-single/signal.html` opened from `file://`,
+ * Pipeline test for the offline single-file build: `dist-single/signal.html` opened from `file://`,
  * offline, with no server. Proves the inlined worker, CSS and fonts work and that the page
  * makes zero requests other than file:/data:/blob:.
  */
@@ -73,7 +73,7 @@ test.describe('single-file build from file://', () => {
   });
 });
 
-test.describe('meeting demo on the single-file build, offline', () => {
+test.describe('guided demo on the single-file build, offline', () => {
   test('the Model page renders offline (MathML, car table, sources as text)', async ({
     page,
     context,
@@ -87,7 +87,7 @@ test.describe('meeting demo on the single-file build, offline', () => {
     await expect(page.getByTestId('sources')).toContainText('https://');
   });
 
-  test('pre-meeting checklist: A1 runs from file:// offline', async ({ page, context }) => {
+  test('offline check: A1 runs from file:// offline', async ({ page, context }) => {
     await context.setOffline(true);
     await page.goto(`${pathToFileURL(SINGLE).href}?playback=instant#/level/A1`);
     await page.evaluate(() => localStorage.clear());
@@ -114,11 +114,11 @@ test.describe('meeting demo on the single-file build, offline', () => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     const t0 = Date.now();
-    await playMeetingDemo(page, {
+    await playGuidedDemo(page, {
       url: `${pathToFileURL(SINGLE).href}?demo=1#/level/B4L`,
       suffix: '-single',
     });
-    console.log(`[meeting demo] single-file build at ${DEMO_SPEED}×: ${Date.now() - t0} ms wall`);
+    console.log(`[guided demo] single-file build at ${DEMO_SPEED}×: ${Date.now() - t0} ms wall`);
     expect(blocked, `blocked requests: ${blocked.join(', ')}`).toEqual([]);
     expect(errors).toEqual([]);
   });

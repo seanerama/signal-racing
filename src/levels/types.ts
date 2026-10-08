@@ -20,7 +20,7 @@ import type { Role, SensorArtifact } from '@/telemetry/types';
 
 export type { SensorArtifact };
 
-/** Level ids. `L` = meeting-cut "lite" variants. */
+/** Level ids. `L` = "lite" variants. */
 export type LevelId = 'A1' | 'A2' | 'A3' | 'A4' | 'B1L' | 'B4L';
 
 /** One unlocked lever. Discrete: grid search evaluates exactly these step points. */
@@ -85,7 +85,7 @@ export interface LevelConfig {
   defaultStrips: ChannelId[];
   hintRules: HintRule[];
   conditions: ConditionsSpec;
-  /** Meeting cut: `'any_run'` for all. */
+  /** Current version: `'any_run'` for all. */
   passOn: 'any_run' | 'total';
   /** B1L uses `'compromise_gap'`. */
   scoreTarget?: 'time' | 'compromise_gap';

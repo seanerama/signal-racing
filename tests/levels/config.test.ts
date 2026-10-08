@@ -79,7 +79,7 @@ describe.each(LEVELS.map((l) => [l.id, l] as const))('%s config', (_id, level) =
     }
   });
 
-  it('channel and causal counts follow the meeting-cut growth', () => {
+  it('channel and causal counts follow the channel growth', () => {
     // Stage 9 adds the four axle-force channels (grip circle) to every level; Stage 11 adds B1L
     // distractors and makes the forces correlated everywhere (signal-to-noise, finding 6).
     const want = { A1: 16, A2: 25, A3: 32, A4: 41, B1L: 60, B4L: 215 }[level.id];

@@ -17,7 +17,7 @@
  * `gap ≤ bestAchievableGap + tolerance × optimum.totalTime` (contract 06, amended: additive, since a
  * multiplicative slack on a gap that can be 0 only ever passes the exact optimum), with
  * `bestAchievableGap = optimum.totalTime − Σ segmentFloors`. Other levels pass at
- * `totalTime ≤ grid.target`. `passOn: 'total'` is not in the meeting cut and is treated as
+ * `totalTime ≤ grid.target`. `passOn: 'total'` is not in the current version and is treated as
  * `'any_run'`.
  *
  * "Make the call" (Stage 9): `answerCall` records the player's answer to `level.call` once the

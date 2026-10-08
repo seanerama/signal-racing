@@ -83,7 +83,7 @@ export const TRACK_B1: Track = {
   ],
 };
 
-/** The B4L ("Puzzle-lite") circuit from the Stage 8 notes: the longest meeting-cut track. */
+/** The B4L ("Puzzle-lite") circuit from the Stage 8 notes: the longest current track. */
 export const TRACK_B4: Track = {
   id: 'b4l',
   standingStart: true,

@@ -195,7 +195,7 @@
   }
 }
 
-/* ---- Projector mode: for the meeting (toggled with P, persisted), on top of either density */
+/* ---- Projector mode: for presenting on a big screen (toggled with P, persisted), on top of either density */
 [data-projector] {
   --bg: #161d1e; /* projectors crush near-black */
   --panel: #1e2729;

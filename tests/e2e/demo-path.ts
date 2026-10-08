@@ -1,5 +1,5 @@
 /**
- * The signal.md meeting demo ("The meeting demo, in two minutes"), shared by `demo.spec.ts`
+ * The signal.md guided demo ("The demo, in two minutes"), shared by `demo.spec.ts`
  * (standard build behind `vite preview`) and `single-file.spec.ts` (`dist-single/signal.html`
  * from `file://`, network blocked). Not a spec.
  *
@@ -26,7 +26,7 @@ export async function shot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: resolve(SHOT_DIR, `${name}.png`) });
 }
 
-/** Playback speed for the meeting demo (Stage 10): 4× unless `SIGNAL_DEMO_SPEED` says 1 or 2. */
+/** Playback speed for the guided demo (Stage 10): 4× unless `SIGNAL_DEMO_SPEED` says 1 or 2. */
 export const DEMO_SPEED: 1 | 2 | 4 = (() => {
   const v = Number(process.env['SIGNAL_DEMO_SPEED'] ?? 4);
   return v === 1 || v === 2 ? v : 4;
@@ -53,7 +53,7 @@ export interface DemoOptions {
   suffix: string;
 }
 
-export async function playMeetingDemo(page: Page, { url, suffix }: DemoOptions): Promise<void> {
+export async function playGuidedDemo(page: Page, { url, suffix }: DemoOptions): Promise<void> {
   await page.goto(url);
   // Fresh demo state (the context is fresh; this guards a reused profile), with real-time
   // playback at the demo speed.

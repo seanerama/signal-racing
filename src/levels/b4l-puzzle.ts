@@ -1,5 +1,5 @@
 /**
- * B4L "The Puzzle" (signal.md "The Puzzle and the AI assist"; meeting-cut lite). Every team
+ * B4L "The Puzzle" (signal.md "The Puzzle and the AI assist"; lite). Every team
  * arrives with data and limited practice time; the question is who puts the puzzle together
  * fastest. An open circuit (main straight, fast right, back straight, hairpin, run to a stop),
  * all four levers, conditions that vary between runs, ten runs, and the whole channel registry

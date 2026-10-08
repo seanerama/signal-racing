@@ -1,6 +1,6 @@
 /**
- * The meeting demo profile (`?demo=1`). It loads a canned, labelled, unassisted Puzzle history so
- * the with/without-assist comparison exists on a fresh laptop.
+ * The guided demo profile (`?demo=1`). It loads a canned, labelled, unassisted Puzzle history so
+ * the with/without-assist comparison exists on a fresh install.
  *
  * Honest by construction: `demo-history.json` stores only the setups and run seeds of an attempt
  * played by hand without the assist. On load every run is re-simulated through the normal sim

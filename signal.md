@@ -257,17 +257,17 @@ The Puzzle is the race-weekend metaphor as a level: every team arrives with data
 
 **The assist.** A toggle, off by default. When on, after each run it shows the five channels most correlated with lap time across the runs so far, with the sign of the correlation and a one-line reason drawn from the hint rules that fired. It never sets a lever and never names a value.
 
-**What it is.** Deliberately simple and fully explainable: a rank by absolute correlation with the outcome, plus the same rules that produced hints in levels 1 to 8 acting as priors. That is the point for the meeting. It is a filter, not a decider: it surfaces what matters so the engineer applies their judgment faster.
+**What it is.** Deliberately simple and fully explainable: a rank by absolute correlation with the outcome, plus the same rules that produced hints in levels 1 to 8 acting as priors. That is the point. It is a filter, not a decider: it surfaces what matters so the engineer applies their judgment faster.
 
 **What it is not.** Not a model of the car, not a setup optimiser, not a black box. With ten runs and 200 channels, raw correlation alone finds plenty of spurious matches. The priors are what make it useful, and the debrief says so.
 
 **The comparison.** The debrief reports runs-to-target with and without the assist, from the player's own history. A player who has done the earlier levels will usually converge in six to eight runs unassisted and four to five assisted. Those two numbers are the demo.
 
-**The meeting demo, in two minutes.** Open The Puzzle. Run once with everything at defaults. Scroll the 200-channel report. Open a run's CSV in a spreadsheet so the width is visible. Turn the assist on, run again, and show the five channels it surfaces. Then ask the CIO which five their engineers would have picked.
+**The demo, in two minutes.** Open The Puzzle. Run once with everything at defaults. Scroll the 200-channel report. Open a run's CSV in a spreadsheet so the width is visible. Turn the assist on, run again, and show the five channels it surfaces. Then ask the audience which five they would have picked.
 
 ## Architecture
 
-One HTML file with vanilla JavaScript and no build step, so it runs offline on a laptop in the meeting.
+One HTML file with vanilla JavaScript and no build step, so it runs offline anywhere.
 
 &#91;embedded content: architecture · 8 modules, one data path\]
 
@@ -282,20 +282,20 @@ Level config shapes what the setup form offers and what the engine simulates. Th
 
 ## Build plan
 
-Four milestones, and the meeting needs the first and a rough cut of the last.
+Four milestones. A first playable cut needs the first and a rough cut of the last.
 
 1. **Straight line (A1 to A3) and the stack.** Engine with drag, engine curve, traction limit, longitudinal load transfer. The stacked-graph report with this-run-over-best overlay, cursor and strip management. Hint engine with the A1 to A3 rules. Grid-search targets. This is the minimum that teaches something.
 2. **Corners (A4 to A7).** Segment tracks, the driver model's braking and corner-speed logic, lateral load transfer and the anti-roll-bar split, the wing tradeoff, temperature, per-run condition variation and the noise rule.
 3. **Assembly (B1 to B3).** Joining segments, one setup across them, the segment\_delta strip and the compromise gap, segment boundaries on the axis, multi-lap runs with fuel and wear.
 4. **The Puzzle and the assist.** The two unseen segments, the 200-channel registry, the correlation ranker with priors, CSV export, the with-and-without comparison in the debrief.
 
-**Before the meeting.** Milestone 1 complete, plus a rough join of two straight segments to show the compromise gap, plus The Puzzle running on that engine with a padded channel list. The demo needs the stack, the wall of channels, the assist toggle and one CSV; it does not need corners to make its point.
+**First playable cut.** Milestone 1 complete, plus a rough join of two straight segments to show the compromise gap, plus The Puzzle running on that engine with a padded channel list. The demo needs the stack, the wall of channels, the assist toggle and one CSV; it does not need corners to make its point.
 
 - [ ] Milestone 1: engine, stacked graphs, hints, A1 to A3
 - [ ] Rough join: two segments, one setup, segment\_delta strip
 - [ ] Rough Puzzle: wide channel list, assist toggle, CSV export
 - [ ] Playtest once with someone who has not seen the spec
-- [ ] Milestones 2 to 4 after the meeting
+- [ ] Milestones 2 to 4 after the first playable cut
 
 ## Open questions
 

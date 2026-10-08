@@ -1,5 +1,5 @@
 /**
- * The meeting demo profile flag: `?demo=1` in the URL (before or inside the hash, e.g.
+ * The guided demo profile flag: `?demo=1` in the URL (before or inside the hash, e.g.
  * `signal.html?demo=1#/level/B4L` or `#/level/B4L?demo=1`). Once seen it sticks for the browser
  * tab (sessionStorage), so in-app navigation that rewrites the hash keeps it.
  */

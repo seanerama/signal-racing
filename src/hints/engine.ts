@@ -131,7 +131,7 @@ export function renderTier(
 // ---- Noise rule ----
 
 /**
- * Time elasticity to grip: d(ln T)/d(ln μ) ≈ −0.25 at the optimum on the meeting-cut tracks
+ * Time elasticity to grip: d(ln T)/d(ln μ) ≈ −0.25 at the optimum on the current tracks
  * (measured on the A3/A4/B4L shapes: 0.19–0.26). Used to turn `gripFrac` into a time band.
  */
 export const NOISE_GRIP_ELASTICITY = 0.25;
@@ -140,7 +140,7 @@ export const NOISE_GRIP_ELASTICITY = 0.25;
  * σ (s) of the difference between two runs of the same setup, from the level's declared
  * variation: one run's grip factor is `1 + gripFrac·u`, `u ~ U[−1, 1)`, so its time has
  * σ ≈ T·e·gripFrac/√3, and a difference of two independent runs has √2 times that. Track
- * temperature only moves grip when `tempAffectsGrip` is on (off in the meeting cut), so it is
+ * temperature only moves grip when `tempAffectsGrip` is on (off in the current version), so it is
  * ignored. 0 when the level declares no variation.
  */
 export function runToRunSigma(
@@ -156,7 +156,7 @@ export function runToRunSigma(
 /**
  * The generic noise rule (kind `'noise'`): fires when |Δ| between this run and the previous one
  * is less than 2σ of run-to-run variation. Needs `previousOutcome` in the context (the session
- * provides it). Add it to a level's `hintRules` to enable it (B4L in the meeting cut).
+ * provides it). Add it to a level's `hintRules` to enable it (B4L in the current version).
  */
 export function noiseRule(opts: { id?: string; elasticity?: number } = {}): HintRule {
   const id = opts.id ?? 'noise';

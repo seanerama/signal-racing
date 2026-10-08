@@ -47,7 +47,7 @@ export interface HintCtx {
 /** One hint rule: a pure predicate over a run summary plus three tiers of templated text. */
 export interface HintRule {
   id: string;
-  /** `'noise'` rules are implemented generically by the hint engine (active on B4L only in the meeting cut). */
+  /** `'noise'` rules are implemented generically by the hint engine (active on B4L only in the current version). */
   kind: 'fault' | 'headroom' | 'noise';
   /**
    * Stage 11, additive: a fallback rule's match is kept only when no fault or headroom rule

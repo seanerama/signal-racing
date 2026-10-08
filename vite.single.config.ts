@@ -20,7 +20,7 @@ function renameHtml(outDir: string, fileName: string): Plugin {
 }
 
 /**
- * Meeting fallback: `npm run build:single` → `dist-single/signal.html`, one self-contained file
+ * Offline single-file build: `npm run build:single` → `dist-single/signal.html`, one self-contained file
  * (JS, CSS, fonts and the sim worker inlined) that opens straight from disk with no server.
  */
 export default defineConfig(

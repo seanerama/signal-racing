@@ -11,7 +11,7 @@
 export type ChannelId = string;
 
 /**
- * A setup lever the player can tune. Meeting cut: these four.
+ * A setup lever the player can tune. Current version: these four.
  * M2+ adds `'arb_front' | 'arb_rear' | 'fuel_load' | 'aggression'`.
  */
 export type LeverId = 'throttle_ramp' | 'tire_pressure' | 'weight_dist' | 'wing';
@@ -86,7 +86,7 @@ export interface CarParams {
   crr: number;
   /** N, 11_500: total driver brake demand at full pedal (Stage 11; was 13_000). */
   brakeForceMax: number;
-  /** 0.70: front brake bias, fixed in the meeting cut (Stage 11; was 0.60). */
+  /** 0.70: front brake bias, fixed in the current version (Stage 11; was 0.60). */
   brakeBiasFront: number;
   /** bar, 1.7: optimal tire pressure, pressure → μ bell (Stage 11; was 1.65). */
   pOpt: number;
@@ -107,7 +107,7 @@ export interface CarParams {
    * demand ratio `r = F_demand/F_max` falls below `kRegrip`. Must lie in `[slideFactor, 1]`.
    */
   kRegrip: number;
-  /** kg, 0 in the meeting cut (fuel not modelled in mass). */
+  /** kg, 0 in the current version (fuel not modelled in mass). */
   fuelMass0: number;
   /** q, 0.5: share of lateral load transfer taken by the front axle (lever from A5, fixed now). */
   arbFrontShare: number;
@@ -184,7 +184,7 @@ export interface ModelFlags {
   tractionLimit: boolean;
   /** A1 false, true from A2. */
   pressureAffectsGrip: boolean;
-  /** False in the meeting cut (temperatures are still computed and logged). */
+  /** False in the current version (temperatures are still computed and logged). */
   tempAffectsGrip: boolean;
 }
 

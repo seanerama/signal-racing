@@ -1,23 +1,23 @@
 import { expect, test } from '@playwright/test';
 import { fresh, setLever } from './helpers';
-import { DEMO_SPEED, DEMO_TIMEOUT_MS, playMeetingDemo, runAndWait, shot } from './demo-path';
+import { DEMO_SPEED, DEMO_TIMEOUT_MS, playGuidedDemo, runAndWait, shot } from './demo-path';
 
 /**
- * Stage 8 Pipeline Test (standard build): the signal.md meeting demo end to end against
+ * Stage 8 Pipeline Test (standard build): the signal.md guided demo end to end against
  * `vite preview` (Stage 10: with real-time playback at 4×, or `SIGNAL_DEMO_SPEED`), plus the B1L
  * join view and the in-browser live B4L grid-search timing. Screenshots land in
  * `test-results/stage-9/`.
  */
 
-test('the meeting demo: Puzzle, 200 channels, CSV, assist, with/without debrief', async ({
+test('the guided demo: Puzzle, 200 channels, CSV, assist, with/without debrief', async ({
   page,
 }) => {
   test.setTimeout(DEMO_TIMEOUT_MS);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   const t0 = Date.now();
-  await playMeetingDemo(page, { url: '/?demo=1#/level/B4L', suffix: '' });
-  console.log(`[meeting demo] standard build at ${DEMO_SPEED}×: ${Date.now() - t0} ms wall`);
+  await playGuidedDemo(page, { url: '/?demo=1#/level/B4L', suffix: '' });
+  console.log(`[guided demo] standard build at ${DEMO_SPEED}×: ${Date.now() - t0} ms wall`);
   expect(errors).toEqual([]);
 });
 
