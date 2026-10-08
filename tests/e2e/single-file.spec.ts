@@ -37,7 +37,7 @@ test.describe('single-file build from file://', () => {
 
   test('fonts render from the inlined data', async ({ page, context }) => {
     await context.setOffline(true);
-    await page.goto(pathToFileURL(SINGLE).href);
+    await page.goto(`${pathToFileURL(SINGLE).href}#/dev`);
     await expect(page.getByTestId('sample-speed')).toBeVisible();
     const loaded = await page.evaluate(async () => {
       await document.fonts.ready;

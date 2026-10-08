@@ -9,7 +9,7 @@ import {
   type NoiseCtx,
 } from '@/hints/engine';
 import type { HintRule } from '@/hints/types';
-import { STUB_A2 } from '@/levels/index';
+import { STUB_A2 } from '../game/stub-level';
 import type { LevelConfig } from '@/levels/types';
 import type { RunSummary } from '@/telemetry/types';
 

@@ -13,7 +13,7 @@ import {
   startLevel,
 } from '@/game/session';
 import type { LevelSession, RunRecord } from '@/game/types';
-import { STUB_A2 } from '@/levels/index';
+import { A2 as STUB_A2 } from '@/levels/index';
 import type { LevelConfig } from '@/levels/types';
 import { createSimClient } from '@/worker/client';
 import type { GridResult, SimClient } from '@/worker/types';

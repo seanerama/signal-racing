@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STUB_A2 } from '@/levels/index';
+import { STUB_A2 } from '../game/stub-level';
 import type { LevelConfig } from '@/levels/types';
 import {
   buildBaseSimInput,

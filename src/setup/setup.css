@@ -1,0 +1,229 @@
+/* Setup panel, lever widget and hint controls (design-system "Lever widget", "Workbench"). */
+
+.setup {
+  /* Above the centre column, so the hint popover can overhang it. */
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+}
+.setup__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+  min-height: 36px;
+  padding: var(--s2) var(--s3);
+  border-bottom: 1px solid var(--line);
+}
+.setup__levers {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  padding: var(--s3) var(--s3) var(--s4);
+}
+.setup__foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s3);
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+.setup__run {
+  width: 100%;
+}
+
+/* ---- Lever ---- */
+.lever {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+.lever__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--lh-body);
+}
+.lever__label {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  color: var(--text-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+}
+.lever__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.lever__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+}
+.lever__step {
+  width: 24px;
+  height: var(--control-h-compact);
+  border: 1px solid transparent;
+  border-radius: var(--r1);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 10px;
+  line-height: 1;
+}
+.lever__step:hover:not(:disabled) {
+  background: var(--raised);
+  color: var(--text);
+}
+.lever__step:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+.lever__value {
+  flex: 1;
+  height: var(--control-h-compact);
+  border: 1px solid transparent;
+  border-radius: var(--r1);
+  background: transparent;
+  color: var(--text);
+  text-align: center;
+  cursor: text;
+}
+.lever__value:hover:not(:disabled) {
+  border-color: var(--line);
+  background: var(--raised);
+}
+.lever__input {
+  flex: 1;
+  min-width: 0;
+  height: var(--control-h-compact);
+  padding: 0 var(--s2);
+  border: 1px solid var(--focus);
+  border-radius: var(--r1);
+  background: var(--raised);
+  color: var(--text);
+  text-align: center;
+}
+.lever__value--shake {
+  color: var(--fault);
+  animation: lever-shake var(--dur-ui) linear 1;
+}
+@keyframes lever-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+.lever__track {
+  position: relative;
+  height: 18px;
+  margin: 0 var(--s2);
+  cursor: pointer;
+  touch-action: none;
+}
+.lever__rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 8px;
+  height: 1px;
+  background: var(--rule);
+}
+.lever__tick {
+  position: absolute;
+  top: 5px;
+  width: 1px;
+  height: 7px;
+  margin-left: -0.5px;
+  background: var(--rule);
+}
+.lever__ghost {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 18px;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+.lever__thumb {
+  position: absolute;
+  top: 4px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 0 0 2px var(--panel);
+  pointer-events: none;
+}
+.lever__track:focus-visible .lever__thumb {
+  background: var(--focus);
+}
+.lever--disabled .lever__thumb {
+  background: var(--text-faint);
+}
+
+.lever--locked .lever__label,
+.lever--locked .lever__value {
+  color: var(--text-faint);
+}
+.lever--locked .lever__value {
+  text-align: left;
+  padding-left: 0;
+  cursor: default;
+}
+
+/* ---- Hint controls ---- */
+.hintctl {
+  position: relative;
+}
+.hintctl__pop {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + var(--s2));
+  width: max(100%, 320px);
+  z-index: 20;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  box-shadow: var(--shadow-popover);
+  animation: pop-in var(--dur-ui) var(--ease-ui);
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.hintctl__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s1);
+}
+.hintctl__label {
+  margin-right: var(--s2);
+}
+.hintctl__key {
+  margin-left: auto;
+}
