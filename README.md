@@ -35,7 +35,7 @@ First e2e run: `npx playwright install chromium`.
 Dev route `#/dev/worker` pings the sim worker and shows the round-trip time; "live grid B4L"
 times the worker search the game falls back to when a level has no precomputed target.
 
-## The meeting demo (v0.3.0)
+## The meeting demo
 
 Levels: A1–A4 (Phase A), B1L "Join: straight + fast corner" and B4L "The Puzzle" (Phase B).
 
