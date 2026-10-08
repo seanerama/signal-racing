@@ -48,6 +48,7 @@ export function StripStack({
   hintWindow = null,
   units,
   flashChannel = null,
+  gutterMenu,
 }: StripStackProps) {
   const projector = useProjectorMode();
   const syncKey = useMemo(() => `signal-strips-${++syncSeq}`, []);
@@ -310,7 +311,7 @@ export function StripStack({
               hintRange={hintWindow && hintWindow.channel === id ? hintRange : null}
               segments={id === bottomId ? segCfg.bottom : segCfg.other}
               registerPlot={registerPlot}
-              gutter={gutterProps(id)}
+              gutter={{ ...gutterProps(id), ...(gutterMenu ? { menu: gutterMenu(id) } : {}) }}
               onResize={(h) =>
                 setHeights((prev) => ({
                   ...prev,
