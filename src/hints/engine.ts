@@ -7,6 +7,8 @@
  * - `{name:quantity}` formats it with `formatValue(quantity, units, value)` (SI in, display out);
  * - a backticked channel id (`` `rear_slip_ratio` ``) becomes a `channel` segment, so the UI can
  *   render it as a link without re-parsing. The backticks are not part of `text`.
+ * - `{name:channel}` (Stage 11) inserts `vars.name` as a `channel` segment: a channel chosen at run
+ *   time, rendered exactly like a backticked one.
  */
 import { log } from '@/app/log';
 import type { Outcome, Quantity } from '@/engine/types';
@@ -37,19 +39,21 @@ function safe<T>(rule: HintRule, what: string, fn: () => T, fallback: T): T {
 
 /**
  * Every rule of `level` that fires on this run, ranked by `estTimeCost` descending (ties keep the
- * level's rule order).
+ * level's rule order). A `fallback` rule's match is dropped when any fault or headroom rule fired.
  */
 export function evaluateHints(level: LevelConfig, summary: RunSummary, ctx: HintCtx): HintMatch[] {
-  const fired: Array<{ match: HintMatch; cost: number; order: number }> = [];
+  const fired: Array<{ match: HintMatch; cost: number; order: number; rule: HintRule }> = [];
   level.hintRules.forEach((rule, order) => {
     const match = safe(rule, 'when', () => rule.when(summary, ctx), null);
     if (!match) return;
     const raw = safe(rule, 'estTimeCost', () => rule.estTimeCost(summary, ctx), 0);
     const cost = Number.isFinite(raw) ? raw : 0;
-    fired.push({ match: { ...match, ruleId: rule.id }, cost, order });
+    fired.push({ match: { ...match, ruleId: rule.id }, cost, order, rule });
   });
-  fired.sort((a, b) => b.cost - a.cost || a.order - b.order);
-  return fired.map((f) => f.match);
+  const specific = fired.some((f) => !f.rule.fallback && f.rule.kind !== 'noise');
+  const kept = specific ? fired.filter((f) => !f.rule.fallback) : fired;
+  kept.sort((a, b) => b.cost - a.cost || a.order - b.order);
+  return kept.map((f) => f.match);
 }
 
 /** Finds the rule a match came from. */
@@ -90,6 +94,10 @@ export function renderTemplate(
       continue;
     }
     const v = name !== undefined ? vars[name] : undefined;
+    if (quantity === 'channel' && typeof v === 'string') {
+      segments.push({ kind: 'channel', value: v });
+      continue;
+    }
     let value: string;
     if (v === undefined) {
       log.warn(`hint template: no value for {${name ?? ''}}`);
@@ -162,13 +170,28 @@ export function noiseRule(opts: { id?: string; elasticity?: number } = {}): Hint
   return {
     id,
     kind: 'noise',
-    when(_s, ctx) {
+    when(s, ctx) {
       const b = band(ctx);
       if (!b || !(Math.abs(b.delta) < 2 * b.sigma)) return null;
+      // Stage 11: point at the run's real conditions where the level logs them.
+      const set = ctx.level.channelSet;
+      const conditions = (['grip_multiplier', 'track_temp'] as const).filter((c) =>
+        set.includes(c),
+      );
       return {
         ruleId: id,
-        vars: { delta: Math.abs(b.delta), sigma: b.sigma, band: 2 * b.sigma },
-        channels: ['delta_best'],
+        vars: {
+          delta: Math.abs(b.delta),
+          sigma: b.sigma,
+          band: 2 * b.sigma,
+          grip:
+            (s.clean as RunSummary['clean'] | undefined)?.grip_multiplier?.mean ??
+            ctx.level.conditions.base.gripMultiplier,
+          temp:
+            (s.clean as RunSummary['clean'] | undefined)?.track_temp?.mean ??
+            ctx.level.conditions.base.trackTemp,
+        },
+        channels: ['delta_best', ...conditions],
       };
     },
     estTimeCost(_s, ctx) {
@@ -176,8 +199,8 @@ export function noiseRule(opts: { id?: string; elasticity?: number } = {}): Hint
       return b ? 2 * b.sigma : 0;
     },
     tiers: [
-      'This run differs from the last by {delta:time}, inside the run-to-run band of {band:time}.',
-      'This change is smaller than the track variation between runs. Grip and track temperature move a little every run, so a difference this small can be the track, not the setup.',
+      'This run differs from the last by {delta:time}, inside the run-to-run band of {band:time}; `grip_multiplier` read {grip} and `track_temp` {temp:temperature} this run.',
+      'This change is smaller than the track variation between runs. Grip and track temperature move a little every run, and `grip_multiplier` and `track_temp` show by how much, so a difference this small can be the track, not the setup.',
       'Compare runs under like conditions before concluding: make a bigger change to one lever, or repeat the setup.',
     ],
   };
