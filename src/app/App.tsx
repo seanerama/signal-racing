@@ -2,6 +2,7 @@ import { signal } from '@preact/signals';
 import type { UnitSystem } from '@/units';
 import { TopBar } from './components/TopBar';
 import { routePath } from './router';
+import { DevReport } from './routes/DevReport';
 import { DevWorker } from './routes/DevWorker';
 import { Home } from './routes/Home';
 import './App.css';
@@ -13,6 +14,8 @@ function Route() {
   switch (routePath.value) {
     case '/dev/worker':
       return <DevWorker />;
+    case '/dev/report':
+      return <DevReport units={units.value} onUnitsChange={(next) => (units.value = next)} />;
     default:
       return <Home units={units.value} />;
   }
