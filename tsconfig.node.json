@@ -7,6 +7,7 @@
   },
   "include": [
     "tests",
+    "scripts",
     "vite.config.ts",
     "vite.single.config.ts",
     "vite.shared.ts",
