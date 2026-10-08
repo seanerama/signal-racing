@@ -206,3 +206,21 @@
 .db__cmp .db__prose {
   margin-top: var(--s2);
 }
+
+/* Stage 9: Calls row and the model link. */
+.db__calls td {
+  vertical-align: top;
+}
+.db__calls p {
+  margin: 0 0 var(--s1);
+}
+.db__call--right {
+  color: var(--gain);
+}
+.db__call--wrong {
+  color: var(--loss);
+}
+.db__modellink {
+  align-self: center;
+  margin-right: var(--s2);
+}

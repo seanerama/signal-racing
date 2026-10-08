@@ -1,0 +1,129 @@
+/* Model & sources (Stage 9): a reading page, same voice as the debrief. */
+.model {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: var(--s6) var(--s6) var(--s8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s6);
+}
+.model__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.model__head p {
+  margin: 0;
+}
+.model__disclaimer {
+  color: var(--text-dim);
+}
+.model__sec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+.model__sec h2,
+.model__sec p {
+  margin: 0;
+}
+.model__eqs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.model__eq {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: var(--s3);
+  padding: var(--s3) 0;
+  border-top: 1px solid var(--line);
+}
+.model__row {
+  padding-top: 2px;
+}
+.model__eqbody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  min-width: 0;
+}
+.model__eqtitle {
+  color: var(--text-dim);
+  font-size: var(--fs-data);
+}
+.model__math {
+  color: var(--text);
+  font-size: 16px;
+  overflow-x: auto;
+}
+.model__math math {
+  font-family: 'STIX Two Math', 'Cambria Math', 'Latin Modern Math', serif;
+}
+.model__plain {
+  color: var(--text);
+  font-size: var(--fs-data);
+  white-space: pre-wrap;
+}
+.model__plain--twin {
+  color: var(--text-dim);
+  font-size: var(--fs-micro);
+}
+.model__note {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.model__table {
+  border-collapse: collapse;
+  font-size: var(--fs-data);
+  width: 100%;
+  max-width: 640px;
+}
+.model__table th,
+.model__table td {
+  padding: 3px var(--s3) 3px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+.model__table th {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.model__r {
+  text-align: right !important;
+}
+.model__list {
+  margin: 0;
+  padding-left: var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.model__list ul {
+  margin: var(--s1) 0 0;
+  padding-left: var(--s4);
+}
+.model__artifact {
+  font-size: var(--fs-data);
+}
+.model__sources {
+  margin: 0;
+  padding-left: var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  font-size: var(--fs-body);
+}
+.model__sources li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.model__url {
+  font-size: var(--fs-data);
+  word-break: break-all;
+}

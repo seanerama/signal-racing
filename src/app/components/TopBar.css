@@ -80,3 +80,36 @@
   font-weight: 500;
   letter-spacing: 0.12em;
 }
+
+/* ⓘ menu (Stage 9): Brief · How this is modelled. */
+.topbar__info {
+  position: relative;
+}
+.topbar__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: var(--s1) 0;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  box-shadow: 0 8px 24px #000a;
+}
+.topbar__menu-item {
+  padding: var(--s1) var(--s3);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-data);
+  text-align: left;
+  white-space: nowrap;
+}
+.topbar__menu-item:hover,
+.topbar__menu-item:focus-visible {
+  background: var(--line);
+  outline: none;
+}

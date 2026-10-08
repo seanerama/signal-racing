@@ -271,6 +271,7 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
     engineFull: 0,
     resistance: 0,
     fxMaxRear: 0,
+    rearSliding: false,
   };
 
   const boundaryTimes: number[] = [];
@@ -299,6 +300,7 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
     ds.engineFull = engineFull;
     ds.resistance = grip.fDrag + roll;
     ds.fxMaxRear = grip.fxMaxRear;
+    ds.rearSliding = st.slideRear && st.slideRearDrive;
     driverInputs(ds, env, pedals);
     const beta = pedals.brake;
     const theta = pedals.throttle;
@@ -393,6 +395,11 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
       out.grip_budget_rear = grip.budgetRear;
       out.grip_used_front = usedFront;
       out.grip_used_rear = usedRear;
+      // Stage 9: the axle forces behind grip_used (rows 12, 18, 20), for the grip circle.
+      out.fx_front = fxFront;
+      out.fy_front = grip.fyFront;
+      out.fx_rear = fxRear;
+      out.fy_rear = grip.fyRear;
       out.front_slip_ratio = slipFront;
       out.rear_slip_ratio = slipRear;
       out.wheel_speed_fl = wFront;

@@ -29,11 +29,12 @@ import {
 import { LevelSelect } from './LevelSelect';
 import { demoProfile, demoStatus } from './demo';
 import { log } from './log';
-import { levelPath, navigate, parseRoute, routePath, type Route } from './router';
+import { MODEL_PATH, levelPath, navigate, parseRoute, routePath, type Route } from './router';
 import { DevHome } from './routes/DevHome';
 import { DevReport } from './routes/DevReport';
 import { DevWorker } from './routes/DevWorker';
 import { LevelRoute } from './LevelRoute';
+import { ModelPage } from './ModelPage';
 import { DebriefExtra } from './DebriefExtra';
 import './App.css';
 import './screens.css';
@@ -122,6 +123,8 @@ function RouteView({ route }: { route: Route }) {
   switch (route.name) {
     case 'select':
       return <LevelSelect units={units.value} />;
+    case 'model':
+      return <ModelPage units={units.value} />;
     case 'level':
       return unlocked(route.id) ? (
         <LevelRoute key={route.id} id={route.id} units={units.value} />
@@ -258,6 +261,12 @@ function usePaletteCommands(route: Route, phaseB: boolean): Command[] {
     cmds.push(
       { id: 'select', group: 'Level', label: 'Level select', run: () => navigate('/') },
       {
+        id: 'model',
+        group: 'View',
+        label: 'How this is modelled (model & sources)',
+        run: () => navigate(MODEL_PATH),
+      },
+      {
         id: 'projector',
         group: 'View',
         label: `Projector mode ${projectorMode.value ? 'off' : 'on'}`,
@@ -326,6 +335,7 @@ export function App() {
         {...(route.name === 'level' && workbenchActions.value
           ? { onBrief: () => workbenchActions.value?.openBrief() }
           : {})}
+        onModel={() => navigate(MODEL_PATH)}
         {...(demoProfile.value
           ? {
               status: (
@@ -358,6 +368,7 @@ export function App() {
             {route.name === 'debrief' && <span class="micro dim">/ debrief</span>}
           </>
         )}
+        {route.name === 'model' && <span class="micro dim">model &amp; sources</span>}
       </TopBar>
       <main class="app__main">
         <Boundary resetKey={routePath.value}>

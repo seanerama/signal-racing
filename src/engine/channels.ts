@@ -66,6 +66,28 @@ export const PHYSICAL_CHANNELS: readonly PhysicalChannelMeta[] = Object.freeze([
     description: 'Rear axle grip used, √(Fx² + Fy²)/F_max.',
   },
   {
+    id: 'fx_front',
+    quantity: 'force',
+    description:
+      'Front axle longitudinal tire force (+ drive, − braking): the row-12 force actually delivered.',
+  },
+  {
+    id: 'fy_front',
+    quantity: 'force',
+    description: 'Front axle lateral tire force toward the corner centre, m·a_y·(1−d) (row 18).',
+  },
+  {
+    id: 'fx_rear',
+    quantity: 'force',
+    description:
+      'Rear axle longitudinal tire force (+ drive, − braking): the row-12 force actually delivered.',
+  },
+  {
+    id: 'fy_rear',
+    quantity: 'force',
+    description: 'Rear axle lateral tire force toward the corner centre, m·a_y·d (row 18).',
+  },
+  {
     id: 'front_slip_ratio',
     quantity: 'ratio',
     description: 'Front slip ratio (lock under braking).',

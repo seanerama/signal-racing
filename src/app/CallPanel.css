@@ -1,0 +1,121 @@
+/* Make the call (Stage 9; design-system "Make the call"). Docked above the hint controls. */
+.call {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s2) var(--s2) var(--s2) var(--s3);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--warn);
+  border-radius: var(--r2);
+}
+.call__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+.call__title {
+  color: var(--warn);
+  margin: 0;
+}
+.call__q {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.call__why {
+  margin: 0;
+  font-size: var(--fs-data);
+  line-height: var(--lh-data);
+}
+.call__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+.call__opt {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: var(--s2);
+  align-items: start;
+  padding: var(--s1) var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.call__opt:hover:not(:disabled) {
+  border-color: var(--rule);
+  background: var(--panel);
+}
+.call__opt:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.call__opt:disabled {
+  cursor: default;
+  color: var(--text-dim);
+}
+.call__opt--picked {
+  color: var(--text);
+}
+.call__opt--right {
+  border-color: var(--gain);
+}
+.call__opt--wrong {
+  border-color: var(--loss);
+}
+.call__key {
+  color: var(--text-dim);
+  font-size: var(--fs-data);
+  line-height: var(--lh-data);
+}
+.call__opttext {
+  margin: 0;
+  font-size: var(--fs-data);
+  line-height: var(--lh-data);
+}
+.call__result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding-top: var(--s2);
+  border-top: 1px solid var(--line);
+}
+.call__verdict {
+  margin: 0;
+  letter-spacing: var(--ls-h2);
+  text-transform: uppercase;
+}
+.call__verdict--right {
+  color: var(--gain);
+}
+.call__verdict--wrong {
+  color: var(--loss);
+}
+.call__check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1) var(--s2);
+}
+.call__add {
+  padding: 0 var(--s1);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  background: transparent;
+  color: var(--focus);
+  font-family: var(--font-mono);
+  font-size: var(--fs-data);
+  cursor: pointer;
+}
+.call__add:hover:not(:disabled) {
+  background: var(--line);
+}
+.call__add:disabled {
+  color: var(--text-dim);
+  cursor: default;
+}

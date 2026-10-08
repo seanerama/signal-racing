@@ -3,6 +3,7 @@
  * workbench with the concept, the levers unlocked (chips), the run budget, the target time
  * (Readout L, once the grid search has finished) and BEGIN. Reachable again from ⓘ.
  */
+import { DISCLAIMER } from '@/game/disclaimer';
 import type { LevelConfig } from '@/levels/types';
 import { LockGlyph } from '@/report/LockGlyph';
 import { LEVER_QUANTITY, LEVER_SHORT } from '@/report/ResultHeader';
@@ -73,6 +74,11 @@ export function BriefModal({ level, target, progress, units, onBegin, started }:
         <p class="micro faint">{`Target is the optimum from a grid search over every lever setting, plus ${(
           level.tolerance * 100
         ).toFixed(1)}%. Hints cost one run per tier.`}</p>
+        {level.assist && (
+          <p class="micro dim brief__disclaimer" data-testid="disclaimer-brief">
+            {DISCLAIMER}
+          </p>
+        )}
         <div class="brief__actions">
           <Button variant="primary" size="run" onClick={onBegin} data-autofocus data-testid="begin">
             {started ? 'Close' : 'Begin'}

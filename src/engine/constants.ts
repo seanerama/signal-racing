@@ -18,12 +18,21 @@ export const STOP_SPEED = 0.05;
 export const CORNER_TOL = 0.01;
 /** m/s, upper bracket of the corner limit speed bisection. */
 export const CORNER_V_MAX = 200;
+/*
+ * Row 15 values, re-tuned in Stage 9 (equation unchanged). With kHeat 0.9 and a ×4 slide
+ * multiplier the tires ran far outside any plausible band (B4L rear about 590 °C in the demo,
+ * over 1000 °C at some grid setups; the equilibrium of a gripping corner at 60 m/s was ~2700 °C).
+ * kHeat 0.9 → 0.05 and the slide multiplier 4 → 2 keep every level's peak at or under 140 °C for
+ * every setup in the lever grid (scripts/temps.ts), while a good B4L run still warms the rears
+ * by ~30 °C. kCool is unchanged. Tire temperature does not affect grip in the meeting cut
+ * (`tempAffectsGrip` is off on every level), so no outcome changes.
+ */
 /** Tire heating coefficient (row 15). */
-export const K_HEAT = 0.9;
+export const K_HEAT = 0.05;
 /** 1/s, tire cooling coefficient (row 15). */
 export const K_COOL = 0.02;
 /** Heat-in multiplier while the axle is sliding (row 15). */
-export const SLIDE_HEAT_MULT = 4;
+export const SLIDE_HEAT_MULT = 2;
 /** Brake heating coefficient (row 16). */
 export const K_BRAKE = 2e-6;
 /** 1/s, brake cooling coefficient (row 16). */

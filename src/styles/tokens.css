@@ -99,6 +99,8 @@
   --strip-gutter-w: 148px;
   --strip-readout-w: 64px;
   --track-view-h: 200px;
+  /* Stage 9: the grip circle band under the track view (Wide 120px). */
+  --grip-circle-h: 96px;
 
   /* Layout column widths (Standard 1280–1679px) */
   --setup-w: 264px;
@@ -131,6 +133,7 @@
     --setup-w: 280px;
     --table-w: 400px;
     --track-view-h: 240px;
+    --grip-circle-h: 120px;
   }
 }
 

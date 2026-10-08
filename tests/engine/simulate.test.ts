@@ -231,3 +231,39 @@ describe('errors and determinism', () => {
     expect(JSON.stringify(x)).toBe(before);
   });
 });
+
+describe('axle force channels (Stage 9, grip circle)', () => {
+  it('√(fx² + fy²)/F_max equals grip_used per axle within 1e-6 at every sample', () => {
+    for (const track of [TRACK_A1, TRACK_A3, TRACK_A4, TRACK_B1, STOP_THEN_GO]) {
+      for (const setup of [
+        { throttle_ramp: 0 },
+        { throttle_ramp: 0.6, wing: 8, weight_dist: 0.38 },
+        { tire_pressure: 2.2, wing: 0, weight_dist: 0.52 },
+      ]) {
+        const c = simulate(input(track, FLAGS_A2, setup), 'full').columns!;
+        for (const axle of ['front', 'rear'] as const) {
+          const fx = c.ch[`fx_${axle}`]!;
+          const fy = c.ch[`fy_${axle}`]!;
+          const budget = c.ch[`grip_budget_${axle}`]!;
+          const used = c.ch[`grip_used_${axle}`]!;
+          for (let i = 0; i < c.n; i++) {
+            const r = Math.hypot(fx[i]!, fy[i]!) / budget[i]!;
+            expect(Math.abs(r - used[i]!), `${track.id} ${axle} @${i}`).toBeLessThan(1e-6);
+          }
+        }
+      }
+    }
+  });
+
+  it('signs: fx is + under drive and − under braking; fy is ≥ 0 and 0 on straights', () => {
+    const c = simulate(input(TRACK_A4, FLAGS_A2), 'full').columns!;
+    const brake = c.ch.brake!;
+    const thr = c.ch.throttle!;
+    for (let i = 0; i < c.n; i++) {
+      if (brake[i]! > 0) expect(c.ch.fx_rear![i]!).toBeLessThanOrEqual(0);
+      if (brake[i] === 0 && thr[i]! > 0) expect(c.ch.fx_rear![i]!).toBeGreaterThanOrEqual(0);
+      expect(c.ch.fy_front![i]!).toBeGreaterThanOrEqual(0);
+      if (c.seg[i] !== 1) expect(c.ch.fy_rear![i]!).toBe(0);
+    }
+  });
+});

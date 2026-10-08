@@ -163,9 +163,9 @@ describe('row 9–12: driver forces and tires', () => {
 });
 
 describe('row 15–17: temperatures and gears', () => {
-  it('tire heating is kHeat·ratio²·v, ×4 when sliding, minus cooling', () => {
-    expect(tireTempRate(30, 0.5, 20, false, 30)).toBeCloseTo(4.5, 12);
-    expect(tireTempRate(30, 0.5, 20, true, 30)).toBeCloseTo(18, 12);
+  it('tire heating is kHeat·ratio²·v, ×2 when sliding, minus cooling', () => {
+    expect(tireTempRate(30, 0.5, 20, false, 30)).toBeCloseTo(0.25, 12);
+    expect(tireTempRate(30, 0.5, 20, true, 30)).toBeCloseTo(0.5, 12);
     expect(tireTempRate(50, 0, 20, false, 30)).toBeCloseTo(-0.4, 12);
   });
   it('brake heating is kBrake·F·v minus cooling', () => {

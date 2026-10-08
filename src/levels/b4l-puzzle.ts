@@ -20,6 +20,7 @@ import type { Role } from '@/telemetry/types';
 import type { ChannelId } from '@/engine/types';
 import type { LevelConfig } from './types';
 import {
+  AXLE_FORCES,
   DRY,
   FLAGS_GRIP,
   TRACK_PUZZLE,
@@ -42,7 +43,11 @@ export const B4L_CAUSAL: ChannelId[] = [
   'speed_diff_rl',
   'mu_rear',
   'segment_delta',
+  ...AXLE_FORCES,
 ];
+
+/** m: where run 2's planted `speed_diff_rl` spike sits (mid main straight, no wheelspin). */
+export const SPIKE_AT_M = 612;
 
 /** Every registry channel, in registry order. */
 const ALL: ChannelId[] = allChannels().map((c) => c.id);
@@ -89,6 +94,37 @@ export const B4L: LevelConfig = {
   scoreTarget: 'time',
   assist: true,
   segmentFloorSource: 'engine_optimum',
+  artifacts: [
+    // Stage 9 "Make the call": a one-sample sensor spike mid-straight, where the rear tire is
+    // only at its normal driven slip. Sensor layer only; disclosed on the Model page.
+    { run: 2, channel: 'speed_diff_rl', kind: 'spike', at: { s: SPIKE_AT_M }, magnitude: 7.7 },
+  ],
+  call: {
+    afterRun: 2,
+    question:
+      '`speed_diff_rl` jumped to {value:speed} for one sample at {at:distance}, mid-straight. What do you do?',
+    options: [
+      {
+        id: 'act',
+        text: 'Act on it now: that is wheelspin, so change a lever for the next run.',
+        correct: false,
+        why: 'A lever change on one sample spends a run on a reading nothing else confirms. Real wheelspin moves `rear_slip_ratio`, `wheel_speed_rl`, `speed` and `long_g` together.',
+      },
+      {
+        id: 'flag',
+        text: 'Flag it as a possible sensor artifact and cross-check the related channels before acting.',
+        correct: true,
+        why: 'Real wheelspin moves `rear_slip_ratio`, `wheel_speed_rl`, `speed` and `long_g` together; this spike moves one channel for one sample. Flag it, check, and act only on what agrees.',
+      },
+      {
+        id: 'discard',
+        text: 'Throw out all the high readings on `speed_diff_rl` from now on.',
+        correct: false,
+        why: 'Discarding every high reading also discards real wheelspin, which is what the channel is for. Flag the sample, not the channel.',
+      },
+    ],
+    crossCheck: ['rear_slip_ratio', 'wheel_speed_rl', 'speed', 'long_g'],
+  },
   debrief: {
     physics: [
       'Every effect from the earlier levels is on this track at once: `rear_slip_ratio` and `speed_diff_rl` on the launch and out of the hairpin, `load_front` and `front_slip_ratio` in the braking, `mu_rear` on the pressure bell, `drag_force` on the straights.',

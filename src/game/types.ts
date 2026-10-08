@@ -55,6 +55,22 @@ export interface LevelSession {
   /** Consumes `hintCost[tier]`; returns the match whose tier was opened. */
   openHintTier(): HintMatch | null;
   assistOn: Signal<boolean>;
+  /** Stage 9, additive: the answer to `level.call` ("Make the call"); null until answered. */
+  call: Signal<CallAnswer | null>;
+  /**
+   * Stage 9: records the answer to `level.call` (once, after run `afterRun`). Costs no runs.
+   * Returns the recorded answer, or null if there is no call yet or the option is unknown.
+   */
+  answerCall(optionId: string): CallAnswer | null;
+}
+
+/** A recorded "Make the call" answer. */
+export interface CallAnswer {
+  afterRun: number;
+  optionId: string;
+  correct: boolean;
+  /** Runs completed when the answer was given (the panel shows the result until the next run). */
+  atRun: number;
 }
 
 /** Persisted per-level progress (`signal.v1.progress`). */

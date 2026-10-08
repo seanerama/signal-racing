@@ -381,6 +381,8 @@ export interface DriverState {
   resistance: number;
   /** N, longitudinal force the rear axle can take in the corner (row 20). */
   fxMaxRear: number;
+  /** Row 12b: the rear axle arrives sliding under drive (wheelspin carried from the last step). */
+  rearSliding: boolean;
 }
 
 /** Pedal outputs. `throttle` ∈ [0, 1] is the actual throttle; `brake` β ∈ {0, 1}. */
@@ -393,7 +395,9 @@ export interface DriverInputs {
  * The driver for one step. Brakes at full pedal when `v ≥ v_env(s)` (latched by `BRAKE_LATCH`)
  * or past a stop point; once braking for a stop it stays on the pedal until stopped (a release
  * near standstill would crawl and add time noise). In a corner it holds `v_lim`, using throttle only to cancel drag and
- * rolling resistance (plus closing any gap to `v_lim` in one step), capped by the friction circle.
+ * rolling resistance (plus closing any gap to `v_lim` in one step), capped by the friction circle
+ * (inclusive: the demand ratio never exceeds 1). If the rear arrives sliding in a corner, the
+ * driver lifts for that step (row 12b: wheelspin persists until the driver lifts).
  * Otherwise it follows the throttle ramp (row 9).
  */
 export function driverInputs(
@@ -422,10 +426,19 @@ export function driverInputs(
   out.brake = 0;
   let theta = rampThrottle(state.tSinceLaunch, state.ramp, false);
   if (inCorner && state.engineFull > 0) {
-    const target = Math.min(state.vLim, vEnv);
-    const need = Math.max(0, state.resistance + (state.mass * (target - v)) / DT);
-    const cap = Math.min(need, state.fxMaxRear);
-    theta = Math.min(theta, cap / state.engineFull);
+    if (state.rearSliding) {
+      // Row 12b: wheelspin persists until the driver lifts. Holding the corner, the driver lifts
+      // for one step (no demand ends a slide) and comes back on within the friction circle.
+      theta = 0;
+    } else {
+      const target = Math.min(state.vLim, vEnv);
+      const need = Math.max(0, state.resistance + (state.mass * (target - v)) / DT);
+      const cap = Math.min(need, state.fxMaxRear);
+      theta = Math.min(theta, cap / state.engineFull);
+      // Stage 9: `(cap/F)·F` can round one ulp above `cap`, i.e. a demand ratio of 1 + 2⁻⁵² that
+      // starts a slide the hysteresis then holds for the whole corner. The cap is inclusive.
+      while (theta > 0 && theta * state.engineFull > cap) theta -= theta * Number.EPSILON;
+    }
   }
   out.throttle = theta;
   return out;

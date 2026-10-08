@@ -1,13 +1,15 @@
 /**
  * Builds a strip's uPlot data: `[x, ...history, best, current]`, all on the current run's x and
  * converted to display units. The best run (and each history run) is resampled onto the current
- * run's x (`align.ts`). Dropouts (NaN) become `null`, which uPlot draws as gaps.
+ * run's x (`align.ts`). Dropouts (NaN) become `null`, which uPlot draws as gaps. With `smooth`
+ * (Stage 9) the current and best lines are the display-only 5-point mean (`smooth.ts`).
  */
 import type uPlot from 'uplot';
 import type { ChannelId, Quantity } from '@/engine/types';
 import type { RunTelemetry } from '@/telemetry/types';
 import { toDisplay, type UnitSystem } from '@/units';
 import { interpAt, resampleOnto } from './align';
+import { smooth5 } from './smooth';
 
 export type Axis = 'time' | 'distance';
 
@@ -69,15 +71,18 @@ export function buildStripData(args: {
   history?: RunTelemetry[];
   axis: Axis;
   units: UnitSystem;
+  /** Stage 9: display-only 5-point centred mean on the current and best lines. */
+  smooth?: boolean;
 }): StripData {
   const { id, quantity, current, best, axis, units } = args;
+  const sm = args.smooth ? smooth5 : (a: Float64Array) => a;
   const x = axisX(current, axis, units);
   const dstSi = runAxisSrc(current, axis);
   const has = (rt: RunTelemetry) => rt.channelIds.includes(id);
-  const cur = toDisplayArray(quantity, units, has(current) ? current.get(id) : []);
+  const cur = sm(toDisplayArray(quantity, units, has(current) ? current.get(id) : []));
   const resample = (rt: RunTelemetry) =>
     toDisplayArray(quantity, units, resampleOnto(runAxisSrc(rt, axis), rt.get(id), dstSi));
-  const bestArr = best && has(best) ? resample(best) : null;
+  const bestArr = best && has(best) ? sm(resample(best)) : null;
   const hist = (args.history ?? []).filter((h) => h !== current && h !== best && has(h));
   const data: uPlot.AlignedData = [
     x,

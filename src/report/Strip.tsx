@@ -37,6 +37,8 @@ export interface StripProps {
   syncKey: string;
   projector: boolean;
   zoomFrame: string;
+  /** Stage 9: display-only 5-point smoothing (`~` on the gutter and readouts). */
+  smooth?: boolean;
   /** Hint band in x-axis units, or null. */
   hintRange: [number, number] | null;
   segments: SegmentRulesConfig | null;
@@ -79,11 +81,13 @@ function StripReadout({
   dp,
   unit,
   id,
+  smooth = false,
 }: {
   data: StripData | null;
   dp: number;
   unit: string;
   id: string;
+  smooth?: boolean;
 }) {
   const idx = cursorIdx.value;
   const cur = idx !== null && data ? data.cur[idx] : undefined;
@@ -92,14 +96,19 @@ function StripReadout({
   // Glyph + sign; zero after rounding is neutral (`±0.000`), never `▼−0.000`.
   const parts = Number.isFinite(delta) ? deltaParts(delta, dp) : null;
   const deltaText = parts ? `${parts.glyph}${parts.text}` : '—';
+  // Smoothed readouts carry `~` so a displayed mean is never read as a raw sample.
+  const mark = (v: number | undefined): string => {
+    const s = fmt(v, dp);
+    return smooth && s !== '—' ? `~${s}` : s;
+  };
   return (
     <div
       class="strip__readout data"
       role="status"
-      aria-label={`${id} at cursor: current ${fmt(cur, dp)}, best ${fmt(best, dp)}${unit ? ` ${unit}` : ''}`}
+      aria-label={`${id} at cursor${smooth ? ' (smoothed)' : ''}: current ${fmt(cur, dp)}, best ${fmt(best, dp)}${unit ? ` ${unit}` : ''}`}
     >
-      <span class="strip__rd-cur">{fmt(cur, dp)}</span>
-      <span class="strip__rd-best">{fmt(best, dp)}</span>
+      <span class="strip__rd-cur">{mark(cur)}</span>
+      <span class="strip__rd-best">{mark(best)}</span>
       <span class="strip__rd-delta">{deltaText}</span>
     </div>
   );
@@ -161,6 +170,7 @@ export function Strip(props: StripProps) {
     segments,
     registerPlot,
     gutter,
+    smooth = false,
   } = props;
   const rowRef = useRef<HTMLDivElement>(null);
   const plotRef = useRef<HTMLDivElement>(null);
@@ -169,8 +179,11 @@ export function Strip(props: StripProps) {
   const visible = useVisibleOnce(rowRef);
 
   const data = useMemo(
-    () => (current ? buildStripData({ id, quantity, current, best, history, axis, units }) : null),
-    [id, quantity, current, best, history, axis, units],
+    () =>
+      current
+        ? buildStripData({ id, quantity, current, best, history, axis, units, smooth })
+        : null,
+    [id, quantity, current, best, history, axis, units, smooth],
   );
 
   // Plugins read the latest hint/segment config through refs, so they never force a rebuild.
@@ -291,7 +304,15 @@ export function Strip(props: StripProps) {
       data-strip={id}
       style={{ '--strip-hue': hue }}
     >
-      <StripGutter {...gutter} id={id} label={label} unit={unit} slot={slot} hue={hue} />
+      <StripGutter
+        {...gutter}
+        id={id}
+        label={label}
+        unit={unit}
+        slot={slot}
+        hue={hue}
+        smoothed={smooth}
+      />
       <div class="strip__plot" style={{ height: `${height + axisH}px` }}>
         <div class="strip__canvas" ref={plotRef} aria-hidden="true" />
         {!current && <span class="strip__empty micro faint">no run</span>}
@@ -299,7 +320,7 @@ export function Strip(props: StripProps) {
           <CursorChip top={height + 4} plot={plot} xs={data?.x ?? null} axis={axis} units={units} />
         )}
       </div>
-      <StripReadout data={data} dp={dp} unit={unit} id={id} />
+      <StripReadout data={data} dp={dp} unit={unit} id={id} smooth={smooth} />
       <div
         class="strip__resize"
         aria-hidden="true"

@@ -8,7 +8,8 @@ import type { LevelConfig } from '@/levels/types';
 import { RunPips } from '@/report/RunPips';
 import { formatValue, type UnitSystem } from '@/units';
 import { progress, unlocked } from './game-store';
-import { levelPath, navigate } from './router';
+import { DISCLAIMER } from '@/game/disclaimer';
+import { MODEL_PATH, levelPath, navigate } from './router';
 import './screens.css';
 
 type Status = 'locked' | 'open' | 'passed' | 'done';
@@ -118,9 +119,17 @@ export function LevelSelect({ units }: { units: UnitSystem }) {
           );
         })}
       </table>
-      <p class="micro faint select__foot">
-        ⌘K jumps anywhere · P projector mode · U units · ? shortcuts
-      </p>
+      <footer class="select__foot">
+        <p class="micro faint">⌘K jumps anywhere · P projector mode · U units · ? shortcuts</p>
+        <p class="micro">
+          <a class="sheet__link" href={`#${MODEL_PATH}`} data-testid="model-link">
+            How this is modelled
+          </a>
+        </p>
+        <p class="micro dim select__disclaimer" data-testid="disclaimer-select">
+          {DISCLAIMER}
+        </p>
+      </footer>
     </section>
   );
 }

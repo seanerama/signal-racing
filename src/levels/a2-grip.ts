@@ -9,11 +9,11 @@ import type { HintRule } from '@/hints/types';
 import type { RunSummary } from '@/telemetry/types';
 import type { LevelConfig } from './types';
 import {
+  AXLE_FORCES,
   brakeWindow,
+  cleanMax,
   DRY,
   FLAGS_GRIP,
-  TRACK_STRAIGHT,
-  cleanMax,
   lever,
   peakInPhase,
   pressureDirection,
@@ -23,6 +23,7 @@ import {
   rampWindow,
   roles,
   slidingWindow,
+  TRACK_STRAIGHT,
   type Window,
 } from './common';
 
@@ -178,6 +179,7 @@ export const A2: LevelConfig = {
   tolerance: 0.01,
   hintCost: [1, 1, 1],
   channelSet: [
+    ...AXLE_FORCES,
     'segment_time',
     'delta_best',
     'top_speed',
@@ -201,6 +203,7 @@ export const A2: LevelConfig = {
     'fuel_pressure',
   ],
   channelRoles: {
+    ...roles('correlated', AXLE_FORCES),
     ...roles('outcome', ['segment_time', 'delta_best', 'top_speed']),
     ...roles('causal', ['rear_slip_ratio', 'speed_diff_rl', 'wheel_speed_rl', 'mu_rear']),
     ...roles('correlated', [

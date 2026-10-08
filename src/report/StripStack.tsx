@@ -49,6 +49,7 @@ export function StripStack({
   units,
   flashChannel = null,
   gutterMenu,
+  smoothed,
 }: StripStackProps) {
   const projector = useProjectorMode();
   const syncKey = useMemo(() => `signal-strips-${++syncSeq}`, []);
@@ -308,6 +309,7 @@ export function StripStack({
               syncKey={syncKey}
               projector={projector}
               zoomFrame={frame}
+              smooth={smoothed?.has(id) ?? false}
               hintRange={hintWindow && hintWindow.channel === id ? hintRange : null}
               segments={id === bottomId ? segCfg.bottom : segCfg.other}
               registerPlot={registerPlot}

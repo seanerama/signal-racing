@@ -8,14 +8,15 @@ import type { RunSummary } from '@/telemetry/types';
 import type { LevelConfig } from './types';
 import {
   AT_LIMIT,
+  AXLE_FORCES,
+  cleanMin,
   DRY,
   FLAGS_GRIP,
-  TRACK_CORNER,
-  cleanMin,
   lever,
   pressureLever,
   rampLever,
   roles,
+  TRACK_CORNER,
   weightLever,
   wingLever,
 } from './common';
@@ -111,6 +112,7 @@ export const A4: LevelConfig = {
   tolerance: 0.005,
   hintCost: [1, 1, 1],
   channelSet: [
+    ...AXLE_FORCES,
     'segment_time',
     'delta_best',
     'top_speed',
@@ -150,6 +152,7 @@ export const A4: LevelConfig = {
     'pitot_dp_1',
   ],
   channelRoles: {
+    ...roles('causal', AXLE_FORCES),
     ...roles('outcome', ['segment_time', 'delta_best', 'top_speed']),
     ...roles('causal', ['lat_g', 'corner_min_speed', 'exit_speed', 'downforce']),
     ...roles('correlated', [
@@ -197,6 +200,6 @@ export const A4: LevelConfig = {
       'A tire has one grip budget, μ times load, shared between braking, driving and cornering, so in the corner `lat_g` sits flat at the limit and `corner_min_speed` is set by how much load the tires carry.',
       'Wing adds `downforce`, and so load, in proportion to v², but drag grows faster than downforce as the wing goes up; on a segment this short the corner is worth more than the straights, so the best wing is high.',
     ],
-    causal: ['lat_g', 'corner_min_speed', 'exit_speed', 'downforce'],
+    causal: ['lat_g', 'corner_min_speed', 'exit_speed', 'downforce', ...AXLE_FORCES],
   },
 };

@@ -1,0 +1,38 @@
+/* Grip circle (design-system "Grip circle", Stage 9): a band under the track view. */
+.gripcircle {
+  position: relative;
+  width: 100%;
+  height: var(--grip-circle-h);
+  flex: none;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.gripcircle__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.gripcircle__head {
+  position: absolute;
+  top: var(--s1);
+  left: var(--s2);
+  display: flex;
+  gap: var(--s2);
+  pointer-events: none;
+}
+.gripcircle__title {
+  color: var(--text-dim);
+  letter-spacing: var(--ls-h2);
+}
+.gripcircle__note {
+  color: var(--text-dim);
+  font-style: italic;
+}
+.gripcircle__empty {
+  position: absolute;
+  right: var(--s2);
+  top: var(--s1);
+}

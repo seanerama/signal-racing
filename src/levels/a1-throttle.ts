@@ -5,7 +5,15 @@
  * table, which is the core move of the game.
  */
 import type { LevelConfig } from './types';
-import { DRY, FLAGS_NO_GRIP_LIMIT, TRACK_STRAIGHT, rampLever, rampWindow, roles } from './common';
+import {
+  AXLE_FORCES,
+  DRY,
+  FLAGS_NO_GRIP_LIMIT,
+  rampLever,
+  rampWindow,
+  roles,
+  TRACK_STRAIGHT,
+} from './common';
 
 /** Throttle counts as "already full" when it reaches 1.0 within this time (s). */
 const RAMP_GRACE = 0.05;
@@ -26,6 +34,7 @@ export const A1: LevelConfig = {
   tolerance: 0.01,
   hintCost: [1, 1, 1],
   channelSet: [
+    ...AXLE_FORCES,
     'segment_time',
     'delta_best',
     'speed',
@@ -40,6 +49,7 @@ export const A1: LevelConfig = {
     'battery_voltage',
   ],
   channelRoles: {
+    ...roles('correlated', AXLE_FORCES),
     ...roles('outcome', ['segment_time', 'delta_best']),
     ...roles('causal', ['speed', 'long_g', 'drag_force']),
     ...roles('correlated', ['throttle', 'engine_rpm', 'gear', 'engine_force']),

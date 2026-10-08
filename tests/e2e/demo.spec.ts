@@ -5,7 +5,7 @@ import { playMeetingDemo, runAndWait, shot } from './demo-path';
 /**
  * Stage 8 Pipeline Test (standard build): the signal.md meeting demo end to end against
  * `vite preview`, plus the B1L join view and the in-browser live B4L grid-search timing.
- * Screenshots land in `test-results/stage-8/`.
+ * Screenshots land in `test-results/stage-9/`.
  */
 
 test('the meeting demo: Puzzle, 200 channels, CSV, assist, with/without debrief', async ({

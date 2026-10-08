@@ -2,7 +2,8 @@
  * CSV export (contract 03). Stage 3 owns the string; Stage 8 owns the download UI.
  *
  * ```
- * # signal v0.2
+ * # signal v0.3
+ * "# Independent educational prototype. Not affiliated …"   ← v0.3 (Stage 9): the disclaimer, one cell
  * # level: A2
  * # run: 3
  * # seed: 12345
@@ -16,11 +17,12 @@
  * written as `inf` / `-inf`.
  */
 import type { Quantity } from '@/engine/types';
+import { DISCLAIMER } from '@/game/disclaimer';
 import { getChannel } from '@/telemetry/registry';
 import type { CsvMeta, RunTelemetry } from '@/telemetry/types';
 import { precision, toDisplay, unitLabel, type UnitSystem } from '@/units';
 
-export const CSV_FORMAT_VERSION = 'v0.2';
+export const CSV_FORMAT_VERSION = 'v0.3';
 
 /** Quotes a header/units cell if it holds a comma, quote or newline (RFC 4180). */
 function cell(text: string): string {
@@ -48,6 +50,9 @@ export function toCsv(rt: RunTelemetry, meta: CsvMeta): string {
 
   const lines: string[] = [
     `# signal ${CSV_FORMAT_VERSION}`,
+    // Stage 9: the disclaimer travels with every exported log. A comma would split the comment
+    // across spreadsheet columns, so it is one quoted cell like the setup line.
+    cell(`# ${DISCLAIMER}`),
     `# level: ${meta.levelId}`,
     `# run: ${meta.run}`,
     `# seed: ${meta.seed}`,
