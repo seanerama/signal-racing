@@ -206,8 +206,8 @@ export function tireForce(
 }
 
 /**
- * Row 15: `dT/dt = kHeat·(F_used/F_max)²·v − kCool·(T − T_track)`, `kHeat = 0.9`, `kCool = 0.02`;
- * sliding multiplies heat in by 4. `usedRatio` is `F_used/F_max` (or `F_used/(μ_peak·N)` when the
+ * Row 15: `dT/dt = kHeat·(F_used/F_max)²·v − kCool·(T − T_track)`, `kHeat = 0.05`, `kCool = 0.02`;
+ * sliding multiplies heat in by 2 (Stage 9 values). `usedRatio` is `F_used/F_max` (or `F_used/(μ_peak·N)` when the
  * traction limit is off; the caller decides).
  */
 export function tireTempRate(

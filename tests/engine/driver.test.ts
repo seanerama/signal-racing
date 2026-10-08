@@ -94,6 +94,7 @@ describe('driverInputs', () => {
     engineFull: 6000,
     resistance: 300,
     fxMaxRear: 5000,
+    rearSliding: false,
   };
 
   it('follows the ramp below the envelope', () => {
@@ -118,5 +119,20 @@ describe('driverInputs', () => {
     // Slightly fast in the corner: lift rather than brake.
     const fast = driverInputs({ ...base, v: 30.1, vLim: 30, tSinceLaunch: 10 }, env);
     expect(fast).toEqual({ throttle: 0, brake: 0 });
+  });
+  it('the friction-circle cap is inclusive: θ·F_full never rounds above F_x,max (Stage 9)', () => {
+    // From the B4L latch: (cap/5800)·5800 rounds one ulp above cap, a demand ratio of 1 + 2⁻⁵².
+    const cap = 1614.7911725938977;
+    expect((cap / 5800) * 5800).toBeGreaterThan(cap);
+    const s = { ...base, v: 30, vLim: 30, tSinceLaunch: 10, engineFull: 5800, resistance: 9000 };
+    const out = driverInputs({ ...s, fxMaxRear: cap }, env);
+    expect(out.throttle * 5800).toBeLessThanOrEqual(cap);
+    expect(out.throttle * 5800).toBeGreaterThan(cap * (1 - 1e-12));
+  });
+  it('lifts for one step when the rear arrives sliding in a corner (row 12b)', () => {
+    const s = { ...base, v: 30, vLim: 30, tSinceLaunch: 10 };
+    expect(driverInputs({ ...s, rearSliding: true }, env)).toEqual({ throttle: 0, brake: 0 });
+    // On a straight, wheelspin is the player's ramp: the driver does not lift.
+    expect(driverInputs({ ...base, rearSliding: true }, env).throttle).toBe(0.5);
   });
 });

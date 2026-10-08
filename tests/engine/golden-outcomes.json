@@ -9,7 +9,7 @@
    "topSpeed": 86.46886277176814,
    "finished": true
   },
-  "columnsHash": "1851:82b4e47"
+  "columnsHash": "1851:a2b6373f"
  },
  {
   "key": "a1/a1/1",
@@ -43,7 +43,7 @@
    "topSpeed": 94.63861982235969,
    "finished": true
   },
-  "columnsHash": "1794:2ea439b6"
+  "columnsHash": "1794:9f3928e"
  },
  {
   "key": "a1/a1/4",
@@ -77,7 +77,7 @@
    "topSpeed": 72.2836808152426,
    "finished": true
   },
-  "columnsHash": "2014:ee9efcf3"
+  "columnsHash": "2014:350ce9d3"
  },
  {
   "key": "a1/a1/7",
@@ -111,7 +111,7 @@
    "topSpeed": 86.4692151725064,
    "finished": true
   },
-  "columnsHash": "1877:aa14920"
+  "columnsHash": "1877:a297dd30"
  },
  {
   "key": "a1/a2/2",
@@ -145,7 +145,7 @@
    "topSpeed": 91.88682247810118,
    "finished": true
   },
-  "columnsHash": "1975:7d80c77"
+  "columnsHash": "1975:32d785ff"
  },
  {
   "key": "a1/a2/5",
@@ -179,7 +179,7 @@
    "topSpeed": 93.69664662949268,
    "finished": true
   },
-  "columnsHash": "1927:b7eb5004"
+  "columnsHash": "1927:33dadd10"
  },
  {
   "key": "a3/a1/0",
@@ -213,7 +213,7 @@
    "topSpeed": 66.83868025912452,
    "finished": true
   },
-  "columnsHash": "2328:e4ef6622"
+  "columnsHash": "2328:de6c6e7a"
  },
  {
   "key": "a3/a1/3",
@@ -247,7 +247,7 @@
    "topSpeed": 75.56637542439562,
    "finished": true
   },
-  "columnsHash": "2196:b18d9de9"
+  "columnsHash": "2196:a220586d"
  },
  {
   "key": "a3/a1/6",
@@ -281,7 +281,7 @@
    "topSpeed": 82.8231574903778,
    "finished": true
   },
-  "columnsHash": "2151:5d4e6c10"
+  "columnsHash": "2151:46677fd4"
  },
  {
   "key": "a3/a2/1",
@@ -315,7 +315,7 @@
    "topSpeed": 79.24113067244683,
    "finished": true
   },
-  "columnsHash": "2595:a68be55e"
+  "columnsHash": "2595:8b84bf5e"
  },
  {
   "key": "a3/a2/4",
@@ -349,7 +349,7 @@
    "topSpeed": 71.2334647928885,
    "finished": true
   },
-  "columnsHash": "2237:53b59f85"
+  "columnsHash": "2237:af1f54d"
  },
  {
   "key": "a3/a2/7",
@@ -387,7 +387,7 @@
    "topSpeed": 70.83203796865492,
    "finished": true
   },
-  "columnsHash": "1219:7ea05fb6"
+  "columnsHash": "1219:fbdb83ca"
  },
  {
   "key": "a4/a1/2",
@@ -427,7 +427,7 @@
    "topSpeed": 73.84648198344894,
    "finished": true
   },
-  "columnsHash": "1212:325bd55d"
+  "columnsHash": "1212:a28b1555"
  },
  {
   "key": "a4/a1/5",
@@ -467,7 +467,7 @@
    "topSpeed": 74.5889897992915,
    "finished": true
   },
-  "columnsHash": "1227:a6558fd7"
+  "columnsHash": "1227:86565abf"
  },
  {
   "key": "a4/a2/0",
@@ -498,16 +498,16 @@
  {
   "key": "a4/a2/2",
   "outcome": {
-   "totalTime": 17.108453060300608,
+   "totalTime": 16.984755579419687,
    "segmentTimes": [
     9.746452319057783,
-    3.750407464732195,
-    3.6115932765106304
+    3.7173099896432493,
+    3.5209932707186553
    ],
-   "topSpeed": 49.24809819028017,
+   "topSpeed": 50.1355175118273,
    "finished": true
   },
-  "columnsHash": "1711:fb3071f1"
+  "columnsHash": "1699:f986da9d"
  },
  {
   "key": "a4/a2/3",
@@ -547,7 +547,7 @@
    "topSpeed": 55.05240141813794,
    "finished": true
   },
-  "columnsHash": "1437:1fd65986"
+  "columnsHash": "1437:eebefa2"
  },
  {
   "key": "a4/a2/6",
@@ -587,7 +587,7 @@
    "topSpeed": 90.47180929687427,
    "finished": true
   },
-  "columnsHash": "2285:8823ef0b"
+  "columnsHash": "2285:35cf5f6b"
  },
  {
   "key": "b1/a1/1",
@@ -627,7 +627,7 @@
    "topSpeed": 100.0910419487701,
    "finished": true
   },
-  "columnsHash": "2189:896f360b"
+  "columnsHash": "2189:abddcf3f"
  },
  {
   "key": "b1/a1/4",
@@ -667,7 +667,7 @@
    "topSpeed": 73.92917801722072,
    "finished": true
   },
-  "columnsHash": "2540:c5e0261e"
+  "columnsHash": "2540:d0c30312"
  },
  {
   "key": "b1/a1/7",
@@ -707,16 +707,16 @@
    "topSpeed": 84.93231172644134,
    "finished": true
   },
-  "columnsHash": "2520:c7cc8a1d"
+  "columnsHash": "2520:3835501d"
  },
  {
   "key": "b1/a2/2",
   "outcome": {
-   "totalTime": 30.550645491591656,
+   "totalTime": 30.400504772077724,
    "segmentTimes": [
     23.151761335079723,
-    4.624690694754047,
-    2.7741934617578856
+    4.5358221203944815,
+    2.71292131660352
    ],
    "topSpeed": 67.01681863720022,
    "finished": true
@@ -747,7 +747,7 @@
    "topSpeed": 88.92912078258155,
    "finished": true
   },
-  "columnsHash": "2717:8514ec65"
+  "columnsHash": "2717:db6c0e1"
  },
  {
   "key": "b1/a2/5",
@@ -787,7 +787,7 @@
    "topSpeed": 90.50563882476422,
    "finished": true
   },
-  "columnsHash": "2664:f08dbbc6"
+  "columnsHash": "2664:422249c6"
  },
  {
   "key": "b4/a1/0",
@@ -833,7 +833,7 @@
    "topSpeed": 68.80614546122811,
    "finished": true
   },
-  "columnsHash": "4151:b8bf615a"
+  "columnsHash": "4151:bfdc480a"
  },
  {
   "key": "b4/a1/3",
@@ -879,7 +879,7 @@
    "topSpeed": 81.11358386882311,
    "finished": true
   },
-  "columnsHash": "3763:8d222225"
+  "columnsHash": "3763:276a1749"
  },
  {
   "key": "b4/a1/6",
@@ -925,7 +925,7 @@
    "topSpeed": 84.83403096035163,
    "finished": true
   },
-  "columnsHash": "4577:2082146a"
+  "columnsHash": "4577:bcc06f22"
  },
  {
   "key": "b4/a2/1",
@@ -935,8 +935,8 @@
     18.94473571715301,
     3.9371597899115045,
     7.96928726337233,
-    4.541957310664522,
-    10.223043416009105
+    4.541926119293166,
+    10.223074607380461
    ],
    "topSpeed": 84.93231172644134,
    "finished": true
@@ -945,13 +945,13 @@
  {
   "key": "b4/a2/2",
   "outcome": {
-   "totalTime": 54.831739210446905,
+   "totalTime": 54.621973374596976,
    "segmentTimes": [
     23.151761335079723,
-    4.624690694754047,
-    9.448319426917145,
-    5.3522420409881235,
-    12.254725712707867
+    4.5358221203944815,
+    9.344650577971954,
+    5.3384783787952585,
+    12.251260962355559
    ],
    "topSpeed": 67.01681863720022,
    "finished": true
@@ -971,7 +971,7 @@
    "topSpeed": 83.20137912246246,
    "finished": true
   },
-  "columnsHash": "5577:aeea8522"
+  "columnsHash": "5577:d360b132"
  },
  {
   "key": "b4/a2/4",
@@ -1011,13 +1011,13 @@
     20.141319374177577,
     3.4981597592563958,
     7.873498997053826,
-    4.424881724099752,
-    10.453024761918762
+    4.424802791453683,
+    10.453103694564831
    ],
    "topSpeed": 72.32021519507487,
    "finished": true
   },
-  "columnsHash": "4640:b21e80f5"
+  "columnsHash": "4640:a73fb5aa"
  },
  {
   "key": "b4/a2/7",

@@ -271,6 +271,7 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
     engineFull: 0,
     resistance: 0,
     fxMaxRear: 0,
+    rearSliding: false,
   };
 
   const boundaryTimes: number[] = [];
@@ -299,6 +300,7 @@ export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimR
     ds.engineFull = engineFull;
     ds.resistance = grip.fDrag + roll;
     ds.fxMaxRear = grip.fxMaxRear;
+    ds.rearSliding = st.slideRear && st.slideRearDrive;
     driverInputs(ds, env, pedals);
     const beta = pedals.brake;
     const theta = pedals.throttle;
