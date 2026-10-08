@@ -22,6 +22,14 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+      grepInvert: /@perf/,
+    },
+    {
+      // Wall-clock budgets run alone, after everything else, so parallel workers do not skew them.
+      name: 'perf',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+      grep: /@perf/,
+      dependencies: ['chromium'],
     },
   ],
   webServer: {

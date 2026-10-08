@@ -72,7 +72,7 @@ test('B1L: three runs, segment_delta strip, boundaries and the compromise-gap ch
   await expect(page.getByTestId('join-table')).toContainText('Engine floor');
 });
 
-test('live B4L grid search in the browser stays under 4 s (logged)', async ({ page }) => {
+test('live B4L grid search in the browser stays under 4 s (logged) @perf', async ({ page }) => {
   test.setTimeout(60_000);
   await fresh(page);
   await page.goto('/#/dev/worker');
