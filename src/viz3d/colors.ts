@@ -33,18 +33,18 @@ export function readRamp(): string[] {
 export function readVizColors(): VizColors {
   return {
     bg: cssVar('--bg'),
-    panel: cssVar('--panel') || '#11141a',
+    panel: cssVar('--panel') || '#192022',
     grid: cssVar('--grid'),
     rule: cssVar('--rule'),
     text: cssVar('--text'),
     textDim: cssVar('--text-dim'),
     textFaint: cssVar('--text-faint'),
-    best: cssVar('--best') || '#b46cff',
+    best: cssVar('--best') || '#c9f36a',
     ramp: readRamp(),
   };
 }
 
-/** The current run's colour: the strip slot hue (`--t1…--t8`). */
+/** The current run's colour: lime `--trace-current` (Stage 10: one current-run colour everywhere). */
 export function slotHue(slot: number): string {
   return cssVar(slotToken(slot));
 }

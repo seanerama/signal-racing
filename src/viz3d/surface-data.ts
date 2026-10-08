@@ -312,7 +312,7 @@ export function buildResponse(input: SurfaceInput): ResponseModel {
       positions[j * 3] = mapX(xsSi[i] as number);
       positions[j * 3 + 1] = Number.isFinite(t) ? mapY(t) : 0;
       positions[j * 3 + 2] = mapZ(zsSi[k] as number);
-      // Fast = bright (ramp top), so the purple optimum diamond reads against it.
+      // Fast = bright (ramp top), so the optimum diamond (--best) reads against it.
       const c = rgb(
         rampColor(1 - (t - colorRange[0]) / (colorRange[1] - colorRange[0] || 1), ramp),
       );

@@ -88,25 +88,27 @@ export interface ResultHeaderProps {
   extra?: ResultHeaderExtra[];
   units: UnitSystem;
   onDebrief?(): void;
-  /** Stage 8, additive: secondary actions on line 1 (Export CSV). */
+  /** Stage 8, additive: secondary actions on line 2 (Export CSV). */
   actions?: ComponentChildren;
+  /** Stage 10: runs made this session (default: the run's index). */
+  runs?: number;
+  /** Stage 10: hints opened this session (free, counted). */
+  hints?: number;
+  /**
+   * Stage 10: the run being played back for the first time. The time cell counts up with the
+   * playhead and a live speed shows; the results (deltas, PB, target) appear when it ends.
+   */
+  live?: { index: number; telemetry: RunTelemetry } | null;
+  /** Stage 10: playback controls (speed, pause, skip, replay) at the right of line 1. */
+  controls?: ComponentChildren;
 }
 
-/** `src/report/RunPips.tsx`. */
-export interface RunPipsProps {
-  budget: number;
-  usedByRuns: number;
-  usedByHints: number;
-}
-
-/** `src/report/HintPopover.tsx`. */
+/** `src/report/HintPopover.tsx` (Stage 10: the docked hint box's body; hints are free). */
 export interface HintPopoverProps {
   tiersOpened: number;
-  cost: [number, number, number];
-  runsLeft: number;
   /** Opened tiers only. */
   texts: HintText[];
-  /** Armed → confirm inside the button; no dialogs. */
+  /** Opens the next tier (free, counted). */
   onOpenNext(): void;
   onChannelClick(id: ChannelId): void;
 }

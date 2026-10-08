@@ -1,12 +1,17 @@
-/* Grip circle (design-system "Grip circle", Stage 9): a band under the track view. */
+/* Grip circle (Stage 9; Stage 10 friction-circle treatment): under the track view, inside the
+   same panel, behind a quiet divider. */
 .gripcircle {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: var(--grip-circle-h);
   flex: none;
-  background: var(--bg);
-  border-bottom: 1px solid var(--line);
-  overflow: hidden;
+  border-top: 1px solid var(--line);
+}
+.gripcircle__plot {
+  position: relative;
+  flex: 1;
+  min-height: 0;
 }
 .gripcircle__canvas {
   position: absolute;
@@ -17,22 +22,36 @@
 }
 .gripcircle__head {
   position: absolute;
-  top: var(--s1);
-  left: var(--s2);
+  top: var(--s3);
+  left: var(--s4);
   display: flex;
+  align-items: baseline;
   gap: var(--s2);
   pointer-events: none;
 }
 .gripcircle__title {
-  color: var(--text-dim);
-  letter-spacing: var(--ls-h2);
+  color: var(--text);
 }
 .gripcircle__note {
   color: var(--text-dim);
+  font-size: var(--fs-meta);
   font-style: italic;
 }
 .gripcircle__empty {
   position: absolute;
-  right: var(--s2);
-  top: var(--s1);
+  right: var(--s4);
+  top: var(--s3);
+}
+.gripcircle__readout {
+  flex: none;
+  margin: 0;
+  padding: 0 var(--s4) var(--s3);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

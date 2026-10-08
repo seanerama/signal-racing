@@ -6,12 +6,13 @@
  * changes: units, projector, axis, slot, x-axis visibility, or the data. Height and width changes
  * use `setSize`. Data is never animated.
  */
+import { effect } from '@preact/signals';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import type { ChannelId, Quantity } from '@/engine/types';
 import type { RunTelemetry } from '@/telemetry/types';
-import { precision, unitLabel, type UnitSystem } from '@/units';
+import { displayBounds, minSpan, precision, unitLabel, type UnitSystem } from '@/units';
 import { attachPinOnClick, cursorBind, onPlotCursor } from './cursor';
 import { deltaParts } from './DeltaValue';
 import { cursorIdx } from './cursor-store';
@@ -19,7 +20,8 @@ import { hintBandPlugin } from './plugins/hint-band';
 import { segmentRulesPlugin, type SegmentRulesConfig } from './plugins/segment-rules';
 import { buildStripData, type Axis, type StripData } from './strip-data';
 import { StripGutter, type StripGutterProps } from './StripGutter';
-import { buildStripOptions, historySeries, slotToken, X_AXIS_H, X_AXIS_SEG_H } from './uplot-theme';
+import { playhead } from './playback';
+import { buildStripOptions, historySeries, X_AXIS_H, X_AXIS_SEG_H } from './uplot-theme';
 import { applyZoom, onPlotSelect, xZoom, zoomFor } from './zoom';
 
 export interface StripProps {
@@ -107,9 +109,17 @@ function StripReadout({
       role="status"
       aria-label={`${id} at cursor${smooth ? ' (smoothed)' : ''}: current ${fmt(cur, dp)}, best ${fmt(best, dp)}${unit ? ` ${unit}` : ''}`}
     >
-      <span class="strip__rd-cur">{mark(cur)}</span>
-      <span class="strip__rd-best">{mark(best)}</span>
-      <span class="strip__rd-delta">{deltaText}</span>
+      {idx !== null && data && (
+        <>
+          <span class="strip__rd-cur" title="Current run at the cursor">
+            {mark(cur)}
+          </span>
+          <span class="strip__rd-best" title="Reference (best) run at the cursor">
+            {mark(best)}
+          </span>
+          <span class="strip__rd-delta">{deltaText}</span>
+        </>
+      )}
     </div>
   );
 }
@@ -208,6 +218,11 @@ export function Strip(props: StripProps) {
       showXAxis,
       syncKey,
       projector,
+      minSpan: minSpan(quantity, units),
+      bounds: displayBounds(quantity, units),
+      xUnit: unitLabel(axis === 'time' ? 'time' : 'distance', units),
+      // Playback: the current trace stops at the playhead; the reference stays complete.
+      limit: () => playhead.peek() ?? Infinity,
     });
     if (segBand && opts.axes?.[0]) {
       opts.axes[0].size = X_AXIS_H + X_AXIS_SEG_H;
@@ -265,6 +280,20 @@ export function Strip(props: StripProps) {
     registerPlot,
   ]);
 
+  // Playback: redraw the paths (not the axes) whenever the playhead moves. No re-render.
+  useEffect(() => {
+    const u = plot;
+    if (!u) return;
+    let last: number | null | undefined;
+    return effect(() => {
+      const head = playhead.value;
+      if (head === last) return;
+      const wasPlaying = last !== undefined && last !== null;
+      last = head;
+      if (head !== null || wasPlaying) u.redraw(true, false);
+    });
+  }, [plot]);
+
   // Height changes resize, not rebuild.
   useEffect(() => {
     const u = plotInst.current;
@@ -296,23 +325,9 @@ export function Strip(props: StripProps) {
 
   const unit = unitLabel(quantity, units);
   const dp = precision(quantity, units);
-  const hue = `var(${slotToken(slot)})`;
   return (
-    <div
-      ref={rowRef}
-      class={`strip${props.class ? ` ${props.class}` : ''}`}
-      data-strip={id}
-      style={{ '--strip-hue': hue }}
-    >
-      <StripGutter
-        {...gutter}
-        id={id}
-        label={label}
-        unit={unit}
-        slot={slot}
-        hue={hue}
-        smoothed={smooth}
-      />
+    <div ref={rowRef} class={`strip${props.class ? ` ${props.class}` : ''}`} data-strip={id}>
+      <StripGutter {...gutter} id={id} label={label} unit={unit} slot={slot} smoothed={smooth} />
       <div class="strip__plot" style={{ height: `${height + axisH}px` }}>
         <div class="strip__canvas" ref={plotRef} aria-hidden="true" />
         {!current && <span class="strip__empty micro faint">no run</span>}

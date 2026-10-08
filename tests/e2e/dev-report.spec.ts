@@ -25,7 +25,7 @@ test.describe('dev report', () => {
     await page.getByRole('radio', { name: '200 ch' }).click();
     await expect(page.getByTestId('channel-table').getByText('200', { exact: true })).toBeVisible();
     await expect(page.locator('.uplot')).toHaveCount(6);
-    await expect(page.getByText('clutch_temp: not on this car')).toBeVisible();
+    await expect(page.getByText('clutch_temp: not logged on this level')).toBeVisible();
     // Virtualised table: far fewer DOM rows than channels.
     expect(await page.locator('.ct tbody tr').count()).toBeLessThanOrEqual(40);
   });

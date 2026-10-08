@@ -13,7 +13,6 @@ import { useMemo, useState } from 'preact/hooks';
 import { Button } from '@/app/components/Button';
 import { RichText } from '@/app/components/RichText';
 import type { ChannelId, LeverId, Setup } from '@/engine/types';
-import { scoreOf } from '@/game/progress';
 import type { LevelSession, RunRecord } from '@/game/types';
 import { renderTier, ruleFor } from '@/hints/engine';
 import type { HintMatch } from '@/hints/types';
@@ -32,7 +31,12 @@ export interface DebriefProps {
   session: LevelSession | null;
   /** Hint tiers opened, keyed by the run index they followed. */
   hintOpens: Record<number, number>;
-  stored: { passed: boolean; bestTime: number | null; bestScore: number | null } | null;
+  stored: {
+    passed: boolean;
+    bestTime: number | null;
+    bestRunsToTarget: number | null;
+    hintsOpenedThen: number | null;
+  } | null;
   units: UnitSystem;
   onRetry(): void;
   onNext: (() => void) | null;
@@ -164,16 +168,20 @@ export function Debrief({
   const available = useMemo(() => new Set(level.channelSet), [level]);
   const fired = useMemo(() => firedRules(runs), [runs]);
   const [openRule, setOpenRule] = useState<string | null>(null);
-  const hintsSpent = Object.values(hintOpens).reduce((a, b) => a + b, 0);
-  const firstPass = grid ? runs.find((r) => r.outcome.totalTime <= grid.target) : undefined;
+  const hintsTotal = Object.values(hintOpens).reduce((a, b) => a + b, 0);
+  const rtt = session?.runsToTarget.value ?? null;
+  const hintsThen = session?.hintsAtPass.value ?? null;
+  const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
-  const summary = passed
-    ? firstPass
-      ? `Target met in ${firstPass.index} run${firstPass.index === 1 ? '' : 's'}${hintsSpent ? `, ${hintsSpent} hint tier${hintsSpent === 1 ? '' : 's'} opened` : ''}.`
-      : 'Target met.'
-    : runs.length > 0
-      ? `Target not met in ${level.runBudget} runs.`
-      : 'No runs in this session.';
+  // Stage 10 score: runs to target, with the hints opened by then (free, but counted).
+  const summary =
+    rtt !== null
+      ? `Target met in ${plural(rtt, 'run')} · ${plural(hintsThen ?? 0, 'hint')}.`
+      : !session && stored?.bestRunsToTarget != null
+        ? `Target met in ${plural(stored.bestRunsToTarget, 'run')} · ${plural(stored.hintsOpenedThen ?? 0, 'hint')}.`
+        : runs.length > 0
+          ? `Target not met yet: ${plural(runs.length, 'run')} · ${plural(hintsTotal, 'hint')}. Runs are unlimited.`
+          : 'No runs in this session.';
 
   return (
     <section class="db" data-testid="debrief">
@@ -212,7 +220,7 @@ export function Debrief({
               class={`db__status chip ${passed ? 'chip--best' : ''}`}
               data-testid="debrief-status"
             >
-              {passed ? 'TARGET' : 'NOT MET'}
+              {passed ? 'TARGET MET' : 'NOT MET'}
             </span>
             <p data-testid="debrief-summary">{summary}</p>
             <dl class="db__kv data">
@@ -226,12 +234,12 @@ export function Debrief({
               </dd>
               <dt class="dim">target</dt>
               <dd>{grid ? formatValue('time', units, grid.target) : '—'}</dd>
-              <dt class="dim">score</dt>
-              <dd>
-                {session
-                  ? `${scoreOf(session)} run${scoreOf(session) === 1 ? '' : 's'} left`
-                  : stored?.bestScore != null
-                    ? `${stored.bestScore} runs left`
+              <dt class="dim">runs to target</dt>
+              <dd data-testid="debrief-score">
+                {rtt !== null
+                  ? `${rtt} · ${plural(hintsThen ?? 0, 'hint')}`
+                  : stored?.bestRunsToTarget != null
+                    ? `${stored.bestRunsToTarget} · ${plural(stored.hintsOpenedThen ?? 0, 'hint')} (best)`
                     : '—'}
               </dd>
             </dl>
@@ -259,8 +267,21 @@ export function Debrief({
                   </tr>
                 )}
                 {runs.map((r) => (
-                  <tr key={r.index} class={r === best ? 'db__best' : ''}>
-                    <td class="mono">{r.index}</td>
+                  <tr
+                    key={r.index}
+                    class={`${r === best ? 'db__best' : ''}${r.index === rtt ? ' db__pass' : ''}`}
+                  >
+                    <td class="mono">
+                      {r.index}
+                      {r.index === rtt && (
+                        <span
+                          class="chip chip--best db__passchip"
+                          title="First run at or under target"
+                        >
+                          TARGET MET
+                        </span>
+                      )}
+                    </td>
                     <td>
                       <SetupChips level={level} setup={r.setup} units={units} />
                     </td>
@@ -279,7 +300,7 @@ export function Debrief({
               </tbody>
             </table>
           </div>
-          <p class="micro faint">{`Times in ${unitLabel('time', units)}. Hints = tiers opened after that run.`}</p>
+          <p class="micro faint">{`Times in ${unitLabel('time', units)}. Hints = tiers opened after that run (free, counted).`}</p>
         </div>
 
         {/* ---- Column 2: causal strips across all runs ---- */}
@@ -308,7 +329,7 @@ export function Debrief({
               <p class="micro faint">No runs to draw.</p>
             )}
           </div>
-          <p class="micro faint">Your best run in colour; every other run underneath in grey.</p>
+          <p class="micro faint">Your best run in lime; every other run underneath in grey.</p>
         </div>
 
         {/* ---- Column 3: physics, optimum, rules, surface ---- */}

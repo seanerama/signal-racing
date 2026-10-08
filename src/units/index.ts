@@ -145,6 +145,52 @@ export function precision(q: Quantity, sys: UnitSystem): number {
 }
 
 /**
+ * Minimum visible y span per quantity, in SI (Stage 10, Fable polish): a strip's y-axis never
+ * autoscales tighter than this, so a flat channel (throttle held at 100 %, a steady oil temp)
+ * reads as flat rather than as a magnified noise band. Converted with the unit factor only (the
+ * offset of °C → °F does not change a span).
+ */
+const MIN_SPAN_SI: Record<Quantity, number> = {
+  time: 1,
+  distance: 10,
+  speed: 20 / 3.6, // 20 km/h
+  accel_g: 0.5,
+  force: 1000, // 1 kN
+  mass: 10,
+  temperature: 10, // 10 °C
+  pressure: 0.2,
+  ratio: 0.05,
+  fraction: 0.1,
+  angle: 5,
+  angle_int: 2,
+  rpm: 1000,
+  gear: 2,
+  voltage: 1,
+  current: 5,
+  power: 20_000,
+  rate_deg_s: 10,
+  percent: 0.2, // 20 %
+  dbm: 10,
+  altitude: 5,
+  flow: 10 / 3600, // 10 kg/h
+  dimensionless: 0.1,
+};
+
+/**
+ * Physical display bounds a strip's y-range should not cross when it is widened to the minimum
+ * span (a pedal or throttle position cannot read above 100 %). Display units; undefined = open.
+ */
+export function displayBounds(q: Quantity, sys: UnitSystem): [number, number] | undefined {
+  if (q === 'percent') return [0, spec(q, sys).factor]; // 0–100 %
+  return undefined;
+}
+
+/** Minimum visible y span of a strip for quantity `q`, in display units. */
+export function minSpan(q: Quantity, sys: UnitSystem): number {
+  return MIN_SPAN_SI[q] * spec(q, sys).factor;
+}
+
+/**
  * Formats an SI value for display: converted, fixed to `precision()`, with the unit appended
  * (`withUnit` defaults to true; unitless quantities never get a suffix).
  * NaN (a dropout) renders as `'—'`; ±Infinity as `'∞'` / `'−∞'`. Negative zero renders as zero.

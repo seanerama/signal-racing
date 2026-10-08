@@ -32,7 +32,11 @@ export interface RunRecord {
   assistOn: boolean;
 }
 
-export type LevelStatus = 'computing' | 'ready' | 'passed' | 'exhausted';
+/**
+ * Stage 10: there is no run budget, so a session is never `exhausted`; it stays `ready` until a
+ * run meets the cut.
+ */
+export type LevelStatus = 'computing' | 'ready' | 'passed';
 
 /** Live state of one level attempt. Created by `startLevel(level, client)`. */
 export interface LevelSession {
@@ -44,15 +48,20 @@ export interface LevelSession {
   runs: Signal<RunRecord[]>;
   /** Min `outcome.totalTime` (or min compromise gap for B1L). */
   best: ReadonlySignal<RunRecord | null>;
-  /** Runs + hint tiers opened × cost. */
+  /** Runs made (Stage 10: hints are free, so this is just the run count). */
   runsUsed: ReadonlySignal<number>;
-  runsLeft: ReadonlySignal<number>;
+  /** Stage 10: hint tiers opened this session (free, but counted and shown). */
+  hintsOpened: ReadonlySignal<number>;
+  /** Stage 10, the score: index of the first run that met the cut (lower is better); null before. */
+  runsToTarget: ReadonlySignal<number | null>;
+  /** Stage 10: hints opened before the first passing run; null before a pass. */
+  hintsAtPass: ReadonlySignal<number | null>;
   /** 0–3, for the *current* top hint; resets when the top rule changes. */
   hintTiersOpened: Signal<number>;
   status: ReadonlySignal<LevelStatus>;
-  /** Rejects if no runs are left. A failed sim does NOT consume budget. */
+  /** Never refuses for budget (Stage 10: unlimited runs). Rejects only if the sim fails. */
   run(setup: Setup): Promise<RunRecord>;
-  /** Consumes `hintCost[tier]`; returns the match whose tier was opened. */
+  /** Free (Stage 10); counts the tier in `hintsOpened`; returns the match whose tier was opened. */
   openHintTier(): HintMatch | null;
   assistOn: Signal<boolean>;
   /** Stage 9, additive: the answer to `level.call` ("Make the call"); null until answered. */
@@ -73,13 +82,22 @@ export interface CallAnswer {
   atRun: number;
 }
 
-/** Persisted per-level progress (`signal.v1.progress`). */
+/**
+ * Persisted per-level progress (`signal.v1.progress`, envelope version 2 since Stage 10). The
+ * score is runs to target (lower is better), with the hints opened by then.
+ */
 export interface LevelProgress {
   passed: boolean;
-  bestScore: number | null;
+  /** Fewest runs to meet the target over all sessions; null if never met. */
+  bestRunsToTarget: number | null;
+  /** Hints opened in the session that set `bestRunsToTarget`; null if never met. */
+  hintsOpenedThen: number | null;
   /** s. */
   bestTime: number | null;
+  /** Sessions recorded. */
   attempts: number;
+  /** Runs made on this level over all sessions (unlocks the next level at 5, passed or not). */
+  runs: number;
   /** s, per segment (they become the Phase B floor). */
   segmentBests?: number[];
   /** B4L: runs to target with and without the assist. */

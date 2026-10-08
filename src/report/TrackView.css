@@ -1,9 +1,8 @@
+/* Track view (Stage 10 Lap Lab treatment): the top of the right column's track panel. */
 .trackview {
   position: relative;
   width: 100%;
   height: var(--track-view-h);
-  background: var(--bg);
-  border-bottom: 1px solid var(--line);
   overflow: hidden;
 }
 .trackview:focus-visible {
@@ -18,45 +17,44 @@
 }
 .trackview__head {
   position: absolute;
-  top: var(--s1);
-  left: var(--s2);
-  right: var(--s1);
+  top: var(--s3);
+  left: var(--s4);
+  right: var(--s3);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--s3);
   pointer-events: none;
 }
 .trackview__head > * {
   pointer-events: auto;
 }
 .trackview__title {
-  color: var(--text-dim);
-  letter-spacing: var(--ls-h2);
-}
-.trackview__replay {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  text-transform: uppercase;
-  letter-spacing: var(--ls-h2);
+  color: var(--text);
 }
 .trackview__legend {
   flex: 1;
   min-width: 0;
-  margin-left: var(--s3);
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--s1);
   color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
 }
 .trackview__legend-id {
   color: var(--text-dim);
   margin-right: var(--s1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .trackview__legend-val {
   font-variant-numeric: tabular-nums slashed-zero;
 }
 .trackview__ramp {
-  width: 48px;
+  flex: none;
+  width: 40px;
   height: 6px;
   border-radius: var(--r1);
   background: linear-gradient(

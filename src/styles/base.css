@@ -1,8 +1,54 @@
 /*
- * Base styles: font faces, reset, focus ring. Fonts are self-hosted (OFL, see
- * src/assets/fonts/OFL-*.txt) and referenced relatively so Vite can fingerprint them, and inline
- * them as data: URIs in the single-file build. `font-display: block` avoids a fallback flash.
+ * Base styles: font faces, reset, focus ring, shared type classes. Fonts are self-hosted (OFL, see
+ * src/assets/fonts/OFL-*.txt, copied from fontsource) and referenced relatively so Vite can
+ * fingerprint them, and inline them as data: URIs in the single-file build (offline from file://).
+ * `font-display: block` avoids a fallback flash during the demo.
+ *
+ * DM Sans: body and controls. Barlow Condensed 600/700: briefing titles and large metrics.
+ * JetBrains Mono: plot labels, ticks, units, cursor values, channel ids.
  */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('../assets/fonts/dm-sans-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: block;
+  src: url('../assets/fonts/dm-sans-latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url('../assets/fonts/dm-sans-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'DM Sans';
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url('../assets/fonts/dm-sans-latin-400-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url('../assets/fonts/barlow-condensed-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url('../assets/fonts/barlow-condensed-latin-700-normal.woff2') format('woff2');
+}
 @font-face {
   font-family: 'JetBrains Mono';
   font-style: normal;
@@ -23,20 +69,6 @@
   font-weight: 600;
   font-display: block;
   src: url('../assets/fonts/jetbrains-mono-latin-600-normal.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-  src: url('../assets/fonts/inter-latin-400-normal.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: block;
-  src: url('../assets/fonts/inter-latin-600-normal.woff2') format('woff2');
 }
 
 *,
@@ -98,15 +130,53 @@ samp {
 .h1 {
   font-size: var(--fs-h1);
   line-height: var(--lh-h1);
-  font-weight: 600;
+  font-weight: 500;
 }
 
+/* Panel heading: sans 14 px, bold, uppercase (the specimen's "THE EVIDENCE"). */
 .h2 {
   font-size: var(--fs-h2);
   line-height: var(--lh-h2);
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: var(--ls-h2);
+}
+
+/* Briefing display title: Barlow Condensed 700. Briefing screens only. */
+.display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+/* Large performance value: Barlow Condensed 600, tabular. */
+.metric {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Small metadata: tracked uppercase, short section labels only. */
+.meta {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-meta);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-meta);
+  color: var(--text-dim);
+}
+
+/* A flat panel: 1 px --line border, 9 px radius, no shadow or gradient. */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
 }
 
 .data {

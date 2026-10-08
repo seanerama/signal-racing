@@ -2,11 +2,15 @@
  * The reactive level session (contract 06). Main thread; reaches the engine only through the
  * `SimClient` (worker). Signals are `@preact/signals-core`.
  *
- * Budget: `runsUsed = runs + hint runs spent`. A failed simulation consumes nothing. Runs are
- * processed one at a time (queued), so run indices are dense and in order.
+ * Stage 10 rules (Vision Lead): there is **no run budget** and **hints are free**. `run()` never
+ * refuses for budget (`LevelConfig.runBudget` and `hintCost` are ignored here). Hints are still
+ * counted (`hintsOpened`). The score is **runs to target**: the index of the first run that
+ * meets the cut (lower is better), shown with the hints opened by then (`hintsAtPass`). A failed
+ * simulation consumes nothing. Runs are processed one at a time (queued), so run indices are
+ * dense and in order.
  *
  * Hint tiers: `hintTiersOpened` counts tiers opened for the top-ranked rule of the latest run.
- * A new run whose top rule differs resets it to 0; runs already spent on hints stay spent.
+ * A new run whose top rule differs resets it to 0; `hintsOpened` keeps the session total.
  *
  * Best and pass: by total time, or for `scoreTarget: 'compromise_gap'` (B1L) by the compromise
  * gap `totalTime − Σ segmentFloors`; B1L passes at
@@ -33,14 +37,6 @@ import { loadGrid } from './grid-cache';
 import type { CallAnswer, LevelSession, LevelStatus, RunRecord } from './types';
 
 export type { LevelSession, RunRecord };
-
-/** Rejection when a run is requested with no budget left. */
-export class BudgetError extends Error {
-  constructor(message = 'no runs left') {
-    super(message);
-    this.name = 'BudgetError';
-  }
-}
 
 /** Phase B pass slack on the compromise gap, as a fraction of the optimum time (contract 06). */
 export const GAP_TOLERANCE = 0.005;
@@ -80,12 +76,14 @@ export function runPasses(level: LevelConfig, rec: RunRecord, grid: GridResult):
   return rec.outcome.totalTime <= grid.target;
 }
 
-/** runsLeft at the moment of first passing, per session (read by `scoreOf`). */
-const passScores = new WeakMap<LevelSession, number>();
-
-/** runsLeft at the moment the session first passed; null if it has not passed. */
-export function scoreAtPass(session: LevelSession): number | null {
-  return passScores.get(session) ?? null;
+/** Index (1-based) of the first run that meets the cut; null if none has. */
+export function firstPassIndex(
+  level: LevelConfig,
+  runs: readonly RunRecord[],
+  grid: GridResult | null,
+): number | null {
+  if (!grid) return null;
+  return runs.find((r) => runPasses(level, r, grid))?.index ?? null;
 }
 
 export function startLevel(level: LevelConfig, client: SimClient): LevelSession {
@@ -94,9 +92,9 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
   const runs = signal<RunRecord[]>([]);
   const hintTiersOpened = signal(0);
   const assistOn = signal(false);
-  const hintRunsSpent = signal(0);
-  /** Runs accepted but not yet finished (reserved against the budget). */
-  const inFlight = signal(0);
+  const hintsOpened = signal(0);
+  /** Hints opened when the first passing run arrived (null until a pass). */
+  const hintsAtPass = signal<number | null>(null);
   const physicalOf = new Map<RunRecord, PhysicalColumns>();
 
   const gridPromise = loadGrid(level, client, (f) => {
@@ -118,8 +116,7 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
   gridPromise.catch(() => undefined);
 
   const call = signal<CallAnswer | null>(null);
-  const runsUsed = computed(() => runs.value.length + hintRunsSpent.value);
-  const runsLeft = computed(() => Math.max(0, level.runBudget - runsUsed.value));
+  const runsUsed = computed(() => runs.value.length);
 
   const best = computed<RunRecord | null>(() => {
     let b: RunRecord | null = null;
@@ -134,15 +131,12 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
     return b;
   });
 
-  const passed = computed(() => {
-    const g = grid.value;
-    return g ? runs.value.some((r) => runPasses(level, r, g)) : false;
-  });
+  const runsToTarget = computed(() => firstPassIndex(level, runs.value, grid.value));
+  const passed = computed(() => runsToTarget.value !== null);
 
   const status = computed<LevelStatus>(() => {
     if (!grid.value) return 'computing';
     if (passed.value) return 'passed';
-    if (runsLeft.value <= 0) return 'exhausted';
     return 'ready';
   });
 
@@ -196,10 +190,8 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
     batch(() => {
       if (prevRun?.hints[0]?.ruleId !== hints[0]?.ruleId) hintTiersOpened.value = 0;
       runs.value = [...prior, record];
+      if (!wasPassed && passed.value) hintsAtPass.value = hintsOpened.value;
     });
-    if (!wasPassed && passed.value && !passScores.has(session)) {
-      passScores.set(session, runsLeft.value);
-    }
     return record;
   };
 
@@ -210,7 +202,9 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
     runs,
     best,
     runsUsed,
-    runsLeft,
+    hintsOpened,
+    runsToTarget,
+    hintsAtPass,
     hintTiersOpened,
     status,
     assistOn,
@@ -230,13 +224,9 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
       return call.value;
     },
     run(setup) {
-      if (runsLeft.value - inFlight.value <= 0) return Promise.reject(new BudgetError());
-      inFlight.value++;
       const p = queue.then(() => execute(setup));
       queue = p.catch(() => undefined);
-      return p.finally(() => {
-        inFlight.value--;
-      });
+      return p;
     },
     openHintTier() {
       const latest = runs.value[runs.value.length - 1];
@@ -244,10 +234,9 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
       if (!top) return null;
       const tier = hintTiersOpened.value;
       if (tier >= 3) return null;
-      const cost = level.hintCost[tier as 0 | 1 | 2];
-      if (runsLeft.value - inFlight.value < cost) return null;
+      // Free (Stage 10): `level.hintCost` is ignored; the tier is only counted.
       batch(() => {
-        hintRunsSpent.value += cost;
+        hintsOpened.value += 1;
         hintTiersOpened.value = tier + 1;
       });
       return top;

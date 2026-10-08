@@ -1,3 +1,6 @@
+/* Buttons (design-system "Buttons"; Stage 10 style guide): the primary action is a lime fill
+   with dark text and a 5 px radius; secondary is a quiet 1 px outline; ghost is text only.
+   Disabled and focus states are always visible. */
 .btn {
   position: relative;
   display: inline-flex;
@@ -5,13 +8,14 @@
   justify-content: center;
   gap: var(--s2);
   height: var(--control-h);
-  padding: 0 var(--s3);
+  padding: 0 var(--s4);
   border: 1px solid transparent;
   border-radius: var(--r2);
   background: transparent;
   color: var(--text);
   font-family: var(--font-sans);
   font-size: var(--fs-body);
+  font-weight: 500;
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -21,27 +25,26 @@
 }
 .btn--run {
   height: var(--control-h-run);
-  padding: 0 var(--s4);
+  padding: 0 var(--s5);
+  font-size: calc(var(--fs-body) + 1px);
 }
 .btn--compact {
   height: var(--control-h-compact);
-  padding: 0 var(--s2);
+  padding: 0 var(--s3);
   font-size: var(--fs-data);
 }
 .btn:active:not(:disabled) {
   transform: translateY(1px);
 }
 
-/* Primary: --accent fill, dark text, 600 */
+/* Primary: lime fill, dark text, bold */
 .btn--primary {
   background: var(--accent);
   color: var(--on-accent);
-  font-weight: 600;
-  letter-spacing: var(--ls-h2);
-  text-transform: uppercase;
+  font-weight: 700;
 }
 .btn--primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent), white 8%);
+  background: color-mix(in srgb, var(--accent), white 14%);
 }
 
 /* Secondary + hint tier: 1px --line border */
@@ -52,7 +55,7 @@
 }
 .btn--secondary:hover:not(:disabled),
 .btn--hint:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--line), white 8%);
+  border-color: var(--rule);
   background: var(--raised);
 }
 
@@ -65,41 +68,51 @@
   color: var(--text);
 }
 
+/* Selected (pressed): lime outline + soft fill, distinct from a result chip. */
 .btn--pressed {
-  background: var(--raised);
-  border-color: var(--rule);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
+/* Disabled: dim text on a dashed outline, so it never reads as a selected or primary control. */
 .btn:disabled {
   cursor: default;
   color: var(--text-faint);
   background: transparent;
   border-color: var(--line);
+  border-style: dashed;
 }
 .btn--ghost:disabled {
   border-color: transparent;
 }
+.btn--primary:disabled:not(.btn--busy) {
+  background: var(--raised);
+  color: var(--text-dim);
+  border-color: var(--line);
+}
 .btn--primary.btn--busy {
   background: var(--raised);
   color: var(--text);
-  border-color: var(--line);
+  border: 1px solid var(--line);
+}
+.btn:focus-visible {
+  outline: var(--focus-ring-w) solid var(--focus);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .btn__cost {
   font-size: var(--fs-micro);
   line-height: var(--lh-micro);
   font-weight: 500;
-  color: var(--warn);
-}
-.btn:disabled .btn__cost {
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 
 .btn__bar {
   position: absolute;
   left: 0;
   bottom: 0;
-  height: 2px;
+  height: 3px;
   background: var(--accent);
 }
 .btn__bar--indet {

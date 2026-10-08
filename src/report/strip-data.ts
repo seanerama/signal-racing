@@ -63,6 +63,22 @@ export interface StripData {
   historyCount: number;
 }
 
+/**
+ * Time-axis tail (Stage 10): when the reference run lasts longer than the current one, its
+ * extra samples are appended to the x array (the current series is a gap there), so the x-range
+ * covers max(current, best) duration and the reference is drawn in full.
+ */
+function bestTail(current: RunTelemetry, best: RunTelemetry | null, axis: Axis): number[] {
+  if (axis !== 'time' || !best || best.n === 0 || current.n === 0) return [];
+  const end = current.t[current.n - 1] as number;
+  const out: number[] = [];
+  for (let i = 0; i < best.n; i++) {
+    const t = best.t[i] as number;
+    if (t > end + 1e-9) out.push(i);
+  }
+  return out;
+}
+
 export function buildStripData(args: {
   id: ChannelId;
   quantity: Quantity;
@@ -84,11 +100,25 @@ export function buildStripData(args: {
     toDisplayArray(quantity, units, resampleOnto(runAxisSrc(rt, axis), rt.get(id), dstSi));
   const bestArr = best && has(best) ? sm(resample(best)) : null;
   const hist = (args.history ?? []).filter((h) => h !== current && h !== best && has(h));
-  const data: uPlot.AlignedData = [
-    x,
-    ...hist.map((h) => gapped(resample(h))),
-    gapped(bestArr ?? new Float64Array(x.length).fill(NaN)),
-    gapped(cur.length === x.length ? cur : new Float64Array(x.length).fill(NaN)),
-  ] as uPlot.AlignedData;
-  return { data, cur, best: bestArr, x, historyCount: hist.length };
+  const n = x.length;
+  const curLine = gapped(cur.length === n ? cur : new Float64Array(n).fill(NaN));
+  const bestLine = gapped(bestArr ?? new Float64Array(n).fill(NaN));
+  const histLines = hist.map((h) => gapped(resample(h)));
+
+  const tail = bestTail(current, best, axis);
+  let xs: Float64Array = x;
+  if (tail.length > 0 && best) {
+    xs = new Float64Array(n + tail.length);
+    xs.set(x);
+    const bestVals = has(best) ? sm(toDisplayArray(quantity, units, best.get(id))) : null;
+    tail.forEach((bi, k) => {
+      xs[n + k] = best.t[bi] as number;
+      curLine.push(null);
+      const v = bestVals ? (bestVals[bi] as number) : NaN;
+      bestLine.push(Number.isFinite(v) ? v : null);
+      for (const h of histLines) h.push(null);
+    });
+  }
+  const data: uPlot.AlignedData = [xs, ...histLines, bestLine, curLine] as uPlot.AlignedData;
+  return { data, cur, best: bestArr, x: xs, historyCount: hist.length };
 }
