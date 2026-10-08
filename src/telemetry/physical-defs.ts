@@ -350,6 +350,24 @@ const SPECS: PhysicalSpec[] = [
     range: [0, 90],
     sigmaFrac: 0.01,
   },
+  // Stage 11: the run's real conditions (an IR track sensor and the grip estimate). They replace
+  // the random-walk `track_surface_temp` distractor, which looked like these and explained nothing.
+  {
+    id: 'track_temp',
+    label: 'Track surface temperature',
+    quantity: 'temperature',
+    group: 'environment',
+    range: [0, 60],
+    sigmaFrac: 0.004,
+  },
+  {
+    id: 'grip_multiplier',
+    label: 'Track grip multiplier',
+    quantity: 'dimensionless',
+    group: 'environment',
+    range: [0.8, 1.1],
+    sigmaFrac: 0.005,
+  },
 ];
 
 /** Contract-02 physical channel ids with their quantities (mirror of the engine's `PHYSICAL_CHANNELS`). */

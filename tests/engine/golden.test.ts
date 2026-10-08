@@ -47,11 +47,20 @@ const SETUPS: Setup[] = [
 ];
 
 /**
- * Channels added after the goldens were recorded (Stage 9: the axle forces behind `grip_used`).
+ * Channels added after the goldens were recorded (Stage 9: the axle forces behind `grip_used`;
+ * Stage 11: the run conditions).
  * They are new columns, not changed physics, so they are left out of the hash; `simulate.test.ts`
  * checks them against `grip_used_*` at every sample.
  */
-const ADDED_LATER = new Set(['fx_front', 'fy_front', 'fx_rear', 'fy_rear']);
+const ADDED_LATER = new Set([
+  'fx_front',
+  'fy_front',
+  'fx_rear',
+  'fy_rear',
+  // Stage 11: the run's conditions as channels (constants per run, no physics).
+  'track_temp',
+  'grip_multiplier',
+]);
 
 interface Golden {
   key: string;

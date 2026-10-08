@@ -867,14 +867,6 @@ const ENVIRONMENT: RegisteredChannel[] = [
     walk(0, 360, 0.3, 0.7, 0.03, 0.1, 0.005),
   ),
   def(
-    'track_surface_temp',
-    'Track surface temperature (IR)',
-    'temperature',
-    'environment',
-    'random_walk',
-    walk(25, 50, 0.3, 0.6, 0.04, 0.5, 0.01),
-  ),
-  def(
     'gps_altitude',
     'GPS altitude',
     'altitude',
