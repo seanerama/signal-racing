@@ -123,7 +123,7 @@ m\, v^2 / r \le \min(F_{y,front}^{max},\; F_{y,rear}^{max}) \cdot 2
 | --- | --- |
 | Mass with driver, m | 750 kg |
 | Power, P | 500 kW |
-| Peak tractive force, F\_peak | 10 kN |
+| Peak tractive force, F\_peak | 5.8 kN (tuned so the launch sits between static and transferred rear grip; see A2) |
 | Drag area at mid wing, C\_d·A | 1.0 m² |
 | Lift area at mid wing, C\_l·A | 3.0 m² |
 | Peak friction, μ\_peak | 1.6 |
