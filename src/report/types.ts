@@ -19,6 +19,12 @@ export interface HintWindow {
   tEnd: number;
 }
 
+/** One item in a strip's gutter menu (e.g. Stage 7's "Waterfall…"). */
+export interface GutterMenuItem {
+  label: string;
+  onSelect(): void;
+}
+
 /** `src/report/StripStack.tsx`: the synced uPlot strip stack. */
 export interface StripStackProps {
   current: RunTelemetry | null;
@@ -39,6 +45,8 @@ export interface StripStackProps {
   units: UnitSystem;
   /** Gutter pulse when a hint/assist link is clicked. */
   flashChannel?: ChannelId | null;
+  /** Optional per-strip gutter menu (a `⋯` button on hover/focus). Omitted: no menu. */
+  gutterMenu?: (id: ChannelId) => GutterMenuItem[];
 }
 
 /** `src/report/ChannelTable.tsx`: the virtualised channel table. */

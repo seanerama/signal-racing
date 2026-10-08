@@ -342,15 +342,21 @@ export function Debrief({
             })}
           </ul>
 
-          <h2 class="h2 dim db__h">Response surface</h2>
-          <div class="db__surface" data-testid="response-surface-slot">
-            {responseSurface ?? (
-              <p class="micro faint">
-                The response surface (time over the two most influential levers, with your runs on
-                it) renders here.
-              </p>
-            )}
-          </div>
+          {/* STAGE 7 SLOT: the response surface (mounted by the route when a grid exists). */}
+          {responseSurface ? (
+            <div class="db__surface db__surface--live" data-testid="response-surface-slot">
+              {responseSurface}
+            </div>
+          ) : (
+            <>
+              <h2 class="h2 dim db__h">Response surface</h2>
+              <div class="db__surface" data-testid="response-surface-slot">
+                <p class="micro faint">
+                  The response surface needs this session's grid search; replay the level to see it.
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>

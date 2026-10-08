@@ -237,3 +237,60 @@
 .strips .u-over {
   cursor: crosshair;
 }
+
+/* ---- gutter menu (`⋯`, optional; e.g. "Waterfall…") ---- */
+.strip__menu {
+  position: absolute;
+  top: var(--s1);
+  right: calc(var(--s1) + 20px);
+}
+.strip__menu-btn {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r1);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: var(--fs-micro);
+  line-height: 18px;
+  opacity: 0;
+}
+.strip__gutter:hover .strip__menu-btn,
+.strip__gutter:focus-within .strip__menu-btn,
+.strip__menu-btn--open {
+  opacity: 1;
+}
+.strip__menu-btn:hover,
+.strip__menu-btn--open {
+  background: var(--line);
+  color: var(--text);
+}
+.strip__menu-list {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  padding: var(--s1) 0;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  box-shadow: var(--shadow-popover);
+  cursor: default;
+}
+.strip__menu-item {
+  padding: var(--s1) var(--s3);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  white-space: nowrap;
+}
+.strip__menu-item:hover,
+.strip__menu-item:focus-visible {
+  background: var(--line);
+  outline: none;
+}

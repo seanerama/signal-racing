@@ -32,6 +32,7 @@ import type { UnitSystem } from '@/units';
 import { HintControls } from '@/setup/HintControls';
 import { SetupPanel } from '@/setup/SetupPanel';
 import { runSeed } from '@/worker/build-input';
+import { WaterfallOverlay } from '@/viz3d/WaterfallOverlay';
 import { workbenchActions } from './actions';
 import { BriefModal } from './BriefModal';
 import { Button } from './components/Button';
@@ -85,6 +86,7 @@ export function Workbench({
   const [hintOpen, setHintOpen] = useState(false);
   const [flash, setFlash] = useState<ChannelId | null>(null);
   const [briefOpen, setBriefOpen] = useState(!st.briefSeen.value);
+  const [waterfall, setWaterfall] = useState<ChannelId | null>(null);
 
   // Fill an empty layout with the level defaults (never replace a persisted one).
   useEffect(() => {
@@ -271,6 +273,7 @@ export function Workbench({
               hintWindow={hintWindow}
               units={units}
               flashChannel={flash}
+              gutterMenu={(id) => [{ label: 'Waterfall…', onSelect: () => setWaterfall(id) }]}
             />
           )}
           {!latest && !fault && (
@@ -306,6 +309,17 @@ export function Workbench({
         </div>
       </aside>
 
+      {waterfall && (
+        <WaterfallOverlay
+          runs={runs}
+          channel={waterfall}
+          units={units}
+          axis={axis}
+          slot={Math.max(0, strips.indexOf(waterfall))}
+          levers={level.levers}
+          onClose={() => setWaterfall(null)}
+        />
+      )}
       {briefOpen && (
         <BriefModal
           level={level}

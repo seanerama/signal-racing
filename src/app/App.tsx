@@ -11,6 +11,8 @@ import { LEVELS, getLevel } from '@/levels/index';
 import type { LevelId } from '@/levels/types';
 import { RunPips } from '@/report/RunPips';
 import { Debrief } from '@/debrief/Debrief';
+import { DevViz3d } from '@/viz3d/DevViz3d';
+import { ResponseSurfacePanel } from '@/viz3d/ResponseSurfacePanel';
 import { paletteOpen, shortcutsOpen, workbenchActions } from './actions';
 import { CommandPalette, type Command } from './CommandPalette';
 import { TopBar } from './components/TopBar';
@@ -73,8 +75,19 @@ function DebriefRoute({ id }: { id: LevelId }) {
   const level = getLevel(id)!;
   const st = existingLevelState(id);
   const next = nextLevel(id);
+  const grid = st?.session.grid.value ?? null;
   return (
     <Debrief
+      responseSurface={
+        grid && st ? (
+          <ResponseSurfacePanel
+            grid={grid}
+            runs={st.session.runs.value}
+            level={level}
+            units={units.value}
+          />
+        ) : undefined
+      }
       level={level}
       session={st?.session ?? null}
       hintOpens={st?.hintOpens.value ?? {}}
@@ -116,6 +129,7 @@ function RouteView({ route }: { route: Route }) {
       return unlocked(route.id) ? <DebriefRoute id={route.id} /> : <Locked id={route.id} />;
     case 'dev':
       if (route.path === '/dev/worker') return <DevWorker />;
+      if (route.path === '/dev/viz3d') return <DevViz3d units={units.value} />;
       if (route.path === '/dev/report')
         return <DevReport units={units.value} onUnitsChange={(next) => (units.value = next)} />;
       return <DevHome units={units.value} />;
