@@ -12,12 +12,13 @@ import type { HintCtx, HintRule } from '@/hints/types';
 import type { RunSummary } from '@/telemetry/types';
 import type { LevelConfig } from './types';
 import {
+  AXLE_FORCES,
   DRY,
   FLAGS_GRIP,
-  TRACK_JOIN,
   pressureLever,
   rampLever,
   roles,
+  TRACK_JOIN,
   weightLever,
   wingLever,
 } from './common';
@@ -131,6 +132,7 @@ export const B1L: LevelConfig = {
   tolerance: 0.005,
   hintCost: [1, 1, 1],
   channelSet: [
+    ...AXLE_FORCES,
     'segment_time',
     'delta_best',
     'segment_delta',
@@ -178,6 +180,7 @@ export const B1L: LevelConfig = {
     'diff_temp',
   ],
   channelRoles: {
+    ...roles('causal', AXLE_FORCES),
     ...roles('outcome', ['segment_time', 'delta_best']),
     ...roles('causal', [
       'segment_delta',
@@ -248,6 +251,13 @@ export const B1L: LevelConfig = {
       'Drag grows with v² and with the wing, so on a kilometre of straight a high wing costs time on every metre: `drag_force` caps `top_speed` long before the braking point.',
       'The same wing buys `downforce` and so `corner_min_speed` in one fast corner; the best single setup sits where the time the wing saves in the corner equals the time it costs on the straight, which is why `segment_delta` is shared out rather than zero.',
     ],
-    causal: ['segment_delta', 'drag_force', 'top_speed', 'corner_min_speed', 'downforce'],
+    causal: [
+      'segment_delta',
+      'drag_force',
+      'top_speed',
+      'corner_min_speed',
+      'downforce',
+      ...AXLE_FORCES,
+    ],
   },
 };

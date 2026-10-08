@@ -46,6 +46,13 @@ const SETUPS: Setup[] = [
   { throttle_ramp: 1.1, tire_pressure: 1.5, weight_dist: 0.42, wing: 1 },
 ];
 
+/**
+ * Channels added after the goldens were recorded (Stage 9: the axle forces behind `grip_used`).
+ * They are new columns, not changed physics, so they are left out of the hash; `simulate.test.ts`
+ * checks them against `grip_used_*` at every sample.
+ */
+const ADDED_LATER = new Set(['fx_front', 'fy_front', 'fx_rear', 'fy_rear']);
+
 interface Golden {
   key: string;
   outcome: Outcome;
@@ -62,7 +69,7 @@ function hashColumns(c: PhysicalColumns): string {
   feed(c.t);
   feed(c.s);
   feed(c.seg);
-  for (const id of Object.keys(c.ch).sort()) feed(c.ch[id]!);
+  for (const id of Object.keys(c.ch).sort()) if (!ADDED_LATER.has(id)) feed(c.ch[id]!);
   return `${c.n}:${h.toString(16)}`;
 }
 

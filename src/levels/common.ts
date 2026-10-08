@@ -279,6 +279,12 @@ export function lever(level: LevelConfig, id: LeverSpec['id']): LeverSpec {
   return l;
 }
 
+/**
+ * Stage 9: the axle forces behind `grip_used` (the grip circle plots them). Every level carries
+ * them: correlated where corners do not exist yet (A1–A3), causal from A4 on.
+ */
+export const AXLE_FORCES: ChannelId[] = ['fx_front', 'fy_front', 'fx_rear', 'fy_rear'];
+
 /** Assigns every id in `ids` the given role (for building `channelRoles`). */
 export function roles<R extends string>(r: R, ids: ChannelId[]): Record<ChannelId, R> {
   return Object.fromEntries(ids.map((id) => [id, r]));

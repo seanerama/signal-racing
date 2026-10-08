@@ -20,6 +20,7 @@ import type { Role } from '@/telemetry/types';
 import type { ChannelId } from '@/engine/types';
 import type { LevelConfig } from './types';
 import {
+  AXLE_FORCES,
   DRY,
   FLAGS_GRIP,
   TRACK_PUZZLE,
@@ -42,6 +43,7 @@ export const B4L_CAUSAL: ChannelId[] = [
   'speed_diff_rl',
   'mu_rear',
   'segment_delta',
+  ...AXLE_FORCES,
 ];
 
 /** Every registry channel, in registry order. */

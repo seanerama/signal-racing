@@ -8,15 +8,16 @@ import type { HintRule } from '@/hints/types';
 import type { LevelConfig } from './types';
 import {
   AT_LIMIT,
+  AXLE_FORCES,
+  brakeWindow,
   DRY,
   FLAGS_GRIP,
-  TRACK_LAUNCH_STOP,
-  brakeWindow,
   peakInPhase,
   pressureLever,
   rampLever,
   roles,
   SLIDING,
+  TRACK_LAUNCH_STOP,
   weightLever,
 } from './common';
 import { pressureOffPeakRule } from './a2-grip';
@@ -163,6 +164,7 @@ export const A3: LevelConfig = {
   tolerance: 0.01,
   hintCost: [1, 1, 1],
   channelSet: [
+    ...AXLE_FORCES,
     'segment_time',
     'delta_best',
     'top_speed',
@@ -193,6 +195,7 @@ export const A3: LevelConfig = {
     'clutch_temp',
   ],
   channelRoles: {
+    ...roles('correlated', AXLE_FORCES),
     ...roles('outcome', ['segment_time', 'delta_best', 'top_speed']),
     ...roles('causal', ['load_front', 'load_rear', 'front_slip_ratio', 'rear_slip_ratio']),
     ...roles('correlated', [

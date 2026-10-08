@@ -56,11 +56,14 @@ describe.each(LEVELS.map((l) => [l.id, l] as const))('%s config', (_id, level) =
   });
 
   it('channel and causal counts follow the meeting-cut growth', () => {
-    const want = { A1: 12, A2: 20, A3: 28, A4: 36, B1L: 45, B4L: 210 }[level.id];
+    // Stage 9 adds the four axle-force channels (grip circle) to every level.
+    const want = { A1: 16, A2: 24, A3: 32, A4: 40, B1L: 49, B4L: 214 }[level.id];
     expect(Math.abs(level.channelSet.length - want)).toBeLessThanOrEqual(
       level.id === 'B4L' ? 10 : 2,
     );
-    const [lo, hi] = level.id === 'B4L' ? [6, 8] : level.id === 'B1L' ? [5, 5] : [3, 5];
+    // From A4 on the axle forces are causal (+4).
+    const [lo, hi] =
+      { B4L: [10, 12], B1L: [9, 9], A4: [7, 9] }[level.id as 'B4L' | 'B1L' | 'A4'] ?? [3, 5];
     expect(causal.length).toBeGreaterThanOrEqual(lo);
     expect(causal.length).toBeLessThanOrEqual(hi);
     expect(new Set(level.debrief.causal)).toEqual(new Set(causal));
