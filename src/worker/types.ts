@@ -7,7 +7,11 @@ import type { LevelId } from '@/levels/types';
 
 /** Result of one player run. */
 export interface RunPayload {
-  /** Derived: hash(levelId, runIndex) when the level has variation, else a fixed level seed. */
+  /**
+   * ALWAYS per run: `hash(levelId, runIndex)` (contract 05, amended after Stage 3). It drives the
+   * telemetry noise and distractors every run; physics condition variation applies only when the
+   * level declares `conditions.variation`.
+   */
   seed: number;
   /** After variation, so the player can see it. */
   conditions: Conditions;
@@ -59,12 +63,11 @@ export interface SimClient {
 
 // ---- Wire envelope (main ↔ worker) ----
 
-/**
- * RPC method map: `type` → request payload and response value. Stage 1 implements `ping`;
- * Stage 5 adds `run` and `gridSearch` here.
- */
+/** RPC method map: `type` → request payload and response value. */
 export interface RpcMethods {
   ping: { req: { sentAt: number }; res: { reply: 'pong'; sentAt: number } };
+  run: { req: RunRequest; res: RunPayload };
+  gridSearch: { req: GridSearchRequest; res: GridResult };
 }
 
 export type RpcType = keyof RpcMethods;

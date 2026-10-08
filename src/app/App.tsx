@@ -1,14 +1,10 @@
-import { signal } from '@preact/signals';
-import type { UnitSystem } from '@/units';
+import { units } from '@/game/prefs';
 import { TopBar } from './components/TopBar';
 import { routePath } from './router';
 import { DevReport } from './routes/DevReport';
 import { DevWorker } from './routes/DevWorker';
 import { Home } from './routes/Home';
 import './App.css';
-
-/** Local units signal. Stage 5 replaces it with the persisted `units` pref (contract 06). */
-const units = signal<UnitSystem>('metric');
 
 function Route() {
   switch (routePath.value) {
