@@ -33,14 +33,17 @@ test('play A1: brief, one run at full throttle, target, debrief, A2 unlocked', a
   expect(time).toBeGreaterThan(0);
   expect(time).toBeLessThanOrEqual(target);
   await expect(page.getByTestId('chip-target')).toBeVisible();
-  await expect(page.getByTestId('run-pips')).toHaveAttribute('aria-label', /4 of 5 runs left/);
+  await expect(page.getByTestId('run-count')).toHaveAttribute(
+    'aria-label',
+    '1 run made, 0 hints opened',
+  );
 
   await page.getByRole('button', { name: 'Continue to debrief' }).click();
   await expect(page).toHaveURL(/#\/level\/A1\/debrief$/);
   const table = page.getByTestId('convergence');
   await expect(table).toBeVisible();
   await expect(table.locator('tbody tr')).toHaveCount(1);
-  await expect(page.getByTestId('debrief-summary')).toHaveText('Target met in 1 run.');
+  await expect(page.getByTestId('debrief-summary')).toHaveText('Target met in 1 run · 0 hints.');
   await expect(page.getByTestId('response-surface-slot')).toBeVisible();
 
   await page.goto('/');

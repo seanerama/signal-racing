@@ -130,3 +130,9 @@
 .devr__card--small > *:not(.micro) {
   margin: 0 var(--s2);
 }
+.devr__playback {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--s2) var(--s3);
+  border-bottom: 1px solid var(--line);
+}

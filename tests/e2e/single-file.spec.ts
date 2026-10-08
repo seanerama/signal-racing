@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { expect, test } from '@playwright/test';
-import { playMeetingDemo } from './demo-path';
+import { DEMO_SPEED, DEMO_TIMEOUT_MS, playMeetingDemo } from './demo-path';
 
 /**
  * Pipeline test for the meeting fallback: `dist-single/signal.html` opened from `file://`,
@@ -47,17 +47,25 @@ test.describe('single-file build from file://', () => {
         document.fonts.load('400 12px "JetBrains Mono"'),
         document.fonts.load('500 12px "JetBrains Mono"'),
         document.fonts.load('600 12px "JetBrains Mono"'),
-        document.fonts.load('400 13px "Inter"'),
-        document.fonts.load('600 13px "Inter"'),
+        document.fonts.load('400 15px "DM Sans"'),
+        document.fonts.load('500 15px "DM Sans"'),
+        document.fonts.load('700 15px "DM Sans"'),
+        document.fonts.load('italic 400 15px "DM Sans"'),
+        document.fonts.load('600 34px "Barlow Condensed"'),
+        document.fonts.load('700 64px "Barlow Condensed"'),
       ]);
       return [...document.fonts]
         .filter((f) => f.status === 'loaded')
-        .map((f) => `${f.family.replace(/"/g, '')} ${f.weight}`)
+        .map((f) => `${f.family.replace(/"/g, '')} ${f.weight}${f.style === 'italic' ? 'i' : ''}`)
         .sort();
     });
     expect(loaded).toEqual([
-      'Inter 400',
-      'Inter 600',
+      'Barlow Condensed 600',
+      'Barlow Condensed 700',
+      'DM Sans 400',
+      'DM Sans 400i',
+      'DM Sans 500',
+      'DM Sans 700',
       'JetBrains Mono 400',
       'JetBrains Mono 500',
       'JetBrains Mono 600',
@@ -81,7 +89,7 @@ test.describe('meeting demo on the single-file build, offline', () => {
 
   test('pre-meeting checklist: A1 runs from file:// offline', async ({ page, context }) => {
     await context.setOffline(true);
-    await page.goto(`${pathToFileURL(SINGLE).href}#/level/A1`);
+    await page.goto(`${pathToFileURL(SINGLE).href}?playback=instant#/level/A1`);
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.getByTestId('begin').click();
@@ -93,7 +101,7 @@ test.describe('meeting demo on the single-file build, offline', () => {
     page,
     context,
   }) => {
-    test.setTimeout(150_000);
+    test.setTimeout(DEMO_TIMEOUT_MS);
     const blocked: string[] = [];
     // Block everything but file:, data: and blob: (the stage brief's network rule).
     await context.route('**', (route) => {
@@ -105,10 +113,12 @@ test.describe('meeting demo on the single-file build, offline', () => {
     await context.setOffline(true);
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
+    const t0 = Date.now();
     await playMeetingDemo(page, {
       url: `${pathToFileURL(SINGLE).href}?demo=1#/level/B4L`,
       suffix: '-single',
     });
+    console.log(`[meeting demo] single-file build at ${DEMO_SPEED}×: ${Date.now() - t0} ms wall`);
     expect(blocked, `blocked requests: ${blocked.join(', ')}`).toEqual([]);
     expect(errors).toEqual([]);
   });

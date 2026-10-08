@@ -61,17 +61,20 @@ test.describe('dev report', () => {
     await expect(page.locator('.strips--pinned')).toHaveCount(0);
   });
 
-  test('Replay sweeps the strips and the block together', async ({ page }) => {
+  test('Replay (Stage 10 playback) sweeps the strips and the car together; Pause holds', async ({
+    page,
+  }) => {
     await page.goto('/#/dev/report');
-    await page.getByRole('button', { name: /Replay/ }).click();
+    await page.getByTestId('pb-replay').click();
     await expect.poll(() => trackIdx(page), { timeout: 3000 }).toBeGreaterThan(50);
     const lefts = await cursorLefts(page);
     expect(Math.max(...lefts) - Math.min(...lefts)).toBeLessThanOrEqual(1);
     expect(Math.min(...lefts)).toBeGreaterThan(0);
-    await page.keyboard.press('Escape');
+    await page.getByTestId('pb-pause').click();
     const stopped = await trackIdx(page);
     await page.waitForTimeout(200);
     expect(await trackIdx(page)).toBe(stopped);
+    await page.getByTestId('pb-skip').click();
   });
 
   test('Shift+drag zooms every strip; double-click resets', async ({ page }) => {
@@ -118,7 +121,8 @@ test.describe('dev report', () => {
     test(`visual check ${w}×${h}`, async ({ page }) => {
       await page.setViewportSize({ width: w, height: h });
       await page.goto('/#/dev/report');
-      await expect(page.locator('.uplot')).toHaveCount(6);
+      // Stage 10's taller strips: the ones in view (plus the lazy margin) are built.
+      await expect.poll(() => page.locator('.uplot').count()).toBeGreaterThanOrEqual(3);
       // Hover so the cursor, readouts and track block are in the shot.
       const over = page.locator('.u-over').nth(2);
       const box = (await over.boundingBox())!;

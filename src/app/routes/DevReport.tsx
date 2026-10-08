@@ -19,6 +19,8 @@ import { selectedStrip } from '@/report/selection';
 import { StripStack } from '@/report/StripStack';
 import { toggleStrip } from '@/report/strip-ops';
 import { TrackView } from '@/report/TrackView';
+import { PlaybackControls } from '@/report/PlaybackControls';
+import { setPlaySpeed, startPlayback } from '@/report/playback';
 import {
   FIXTURE_HINTS,
   FIXTURE_LEVERS,
@@ -269,6 +271,20 @@ export function DevReport({ units, onUnitsChange }: DevReportProps) {
         </div>
 
         <aside class="devr__right" aria-label="Track and channels">
+          <div class="devr__playback">
+            <PlaybackControls
+              canReplay
+              onReplay={() =>
+                startPlayback({
+                  runIndex: 1,
+                  n: fx.current.n,
+                  dt: fx.current.dt,
+                  gating: false,
+                })
+              }
+              onSpeed={setPlaySpeed}
+            />
+          </div>
           <TrackView
             geometry={fx.track}
             current={fx.current}

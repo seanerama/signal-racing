@@ -292,6 +292,9 @@ export function Strip(props: StripProps) {
       const wasPlaying = last !== undefined && last !== null;
       last = head;
       if (head !== null || wasPlaying) u.redraw(true, false);
+      // How far the current trace is drawn (samples): e2e and a11y tooling can read it.
+      const row = rowRef.current;
+      if (row) row.dataset['drawn'] = head === null ? 'all' : String(head + 1);
     });
   }, [plot]);
 

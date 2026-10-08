@@ -72,9 +72,7 @@ export function FaultPanel({ fault, onDismiss, dismissLabel = 'Dismiss' }: Fault
       <div class="fault__name mono">{d.name}</div>
       <p class="fault__msg">{d.message}</p>
       {fault.context === 'run' && (
-        <p class="fault__note dim">
-          The engine stopped on this run. It did not count against the run budget.
-        </p>
+        <p class="fault__note dim">The engine stopped on this run. It did not count as a run.</p>
       )}
       <dl class="fault__kv data">
         {fault.levelId && (

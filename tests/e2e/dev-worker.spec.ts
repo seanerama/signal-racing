@@ -26,7 +26,7 @@ interface PipelineReport {
     runsUsed: number;
     hints: string[];
   };
-  progress: { passed: boolean; bestScore: number; attempts: number } | null;
+  progress: { passed: boolean; bestRunsToTarget: number; attempts: number } | null;
 }
 
 async function runPipeline(page: Page): Promise<PipelineReport> {
@@ -46,9 +46,10 @@ function expectPassing(r: PipelineReport): void {
   expect(r.session.passes).toBe(true);
   expect(r.session.status).toBe('passed');
   expect(r.session.runsUsed).toBe(1);
-  expect(r.session.score).toBe(5);
+  // Stage 10: the score is runs to target (the optimum passes on run 1).
+  expect(r.session.score).toBe(1);
   expect(r.session.hints).toEqual([]);
-  expect(r.progress).toMatchObject({ passed: true, bestScore: 5, attempts: 1 });
+  expect(r.progress).toMatchObject({ passed: true, bestRunsToTarget: 1, attempts: 1, runs: 1 });
 }
 
 test('pipeline: grid A2 + run optimum passes and persists a score (vite preview)', async ({
@@ -71,8 +72,8 @@ test('pipeline: grid A2 + run optimum passes and persists a score (vite preview)
   await page.reload();
   const stored = await page.evaluate(() => localStorage.getItem('signal.v1.progress'));
   expect(JSON.parse(stored ?? '{}')).toMatchObject({
-    v: 1,
-    data: { A2: { passed: true, bestScore: 5 } },
+    v: 2,
+    data: { A2: { passed: true, bestRunsToTarget: 1 } },
   });
 });
 
