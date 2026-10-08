@@ -84,7 +84,7 @@ test('a forced engine error shows the fault panel and does not consume the run',
   await page.getByTestId('begin').click();
   await expect(page.getByTestId('run-button')).toBeEnabled({ timeout: 30_000 });
   await page.evaluate(() => {
-    globalThis.__SIGNAL_FORCE_FAULT__ = true;
+    (globalThis as unknown as { __SIGNAL_FORCE_FAULT__?: boolean }).__SIGNAL_FORCE_FAULT__ = true;
   });
   await page.getByTestId('run-button').click();
   const fault = page.getByTestId('fault-panel');
@@ -95,7 +95,7 @@ test('a forced engine error shows the fault panel and does not consume the run',
   await expect(page.getByTestId('run-pips')).toHaveAttribute('aria-label', '5 of 5 runs left');
 
   await page.evaluate(() => {
-    globalThis.__SIGNAL_FORCE_FAULT__ = false;
+    (globalThis as unknown as { __SIGNAL_FORCE_FAULT__?: boolean }).__SIGNAL_FORCE_FAULT__ = false;
   });
   await page.getByTestId('run-button').click();
   await expect(page.getByTestId('rh-time')).toBeVisible({ timeout: 30_000 });

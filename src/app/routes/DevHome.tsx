@@ -7,7 +7,9 @@ export function DevHome({ units }: { units: UnitSystem }) {
   return (
     <section class="dev-page">
       <h1 class="h1">Signal</h1>
-      <p class="dim">Dev page: unit samples and button variants. The game starts at the level select.</p>
+      <p class="dim">
+        Dev page: unit samples and button variants. The game starts at the level select.
+      </p>
       <dl class="dev-kv data">
         <dt class="dim">sample speed</dt>
         <dd data-testid="sample-speed">{formatValue('speed', units, 100 / 3.6)}</dd>

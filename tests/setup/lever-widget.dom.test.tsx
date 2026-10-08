@@ -71,7 +71,7 @@ describe('LeverWidget', () => {
     const onChange = vi.fn();
     render(<LeverWidget spec={RAMP} value={0.4} units="metric" onChange={onChange} />);
     fireEvent.click(screen.getByTestId('lever-value-throttle_ramp'));
-    const input = screen.getByTestId('lever-input-throttle_ramp') as HTMLInputElement;
+    const input = screen.getByTestId<HTMLInputElement>('lever-input-throttle_ramp');
     expect(input.value).toBe('0.400');
     fireEvent.input(input, { target: { value: '1.2' } });
     fireEvent.keyDown(input, { key: 'Enter' });
