@@ -3,9 +3,11 @@
  *
  * Line 1: run time (Readout XL; `--best` with a PB chip on a new personal best), Δbest and
  * Δtarget (Readout L, glyph + sign + colour), TARGET chip on a pass, extra chips (e.g. the
- * compromise gap), `RUN n`, and the debrief CTA on a pass.
+ * compromise gap) and `RUN n`.
  * Line 2: the setup used as compact chips; levers changed since the previous run get an
- * `--accent` underline, locked levers are `--text-faint` with 🔒.
+ * `--accent` underline, locked levers are `--text-faint` with 🔒. At its right end, the actions
+ * (Export CSV) and the debrief CTA on a pass (Stage 8 moved it here so a Phase B header with
+ * PB, TARGET and two gap chips still fits on one line).
  *
  * A new run is announced through the `aria-live` region.
  */
@@ -122,12 +124,6 @@ export function ResultHeader(props: ResultHeaderProps) {
         ))}
         <span class="rh__spacer" />
         <span class="rh__run micro dim">{`RUN ${run.index}`}</span>
-        {actions}
-        {passed && onDebrief && (
-          <Button variant="secondary" size="compact" onClick={() => onDebrief()}>
-            Continue to debrief
-          </Button>
-        )}
       </div>
       <div class="rh__line2" aria-label="Setup used">
         {chips.map((c) => (
@@ -148,6 +144,16 @@ export function ResultHeader(props: ResultHeaderProps) {
             {c.locked && <LockGlyph class="setchip__lock" />}
           </span>
         ))}
+        {(actions || (passed && onDebrief)) && (
+          <span class="rh__actions">
+            {actions}
+            {passed && onDebrief && (
+              <Button variant="secondary" size="compact" onClick={() => onDebrief()}>
+                Continue to debrief
+              </Button>
+            )}
+          </span>
+        )}
       </div>
     </header>
   );

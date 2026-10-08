@@ -15,6 +15,7 @@ import {
   TRACK_STRAIGHT,
   cleanMax,
   lever,
+  peakInPhase,
   pressureDirection,
   pressureGripRatio,
   pressureLever,
@@ -43,6 +44,12 @@ export function driveSlide(s: RunSummary): Window | null {
   const brake = brakeWindow(s);
   if (brake && w.tStart >= brake.tStart) return null;
   return brake ? { tStart: w.tStart, tEnd: Math.min(w.tEnd, brake.tStart) } : w;
+}
+
+/** Peak rear slip under drive: before the first brake application (the whole run without braking). */
+export function drivePeakSlip(s: RunSummary): number {
+  const brake = brakeWindow(s);
+  return brake ? peakInPhase(s, 'rear_slip_ratio', brake.tStart) : cleanMax(s, 'rear_slip_ratio');
 }
 
 /** Fault: the driven tires slid under drive (shared by A2, A4, B1L and B4L). */
@@ -121,7 +128,7 @@ export function pressureOffPeakRule(): HintRule {
  */
 export function rampTooGentleRule(): HintRule {
   const gentle = (s: RunSummary, step: number): Window | null => {
-    if (slidingWindow(s, 'rear_slip_ratio')) return null;
+    if (driveSlide(s)) return null;
     const ramp = rampWindow(s);
     const lg = s.clean.long_g;
     if (!ramp || !lg) return null;
@@ -138,7 +145,7 @@ export function rampTooGentleRule(): HintRule {
       if (!ramp) return null;
       return {
         ruleId: 'ramp_too_gentle',
-        vars: { t_full: ramp.tEnd, slip: cleanMax(s, 'rear_slip_ratio') },
+        vars: { t_full: ramp.tEnd, slip: drivePeakSlip(s) },
         window: { channel: 'long_g', tStart: 0, tEnd: ramp.tEnd },
         channels: ['long_g', 'throttle', 'rear_slip_ratio'],
       };

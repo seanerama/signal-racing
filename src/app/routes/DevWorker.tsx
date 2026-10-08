@@ -55,6 +55,29 @@ async function runPipeline(): Promise<Record<string, unknown>> {
 }
 
 /**
+ * The live B4L grid search in the worker (the game normally uses the precomputed target; this
+ * times the fallback path the game takes when the config hash has no precomputed entry).
+ */
+async function liveGridB4L(): Promise<Record<string, unknown>> {
+  const client = createSimClient();
+  try {
+    const t0 = performance.now();
+    const grid = await client.gridSearch({ levelId: 'B4L' });
+    const wallMs = performance.now() - t0;
+    log.info(`dev: live grid B4L ${grid.ms.toFixed(0)} ms in worker, ${wallMs.toFixed(0)} ms wall`);
+    return {
+      levelId: grid.levelId,
+      ms: Number(grid.ms.toFixed(1)),
+      wallMs: Number(wallMs.toFixed(1)),
+      evaluated: grid.evaluated,
+      optimum: { setup: grid.optimum.setup, totalTime: grid.optimum.outcome.totalTime },
+    };
+  } finally {
+    client.dispose();
+  }
+}
+
+/**
  * `/#/dev/worker`: pings the sim worker and shows the round-trip time. Proves the worker loads
  * under `vite dev`, `vite build` and the single-file build from `file://`. The "grid A2 + run
  * optimum" button runs the Stage 5 pipeline and prints its JSON.
@@ -63,6 +86,12 @@ export function DevWorker() {
   const rpc = useRef<WorkerRpc | null>(null);
   const [status, setStatus] = useState<Status>({ kind: 'pinging' });
   const [pipeline, setPipeline] = useState<
+    | { kind: 'idle' }
+    | { kind: 'running' }
+    | { kind: 'done'; json: string }
+    | { kind: 'error'; message: string }
+  >({ kind: 'idle' });
+  const [live, setLive] = useState<
     | { kind: 'idle' }
     | { kind: 'running' }
     | { kind: 'done'; json: string }
@@ -128,6 +157,25 @@ export function DevWorker() {
       >
         grid A2 + run optimum
       </Button>
+      <Button
+        onClick={() => {
+          setLive({ kind: 'running' });
+          liveGridB4L().then(
+            (r) => setLive({ kind: 'done', json: JSON.stringify(r, null, 2) }),
+            (e: unknown) => setLive({ kind: 'error', message: String(e) }),
+          );
+        }}
+        busy={live.kind === 'running'}
+        busyLabel="Searching"
+      >
+        live grid B4L
+      </Button>
+      {live.kind === 'done' && (
+        <pre class="data" data-testid="worker-grid-b4l">
+          {live.json}
+        </pre>
+      )}
+      {live.kind === 'error' && <p class="dev-fault">{live.message}</p>}
       {pipeline.kind === 'done' && (
         <pre class="data" data-testid="worker-pipeline">
           {pipeline.json}

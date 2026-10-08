@@ -64,50 +64,52 @@
   margin: 0;
   padding: 0 var(--s3) var(--s2);
 }
-.as__table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
+.as__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* Row: rank · channel · r · add, then the reason on its own line (two lines at most). */
+.as__row {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: var(--s2);
+  padding: var(--s1) var(--s3);
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: var(--fs-data);
+  line-height: var(--lh-data);
   font-variant-numeric: tabular-nums slashed-zero;
 }
-.as__table th,
-.as__table td {
-  height: var(--row-h);
-  padding: 0 var(--s1);
-  border-top: 1px solid var(--line);
-  white-space: nowrap;
-  text-align: left;
-  font-weight: 400;
-}
-.as__table thead th {
-  height: 16px;
-  border-top: 0;
-}
 .as__rank {
-  width: 20px;
-  padding-left: var(--s3) !important;
-  text-align: right !important;
-}
-.as__id {
-  width: 34%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: right;
 }
 .as__r {
-  width: 44px;
-  text-align: right !important;
+  color: var(--text);
+  white-space: nowrap;
 }
 .as__reason {
+  grid-column: 2 / -1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--text-dim);
   font-family: var(--font-sans);
+  font-size: var(--fs-data);
+  line-height: var(--lh-data);
 }
-.as__add {
-  width: 60px;
-  padding-right: var(--s3) !important;
-  text-align: right !important;
+.as__src {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
 }
 .as__link {
+  justify-self: start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   padding: 0;
   border: 0;
   background: none;

@@ -63,62 +63,44 @@ export function AssistBlock(props: AssistBlockProps) {
         </p>
       ) : (
         <>
-          <table class="as__table data" data-testid="assist-rows">
-            <thead>
-              <tr class="micro faint">
-                <th class="as__rank" scope="col">
-                  #
-                </th>
-                <th scope="col">channel</th>
-                <th class="as__r" scope="col">
-                  r
-                </th>
-                <th scope="col">reason</th>
-                <th scope="col">
-                  <span class="visually-hidden">Stack</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => {
-                const stacked = inStack.has(row.channel);
-                return (
-                  <tr key={row.channel} class="as__row" data-channel={row.channel}>
-                    <td class="as__rank faint">{i + 1}</td>
-                    <th scope="row" class="as__id">
-                      <button
-                        type="button"
-                        class="as__link"
-                        onClick={() => onChannelClick(row.channel)}
-                        title={`Show ${row.channel}`}
-                      >
-                        {row.channel}
-                      </button>
-                    </th>
-                    <td class="as__r" title={`Pearson r with lap time: ${row.r.toFixed(4)}`}>
-                      {fmtR(row.r)}
-                    </td>
-                    <td class="as__reason dim" title={row.reason}>
-                      {row.reason}
-                    </td>
-                    <td class="as__add">
-                      <button
-                        type="button"
-                        class="as__addbtn micro"
-                        disabled={stacked}
-                        onClick={() => onAdd(row.channel)}
-                        aria-label={
-                          stacked ? `${row.channel} is in the stack` : `Add ${row.channel} to stack`
-                        }
-                      >
-                        {stacked ? 'in stack' : '+ stack'}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <ol class="as__list" data-testid="assist-rows" aria-label="Assist ranking">
+            {rows.map((row, i) => {
+              const stacked = inStack.has(row.channel);
+              return (
+                <li key={row.channel} class="as__row" data-channel={row.channel}>
+                  <span class="as__rank data faint">{i + 1}</span>
+                  <button
+                    type="button"
+                    class="as__link data"
+                    onClick={() => onChannelClick(row.channel)}
+                    title={`Show ${row.channel}`}
+                  >
+                    {row.channel}
+                  </button>
+                  <span class="as__r data" title={`Pearson r with lap time: ${row.r.toFixed(4)}`}>
+                    {`r ${fmtR(row.r)}`}
+                  </span>
+                  <button
+                    type="button"
+                    class="as__addbtn micro"
+                    disabled={stacked}
+                    onClick={() => onAdd(row.channel)}
+                    aria-label={
+                      stacked ? `${row.channel} is in the stack` : `Add ${row.channel} to stack`
+                    }
+                  >
+                    {stacked ? 'in stack' : '+ stack'}
+                  </button>
+                  <span class="as__reason" title={row.reason}>
+                    {row.fromRule ? (
+                      <span class="micro faint as__src">{`rule ${row.fromRule} · `}</span>
+                    ) : null}
+                    {row.reason}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
           <p class="as__foot micro faint" data-testid="assist-foot">
             {`${total} runs: ${sources.join(' · ')}. Correlation is not cause.`}
           </p>

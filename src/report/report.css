@@ -63,6 +63,7 @@
   color: var(--loss);
 }
 .chip--extra {
+  gap: var(--s1);
   font-weight: 500;
   letter-spacing: 0;
 }
@@ -92,6 +93,7 @@
   align-items: center;
   gap: var(--s4);
   min-width: 0;
+  overflow: hidden;
 }
 .rh__time {
   font-family: var(--font-mono);
@@ -124,6 +126,16 @@
   align-items: center;
   gap: 0 var(--s3);
   color: var(--text);
+}
+/* Secondary actions (Export CSV) sit at the right end of the setup line, kept short so the
+   header keeps its height. */
+.rh__actions {
+  margin-left: auto;
+  display: inline-flex;
+  gap: var(--s2);
+}
+.rh__actions .btn {
+  height: 20px;
 }
 .setchip {
   white-space: nowrap;

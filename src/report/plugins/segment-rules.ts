@@ -52,11 +52,31 @@ export function segmentRulesPlugin(getConfig: () => SegmentRulesConfig | null): 
             if (s === undefined || s >= xMax) return;
             const x = Math.max(left, u.valToPos(Math.max(s, xMin), 'x', true)) + 4 * pr;
             if (x > left + width - 8 * pr) return;
-            ctx.fillText(label.toUpperCase(), x, y);
+            // Room up to the next boundary (or the plot's edge): short segments get a shortened
+            // label rather than one that runs into its neighbour.
+            const next = starts[i + 1];
+            const end =
+              next !== undefined && next < xMax ? u.valToPos(next, 'x', true) : left + width;
+            const text = fitLabel(ctx, label.toUpperCase(), end - x - 6 * pr);
+            if (text) ctx.fillText(text, x, y);
           });
         }
         ctx.restore();
       },
     },
   };
+}
+
+/** `text`, or the longest prefix ending in `…` that fits in `room` px; '' when not even 3 chars fit. */
+export function fitLabel(
+  ctx: Pick<CanvasRenderingContext2D, 'measureText'>,
+  text: string,
+  room: number,
+): string {
+  if (ctx.measureText(text).width <= room) return text;
+  for (let n = text.length - 1; n >= 3; n--) {
+    const t = `${text.slice(0, n).trimEnd()}…`;
+    if (ctx.measureText(t).width <= room) return t;
+  }
+  return '';
 }

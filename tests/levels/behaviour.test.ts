@@ -121,6 +121,7 @@ const CRAFTED = {
     [{ throttle_ramp: 0, tire_pressure: 1.6, weight_dist: 0.52, wing: 0 }, 'front_lock'],
     [{ throttle_ramp: 0, tire_pressure: 2.2, weight_dist: 0.4, wing: 3 }, 'wheelspin'],
     [{ throttle_ramp: 0, tire_pressure: 1.2, weight_dist: 0.52, wing: 3 }, 'pressure_off_peak'],
+    [{ throttle_ramp: 1.4, tire_pressure: 1.6, weight_dist: 0.52, wing: 3 }, 'ramp_too_gentle'],
   ],
 } satisfies Record<string, Array<[Partial<Setup>, string]>>;
 

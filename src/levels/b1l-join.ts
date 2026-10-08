@@ -21,7 +21,7 @@ import {
   weightLever,
   wingLever,
 } from './common';
-import { pressureOffPeakRule, wheelspinRule } from './a2-grip';
+import { pressureOffPeakRule, rampTooGentleRule, wheelspinRule } from './a2-grip';
 import { frontLockRule } from './a3-weight';
 import { cornerGripLimitedRule, dragCostRule } from './a4-corner';
 
@@ -237,6 +237,7 @@ export const B1L: LevelConfig = {
     cornerGripLimitedRule(cornerIsPaying),
     dragCostRule(),
     pressureOffPeakRule(),
+    rampTooGentleRule(),
   ],
   conditions: DRY,
   passOn: 'any_run',

@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { expect, test } from '@playwright/test';
+import { playMeetingDemo } from './demo-path';
 
 /**
  * Pipeline test for the meeting fallback: `dist-single/signal.html` opened from `file://`,
@@ -61,5 +62,31 @@ test.describe('single-file build from file://', () => {
       'JetBrains Mono 500',
       'JetBrains Mono 600',
     ]);
+  });
+});
+
+test.describe('meeting demo on the single-file build, offline', () => {
+  test('the signal.md demo path from file:// with the network blocked', async ({
+    page,
+    context,
+  }) => {
+    test.setTimeout(150_000);
+    const blocked: string[] = [];
+    // Block everything but file:, data: and blob: (the stage brief's network rule).
+    await context.route('**', (route) => {
+      const url = route.request().url();
+      if (ALLOWED.test(url)) return route.continue();
+      blocked.push(url);
+      return route.abort();
+    });
+    await context.setOffline(true);
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await playMeetingDemo(page, {
+      url: `${pathToFileURL(SINGLE).href}?demo=1#/level/B4L`,
+      suffix: '-single',
+    });
+    expect(blocked, `blocked requests: ${blocked.join(', ')}`).toEqual([]);
+    expect(errors).toEqual([]);
   });
 });

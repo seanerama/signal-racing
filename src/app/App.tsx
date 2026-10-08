@@ -332,6 +332,7 @@ export function App() {
                 <span
                   class="topbar__demo"
                   data-testid="demo-chip"
+                  data-status={demoStatus.value}
                   title={`Demo profile: every level unlocked; a recorded unassisted Puzzle attempt (setups and seeds, re-simulated on load${demoStatus.value === 'loading' ? ', loading' : ''}) feeds the debrief comparison.`}
                 >
                   DEMO PROFILE
