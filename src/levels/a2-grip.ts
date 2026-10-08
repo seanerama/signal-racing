@@ -84,7 +84,15 @@ export function pressureOffPeakRule(): HintRule {
         channels: ['mu_rear', 'grip_used_rear', 'rear_slip_ratio'],
       };
     },
-    estTimeCost: (_s, ctx) => (1 - pressureGripRatio(ctx)) * ctx.outcome.totalTime,
+    estTimeCost(s, ctx) {
+      const base = 0.6 * (1 - pressureGripRatio(ctx)) * ctx.outcome.totalTime;
+      // A slide that starts only after the throttle is already full is not the ramp's doing:
+      // pressure is then the lever that matters, so rank this above the wheelspin rule.
+      const slide = slidingWindow(s, 'rear_slip_ratio');
+      const ramp = rampWindow(s);
+      const afterRamp = !!slide && !!ramp && ramp.tEnd > 0 && slide.tStart >= ramp.tEnd - 0.05;
+      return base + (afterRamp ? 1 : 0);
+    },
     tiers: [
       '`mu_rear` never got above {mu}, and the rears ran out of grip: `rear_slip_ratio` and `grip_used_rear` show where.',
       'Tire pressure sets the friction coefficient on a bell curve: too soft or too hard and μ falls on both sides of the peak. The force the rears can put down is μ times load, so a tire off its peak spins at a throttle a tire on its peak would take.',

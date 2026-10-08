@@ -2,8 +2,8 @@ import type { UnitSystem } from '@/units';
 import { formatValue } from '@/units';
 import { Button } from '../components/Button';
 
-/** Placeholder until the level select lands (Stage 6). */
-export function Home({ units }: { units: UnitSystem }) {
+/** `/#/dev`: foundation checks (units samples, button variants, dev links). */
+export function DevHome({ units }: { units: UnitSystem }) {
   return (
     <section class="dev-page">
       <h1 class="h1">Signal</h1>
