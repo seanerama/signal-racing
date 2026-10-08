@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clearGridCache } from '@/game/grid-cache';
 import { getProgress, isUnlocked, recordResult, scoreOf } from '@/game/progress';
 import { startLevel } from '@/game/session';
-import { STUB_A2 } from '@/levels/index';
+import { A2 as STUB_A2 } from '@/levels/index';
 import { createSimClient } from '@/worker/client';
 import { createInProcessWorker } from '../worker/adapter';
 import { MemoryStorage } from './memory-storage';
@@ -45,7 +45,7 @@ describe('pipeline (Node, handler adapter)', () => {
       v: 1,
       data: { A2: { passed: true } },
     });
-    expect(isUnlocked('A2')).toBe(true);
+    expect(isUnlocked('A3')).toBe(true);
     client.dispose();
   });
 });

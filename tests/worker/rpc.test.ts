@@ -9,6 +9,8 @@ import { createSimClient, createWorkerRpc } from '@/worker/client';
 import type { Setup } from '@/engine/types';
 import type { RunPayload, SimClient } from '@/worker/types';
 import { createInProcessWorker } from './adapter';
+import { gridSize } from '@/game/grid-search';
+import { A2 } from '@/levels/index';
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -26,7 +28,7 @@ describe('sim client over the worker loop', () => {
     const progress: number[] = [];
     const grid = await client.gridSearch({ levelId: 'A2' }, (f) => progress.push(f));
     expect(grid.levelId).toBe('A2');
-    expect(grid.evaluated).toBe(16 * 11);
+    expect(grid.evaluated).toBe(gridSize(A2));
     expect(grid.samples).toHaveLength(grid.evaluated);
     expect(progress.at(-1)).toBe(1);
     for (let i = 1; i < progress.length; i++)

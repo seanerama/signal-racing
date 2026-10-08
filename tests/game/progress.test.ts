@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Outcome } from '@/engine/types';
 import { getProgress, isUnlocked, PROGRESS_VERSION, recordResult, scoreOf } from '@/game/progress';
 import type { LevelSession, LevelStatus, RunRecord } from '@/game/types';
-import { STUB_A2 } from '@/levels/index';
+import { STUB_A2 } from './stub-level';
 import type { GridResult } from '@/worker/types';
 import { MemoryStorage } from './memory-storage';
 
@@ -102,7 +102,8 @@ describe('progress', () => {
   });
 
   it('isUnlocked: the first level is open; unknown ids are locked', () => {
-    expect(isUnlocked('A2')).toBe(true);
+    expect(isUnlocked('A1')).toBe(true);
+    expect(isUnlocked('A2')).toBe(false);
     expect(isUnlocked('B4L')).toBe(false);
   });
 

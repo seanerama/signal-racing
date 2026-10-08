@@ -4,7 +4,7 @@
  * A3 = stop at 1 km with weight_dist unlocked; A4, B1L, B4L = all four levers.
  */
 import type { LeverSpec, LevelConfig, LevelId } from '@/levels/types';
-import { STUB_A2 } from '@/levels/index';
+import { STUB_A2 } from './stub-level';
 import { TRACK_A3, TRACK_A4, TRACK_B1, TRACK_B4 } from '../engine/fixtures';
 
 const [RAMP, PRESSURE] = STUB_A2.levers as [LeverSpec, LeverSpec];

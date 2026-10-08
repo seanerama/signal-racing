@@ -9,7 +9,7 @@ import {
   leverGrid,
   PROGRESS_INTERVAL_MS,
 } from '@/game/grid-search';
-import { STUB_A2 } from '@/levels/index';
+import { STUB_A2 } from './stub-level';
 import type { LevelConfig } from '@/levels/types';
 import { buildBaseSimInput } from '@/worker/build-input';
 import { BENCH_A3, BENCH_B1L, WEIGHT } from './bench-levels';

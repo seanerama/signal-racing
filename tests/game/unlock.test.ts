@@ -6,7 +6,7 @@ import { MemoryStorage } from './memory-storage';
 
 vi.mock('@/levels/index', async (importOriginal) => {
   const real = await importOriginal<typeof LevelsModule>();
-  const lv = (id: LevelConfig['id']): LevelConfig => ({ ...real.STUB_A2, id });
+  const lv = (id: LevelConfig['id']): LevelConfig => ({ ...real.A2, id });
   return { ...real, LEVELS: [lv('A1'), lv('A2'), lv('B1L'), lv('B4L')] };
 });
 
