@@ -1,0 +1,39 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.app__main {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.dev-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  padding: var(--s6);
+  max-width: 720px;
+}
+.dev-kv {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--s1) var(--s4);
+  margin: 0;
+}
+.dev-kv dd {
+  margin: 0;
+}
+.dev-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  flex-wrap: wrap;
+}
+.dev-link {
+  color: var(--focus);
+  font-size: var(--fs-data);
+}
+.dev-fault {
+  color: var(--fault);
+}

@@ -1,0 +1,116 @@
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  height: var(--control-h);
+  padding: 0 var(--s3);
+  border: 1px solid transparent;
+  border-radius: var(--r2);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  transition:
+    background-color var(--dur-ui) var(--ease-ui),
+    border-color var(--dur-ui) var(--ease-ui);
+}
+.btn--run {
+  height: var(--control-h-run);
+  padding: 0 var(--s4);
+}
+.btn--compact {
+  height: var(--control-h-compact);
+  padding: 0 var(--s2);
+  font-size: var(--fs-data);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Primary: --accent fill, dark text, 600 */
+.btn--primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  letter-spacing: var(--ls-h2);
+  text-transform: uppercase;
+}
+.btn--primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent), white 8%);
+}
+
+/* Secondary + hint tier: 1px --line border */
+.btn--secondary,
+.btn--hint {
+  border-color: var(--line);
+  color: var(--text);
+}
+.btn--secondary:hover:not(:disabled),
+.btn--hint:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--line), white 8%);
+  background: var(--raised);
+}
+
+/* Ghost: text only */
+.btn--ghost {
+  color: var(--text-dim);
+}
+.btn--ghost:hover:not(:disabled) {
+  background: var(--raised);
+  color: var(--text);
+}
+
+.btn--pressed {
+  background: var(--raised);
+  border-color: var(--rule);
+}
+
+.btn:disabled {
+  cursor: default;
+  color: var(--text-faint);
+  background: transparent;
+  border-color: var(--line);
+}
+.btn--ghost:disabled {
+  border-color: transparent;
+}
+.btn--primary.btn--busy {
+  background: var(--raised);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.btn__cost {
+  font-size: var(--fs-micro);
+  line-height: var(--lh-micro);
+  font-weight: 500;
+  color: var(--warn);
+}
+.btn:disabled .btn__cost {
+  color: var(--text-faint);
+}
+
+.btn__bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+}
+.btn__bar--indet {
+  width: 30%;
+  animation: btn-indet 1s linear infinite;
+}
+@keyframes btn-indet {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}

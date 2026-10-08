@@ -1,0 +1,28 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  height: var(--topbar-h);
+  padding: 0 var(--s4);
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+.topbar__wordmark {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--fs-data);
+  letter-spacing: 0.24em;
+  color: var(--text);
+  text-decoration: none;
+}
+.topbar__crumb {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-dim);
+  font-size: var(--fs-data);
+}
+.topbar__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
