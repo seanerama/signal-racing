@@ -7,13 +7,20 @@
  */
 import { PHYSICAL_CHANNEL_IDS } from './channels';
 import { DT, G, MAX_TIME, STOP_SPEED } from './constants';
-import { computeGrip, createGripContext, createGripState, gripUsed } from './corner';
+import {
+  computeGrip,
+  createGripContext,
+  createGripState,
+  gripUsed,
+  type GripContext,
+} from './corner';
 import {
   buildEnvelope,
   driverInputs,
   envelopeAt,
   segmentLimitSpeeds,
   type DriverInputs,
+  type Envelope,
   type DriverState,
 } from './driver';
 import { SimDivergedError } from './errors';
@@ -30,7 +37,7 @@ import {
   type GearRpm,
   type TireForceResult,
 } from './physics';
-import { crossingTime, curvature, poseAt, trackLayout, type Pose } from './track';
+import { crossingTime, curvature, poseAt, trackLayout, type Pose, type TrackLayout } from './track';
 import type { Outcome, PhysicalColumns, SimInput, SimMode, SimResult } from './types';
 import { validateInput } from './validate';
 
@@ -137,7 +144,71 @@ function stateSnapshot(st: SimState): Record<string, number> {
   };
 }
 
-export function simulate(input: SimInput, mode: SimMode): SimResult {
+/** The setup-dependent driver plan: corner limit speeds, top speed and the braking envelope. */
+interface DriverPlan {
+  limits: number[];
+  vTop: number;
+  env: Envelope;
+}
+
+/**
+ * Opaque memo for repeated `simulate` calls (grid search). The driver plan depends only on the
+ * car, track, conditions, flags and the levers `tire_pressure`, `weight_dist` and `wing`, never on
+ * `throttle_ramp` or the seed, so setups that differ only in ramp share it. Results are
+ * bit-identical with or without a cache (`tests/engine/golden.test.ts`). The caller owns the
+ * cache (the engine keeps no module-level state).
+ */
+export interface SimCache {
+  /** @internal value key of car, track, conditions and flags. */
+  base: string;
+  /** @internal plan per lever key. */
+  plans: Map<string, DriverPlan>;
+}
+
+/** Plans kept per cache; the oldest is evicted first. */
+const SIM_CACHE_PLANS = 64;
+
+export function createSimCache(): SimCache {
+  return { base: '', plans: new Map() };
+}
+
+function buildPlan(ctx: GripContext, layout: TrackLayout, input: SimInput): DriverPlan {
+  const limits = segmentLimitSpeeds(ctx, input.track);
+  const vTop = topSpeed(input.car, input.setup.wing);
+  const env = buildEnvelope(ctx, layout, limits, 1.1 * vTop);
+  return { limits, vTop, env };
+}
+
+function cachedPlan(
+  cache: SimCache,
+  ctx: GripContext,
+  layout: TrackLayout,
+  input: SimInput,
+): DriverPlan {
+  const { car, track, conditions, flags, setup } = input;
+  const base = JSON.stringify([car, track, conditions, flags]);
+  if (base !== cache.base) {
+    cache.base = base;
+    cache.plans.clear();
+  }
+  const key = `${setup.tire_pressure}|${setup.weight_dist}|${setup.wing}`;
+  let plan = cache.plans.get(key);
+  if (!plan) {
+    plan = buildPlan(ctx, layout, input);
+    if (cache.plans.size >= SIM_CACHE_PLANS) {
+      const oldest = cache.plans.keys().next().value;
+      if (oldest !== undefined) cache.plans.delete(oldest);
+    }
+    cache.plans.set(key, plan);
+  }
+  return plan;
+}
+
+/**
+ * Runs one simulation. `cache` (optional, Stage 5) memoises the driver plan across calls; it
+ * never changes the result.
+ */
+export function simulate(input: SimInput, mode: SimMode, cache?: SimCache): SimResult {
   validateInput(input);
   const { car, setup, track, conditions, flags } = input;
   // `input.seed` is accepted for future in-physics noise; the meeting-cut physics has none.
@@ -147,9 +218,9 @@ export function simulate(input: SimInput, mode: SimMode): SimResult {
   const ctx = createGripContext(car, setup, conditions, flags);
   const mass = ctx.mass;
   const roll = rollingForce(car);
-  const limits = segmentLimitSpeeds(ctx, track);
-  const vTop = topSpeed(car, setup.wing);
-  const env = buildEnvelope(ctx, layout, limits, 1.1 * vTop);
+  const { limits, vTop, env } = cache
+    ? cachedPlan(cache, ctx, layout, input)
+    : buildPlan(ctx, layout, input);
 
   const st: SimState = {
     step: 0,

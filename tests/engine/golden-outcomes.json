@@ -1,0 +1,796 @@
+[
+  {
+    "key": "a1/a1/0",
+    "outcome": {
+      "totalTime": 17.97745552668588,
+      "segmentTimes": [17.97745552668588],
+      "topSpeed": 87.97604466688578,
+      "finished": true
+    },
+    "columnsHash": "1798:6d9e73a9"
+  },
+  {
+    "key": "a1/a1/1",
+    "outcome": {
+      "totalTime": 18.23601943154747,
+      "segmentTimes": [18.23601943154747],
+      "topSpeed": 87.97661887452662,
+      "finished": true
+    }
+  },
+  {
+    "key": "a1/a1/2",
+    "outcome": {
+      "totalTime": 20.86337012614086,
+      "segmentTimes": [20.86337012614086],
+      "topSpeed": 69.47186151290227,
+      "finished": true
+    }
+  },
+  {
+    "key": "a1/a1/3",
+    "outcome": {
+      "totalTime": 17.462661337481904,
+      "segmentTimes": [17.462661337481904],
+      "topSpeed": 95.68177265552676,
+      "finished": true
+    },
+    "columnsHash": "1747:aebc2806"
+  },
+  {
+    "key": "a1/a1/4",
+    "outcome": {
+      "totalTime": 17.831581316790597,
+      "segmentTimes": [17.831581316790597],
+      "topSpeed": 93.60483988079042,
+      "finished": true
+    }
+  },
+  {
+    "key": "a1/a1/5",
+    "outcome": {
+      "totalTime": 19.3163208103855,
+      "segmentTimes": [19.3163208103855],
+      "topSpeed": 79.55036347707247,
+      "finished": true
+    }
+  },
+  {
+    "key": "a1/a1/6",
+    "outcome": {
+      "totalTime": 19.544739674714304,
+      "segmentTimes": [19.544739674714304],
+      "topSpeed": 74.47358437801338,
+      "finished": true
+    },
+    "columnsHash": "1955:5a0b6dbe"
+  },
+  {
+    "key": "a1/a1/7",
+    "outcome": {
+      "totalTime": 17.90772784577943,
+      "segmentTimes": [17.90772784577943],
+      "topSpeed": 95.13704114184084,
+      "finished": true
+    }
+  },
+  {
+    "key": "a1/a2/0",
+    "outcome": {
+      "totalTime": 18.25986941424228,
+      "segmentTimes": [18.25986941424228],
+      "topSpeed": 87.95728533757122,
+      "finished": true
+    }
+  },
+  {
+    "key": "a1/a2/1",
+    "outcome": {
+      "totalTime": 18.23601943154747,
+      "segmentTimes": [18.23601943154747],
+      "topSpeed": 87.97661887452662,
+      "finished": true
+    },
+    "columnsHash": "1824:a130f4d2"
+  },
+  {
+    "key": "a1/a2/2",
+    "outcome": {
+      "totalTime": 22.5990350467638,
+      "segmentTimes": [22.5990350467638],
+      "topSpeed": 69.2572903034491,
+      "finished": true
+    }
+  },
+  {
+    "key": "a1/a2/3",
+    "outcome": {
+      "totalTime": 22.160880582260933,
+      "segmentTimes": [22.160880582260933],
+      "topSpeed": 90.71173608140022,
+      "finished": true
+    }
+  },
+  {
+    "key": "a1/a2/4",
+    "outcome": {
+      "totalTime": 19.354261401335382,
+      "segmentTimes": [19.354261401335382],
+      "topSpeed": 93.0805527688602,
+      "finished": true
+    },
+    "columnsHash": "1936:108522a7"
+  },
+  {
+    "key": "a1/a2/5",
+    "outcome": {
+      "totalTime": 19.3163208103855,
+      "segmentTimes": [19.3163208103855],
+      "topSpeed": 79.55036347707247,
+      "finished": true
+    }
+  },
+  {
+    "key": "a1/a2/6",
+    "outcome": {
+      "totalTime": 19.544739674714304,
+      "segmentTimes": [19.544739674714304],
+      "topSpeed": 74.47358437801338,
+      "finished": true
+    }
+  },
+  {
+    "key": "a1/a2/7",
+    "outcome": {
+      "totalTime": 18.79437112552885,
+      "segmentTimes": [18.79437112552885],
+      "topSpeed": 94.86185087939533,
+      "finished": true
+    },
+    "columnsHash": "1880:50bdb61c"
+  },
+  {
+    "key": "a3/a1/0",
+    "outcome": {
+      "totalTime": 20.32272884819671,
+      "segmentTimes": [20.32272884819671],
+      "topSpeed": 85.0466554552696,
+      "finished": true
+    }
+  },
+  {
+    "key": "a3/a1/1",
+    "outcome": {
+      "totalTime": 20.58276830401492,
+      "segmentTimes": [20.58276830401492],
+      "topSpeed": 85.04757886722648,
+      "finished": true
+    }
+  },
+  {
+    "key": "a3/a1/2",
+    "outcome": {
+      "totalTime": 22.717149180570534,
+      "segmentTimes": [22.717149180570534],
+      "topSpeed": 68.82797280076547,
+      "finished": true
+    },
+    "columnsHash": "2272:4eb30624"
+  },
+  {
+    "key": "a3/a1/3",
+    "outcome": {
+      "totalTime": 20.019787725296204,
+      "segmentTimes": [20.019787725296204],
+      "topSpeed": 90.86132588476866,
+      "finished": true
+    }
+  },
+  {
+    "key": "a3/a1/4",
+    "outcome": {
+      "totalTime": 20.33454669057879,
+      "segmentTimes": [20.33454669057879],
+      "topSpeed": 89.38849101687848,
+      "finished": true
+    }
+  },
+  {
+    "key": "a3/a1/5",
+    "outcome": {
+      "totalTime": 21.43613478026465,
+      "segmentTimes": [21.43613478026465],
+      "topSpeed": 77.75267490457031,
+      "finished": true
+    },
+    "columnsHash": "2144:524d500c"
+  },
+  {
+    "key": "a3/a1/6",
+    "outcome": {
+      "totalTime": 21.531420755499788,
+      "segmentTimes": [21.531420755499788],
+      "topSpeed": 73.3601394820697,
+      "finished": true
+    }
+  },
+  {
+    "key": "a3/a1/7",
+    "outcome": {
+      "totalTime": 20.45289203499257,
+      "segmentTimes": [20.45289203499257],
+      "topSpeed": 90.48816585524189,
+      "finished": true
+    }
+  },
+  {
+    "key": "a3/a2/0",
+    "outcome": {
+      "totalTime": 20.871171726636973,
+      "segmentTimes": [20.871171726636973],
+      "topSpeed": 84.94440087961037,
+      "finished": true
+    },
+    "columnsHash": "2088:e9a4f857"
+  },
+  {
+    "key": "a3/a2/1",
+    "outcome": {
+      "totalTime": 20.8417849812311,
+      "segmentTimes": [20.8417849812311],
+      "topSpeed": 84.9577281263544,
+      "finished": true
+    }
+  },
+  {
+    "key": "a3/a2/2",
+    "outcome": {
+      "totalTime": 25.622310751148024,
+      "segmentTimes": [25.622310751148024],
+      "topSpeed": 68.31275293924118,
+      "finished": true
+    }
+  },
+  {
+    "key": "a3/a2/3",
+    "outcome": {
+      "totalTime": 25.949477431590473,
+      "segmentTimes": [25.949477431590473],
+      "topSpeed": 81.83935451498553,
+      "finished": true
+    },
+    "columnsHash": "2595:2704680d"
+  },
+  {
+    "key": "a3/a2/4",
+    "outcome": {
+      "totalTime": 22.422443837267885,
+      "segmentTimes": [22.422443837267885],
+      "topSpeed": 88.30679648204581,
+      "finished": true
+    }
+  },
+  {
+    "key": "a3/a2/5",
+    "outcome": {
+      "totalTime": 21.939386550636986,
+      "segmentTimes": [21.939386550636986],
+      "topSpeed": 77.64907981976216,
+      "finished": true
+    }
+  },
+  {
+    "key": "a3/a2/6",
+    "outcome": {
+      "totalTime": 21.822728680389922,
+      "segmentTimes": [21.822728680389922],
+      "topSpeed": 73.32970652320188,
+      "finished": true
+    },
+    "columnsHash": "2183:27c8b76a"
+  },
+  {
+    "key": "a3/a2/7",
+    "outcome": {
+      "totalTime": 21.72837175068348,
+      "segmentTimes": [21.72837175068348],
+      "topSpeed": 89.80931600122344,
+      "finished": true
+    }
+  },
+  {
+    "key": "a4/a1/0",
+    "outcome": {
+      "totalTime": 11.578350899090223,
+      "segmentTimes": [7.235649623588809, 2.1554146683551556, 2.187286607146259],
+      "topSpeed": 72.98079620763257,
+      "finished": true
+    }
+  },
+  {
+    "key": "a4/a1/1",
+    "outcome": {
+      "totalTime": 11.836725857576685,
+      "segmentTimes": [7.493590065417424, 2.155689543352965, 2.187446248806296],
+      "topSpeed": 72.98271043622942,
+      "finished": true
+    },
+    "columnsHash": "1184:e0fa6590"
+  },
+  {
+    "key": "a4/a1/2",
+    "outcome": {
+      "totalTime": 13.036604812533238,
+      "segmentTimes": [8.177103591824642, 2.3638041007736454, 2.4956971199349507],
+      "topSpeed": 62.70563869314831,
+      "finished": true
+    }
+  },
+  {
+    "key": "a4/a1/3",
+    "outcome": {
+      "totalTime": 11.504727137552218,
+      "segmentTimes": [7.330740907733061, 2.0877023915525807, 2.086283838266576],
+      "topSpeed": 77.15180516945478,
+      "finished": true
+    }
+  },
+  {
+    "key": "a4/a1/4",
+    "outcome": {
+      "totalTime": 11.764198931371757,
+      "segmentTimes": [7.547420978832656, 2.1050555826293857, 2.1117223699097156],
+      "topSpeed": 76.06718755226376,
+      "finished": true
+    },
+    "columnsHash": "1177:a3cf33d2"
+  },
+  {
+    "key": "a4/a1/5",
+    "outcome": {
+      "totalTime": 12.328521045835533,
+      "segmentTimes": [7.7715092757065305, 2.2417447750126387, 2.315266995116364],
+      "topSpeed": 68.32637993837902,
+      "finished": true
+    }
+  },
+  {
+    "key": "a4/a1/6",
+    "outcome": {
+      "totalTime": 12.165893512723551,
+      "segmentTimes": [7.470874025295558, 2.2968602968851517, 2.3981591905428417],
+      "topSpeed": 65.61674670216215,
+      "finished": true
+    }
+  },
+  {
+    "key": "a4/a1/7",
+    "outcome": {
+      "totalTime": 11.921652958391386,
+      "segmentTimes": [7.735116303008703, 2.0932039935764992, 2.0933326618061834],
+      "topSpeed": 76.87172437766975,
+      "finished": true
+    },
+    "columnsHash": "1193:701f8dee"
+  },
+  {
+    "key": "a4/a2/0",
+    "outcome": {
+      "totalTime": 13.858348620513727,
+      "segmentTimes": [7.579317763001694, 3.2104673913158157, 3.068563466196217],
+      "topSpeed": 57.813650459404265,
+      "finished": true
+    }
+  },
+  {
+    "key": "a4/a2/1",
+    "outcome": {
+      "totalTime": 13.846334922755297,
+      "segmentTimes": [7.566298649990515, 3.2105122138650737, 3.0695240588997077],
+      "topSpeed": 57.813650459404265,
+      "finished": true
+    }
+  },
+  {
+    "key": "a4/a2/2",
+    "outcome": {
+      "totalTime": 16.881300679030932,
+      "segmentTimes": [9.686910713967654, 3.718384716106341, 3.4760052489569375],
+      "topSpeed": 51.22165248681035,
+      "finished": true
+    },
+    "columnsHash": "1689:4ba21a58"
+  },
+  {
+    "key": "a4/a2/3",
+    "outcome": {
+      "totalTime": 17.82840857077607,
+      "segmentTimes": [10.07970166737942, 3.9509741677389503, 3.7977327356577],
+      "topSpeed": 47.19930041568169,
+      "finished": true
+    }
+  },
+  {
+    "key": "a4/a2/4",
+    "outcome": {
+      "totalTime": 15.60561285675391,
+      "segmentTimes": [8.897049778313738, 3.505185167090005, 3.2033779113501666],
+      "topSpeed": 57.17468533778492,
+      "finished": true
+    }
+  },
+  {
+    "key": "a4/a2/5",
+    "outcome": {
+      "totalTime": 14.119046193820106,
+      "segmentTimes": [7.826237717604085, 3.1842501600505333, 3.108558316165487],
+      "topSpeed": 56.10270721319734,
+      "finished": true
+    },
+    "columnsHash": "1412:3dc5056b"
+  },
+  {
+    "key": "a4/a2/6",
+    "outcome": {
+      "totalTime": 13.551020440977114,
+      "segmentTimes": [7.499007273373493, 3.0131339583367573, 3.038879209266863],
+      "topSpeed": 56.07686465767648,
+      "finished": true
+    }
+  },
+  {
+    "key": "a4/a2/7",
+    "outcome": {
+      "totalTime": 15.203564501802886,
+      "segmentTimes": [8.597645997388494, 3.4429865304441645, 3.1629319739702275],
+      "topSpeed": 57.79926775589075,
+      "finished": true
+    }
+  },
+  {
+    "key": "b1/a1/0",
+    "outcome": {
+      "totalTime": 22.274511921584345,
+      "segmentTimes": [17.97745552668588, 2.6418061687275056, 1.6552502261709598],
+      "topSpeed": 91.01136168914555,
+      "finished": true
+    },
+    "columnsHash": "2228:222d063e"
+  },
+  {
+    "key": "b1/a1/1",
+    "outcome": {
+      "totalTime": 22.533106497335805,
+      "segmentTimes": [18.23601943154747, 2.641828584182214, 1.655258481606122],
+      "topSpeed": 91.01157559085634,
+      "finished": true
+    }
+  },
+  {
+    "key": "b1/a1/2",
+    "outcome": {
+      "totalTime": 26.36482107388508,
+      "segmentTimes": [20.86337012614086, 3.370424090249113, 2.1310268574951046],
+      "topSpeed": 70.50861597305293,
+      "finished": true
+    }
+  },
+  {
+    "key": "b1/a1/3",
+    "outcome": {
+      "totalTime": 21.381137567299167,
+      "segmentTimes": [17.462661337481904, 2.4164683640088676, 1.5020078658083946],
+      "topSpeed": 100.58068275374114,
+      "finished": true
+    },
+    "columnsHash": "2139:30d05122"
+  },
+  {
+    "key": "b1/a1/4",
+    "outcome": {
+      "totalTime": 21.847279676989515,
+      "segmentTimes": [17.831581316790597, 2.474093213901096, 1.5416051462978224],
+      "topSpeed": 97.90722100127151,
+      "finished": true
+    }
+  },
+  {
+    "key": "b1/a1/5",
+    "outcome": {
+      "totalTime": 24.07564000688738,
+      "segmentTimes": [19.3163208103855, 2.9247742420770457, 1.8345449544248353],
+      "topSpeed": 82.06808912126863,
+      "finished": true
+    }
+  },
+  {
+    "key": "b1/a1/6",
+    "outcome": {
+      "totalTime": 24.654520048608415,
+      "segmentTimes": [19.544739674714304, 3.1349686095168607, 1.9748117643772503],
+      "topSpeed": 76.16997311928922,
+      "finished": true
+    },
+    "columnsHash": "2466:ab98a820"
+  },
+  {
+    "key": "b1/a1/7",
+    "outcome": {
+      "totalTime": 21.85083523316532,
+      "segmentTimes": [17.90772784577943, 2.43107272314095, 1.5120346642449398],
+      "topSpeed": 99.89139447780666,
+      "finished": true
+    }
+  },
+  {
+    "key": "b1/a2/0",
+    "outcome": {
+      "totalTime": 24.696212450942905,
+      "segmentTimes": [18.462715545309564, 3.9372110517206664, 2.296285853912675],
+      "topSpeed": 86.67483342642973,
+      "finished": true
+    }
+  },
+  {
+    "key": "b1/a2/1",
+    "outcome": {
+      "totalTime": 24.67124049707995,
+      "segmentTimes": [18.436968510985317, 3.9371139182921873, 2.297158067802446],
+      "topSpeed": 86.69928671447812,
+      "finished": true
+    },
+    "columnsHash": "2468:a91f62e3"
+  },
+  {
+    "key": "b1/a2/2",
+    "outcome": {
+      "totalTime": 29.905724225602516,
+      "segmentTimes": [22.67030002115872, 4.540455368360714, 2.6949688360830812],
+      "topSpeed": 69.03336653509804,
+      "finished": true
+    }
+  },
+  {
+    "key": "b1/a2/3",
+    "outcome": {
+      "totalTime": 31.00899749084824,
+      "segmentTimes": [22.82397466188369, 5.240106567526208, 2.944916261438344],
+      "topSpeed": 85.42039776615792,
+      "finished": true
+    }
+  },
+  {
+    "key": "b1/a2/4",
+    "outcome": {
+      "totalTime": 26.77861661973956,
+      "segmentTimes": [19.773207053810133, 4.499819887530531, 2.505589678398895],
+      "topSpeed": 90.40250050032546,
+      "finished": true
+    },
+    "columnsHash": "2678:f13ee95a"
+  },
+  {
+    "key": "b1/a2/5",
+    "outcome": {
+      "totalTime": 25.394806901998283,
+      "segmentTimes": [19.391110113149736, 3.747125792849708, 2.256570995998839],
+      "topSpeed": 79.01335400520625,
+      "finished": true
+    }
+  },
+  {
+    "key": "b1/a2/6",
+    "outcome": {
+      "totalTime": 25.22422806007518,
+      "segmentTimes": [19.558251736144538, 3.4976591852759604, 2.1683171386546825],
+      "topSpeed": 74.3252794955312,
+      "finished": true
+    }
+  },
+  {
+    "key": "b1/a2/7",
+    "outcome": {
+      "totalTime": 26.167642995944163,
+      "segmentTimes": [19.23759562156177, 4.452183299140952, 2.477864075241442],
+      "topSpeed": 91.93019614560181,
+      "finished": true
+    },
+    "columnsHash": "2617:49f6de2a"
+  },
+  {
+    "key": "b4/a1/0",
+    "outcome": {
+      "totalTime": 34.10262823287693,
+      "segmentTimes": [
+        17.97745552668588, 2.6418061687275056, 5.475634810953391, 1.19311384263424,
+        6.814617883875915
+      ],
+      "topSpeed": 92.46278395502394,
+      "finished": true
+    }
+  },
+  {
+    "key": "b4/a1/1",
+    "outcome": {
+      "totalTime": 34.36262994419119,
+      "segmentTimes": [
+        18.23601943154747, 2.641828584182214, 5.475653229655354, 1.1931155495534291,
+        6.816013149252726
+      ],
+      "topSpeed": 92.46282584962786,
+      "finished": true
+    }
+  },
+  {
+    "key": "b4/a1/2",
+    "outcome": {
+      "totalTime": 40.40859275642775,
+      "segmentTimes": [
+        20.86337012614086, 3.370424090249113, 7.083168876451211, 1.5527423093613635,
+        7.538887354225203
+      ],
+      "topSpeed": 70.89015722522744,
+      "finished": true
+    },
+    "columnsHash": "4041:b1be629e"
+  },
+  {
+    "key": "b4/a1/3",
+    "outcome": {
+      "totalTime": 32.56464302532156,
+      "segmentTimes": [
+        17.462661337481904, 2.4164683640088676, 4.940061577551603, 1.0671508841885675,
+        6.678300862090616
+      ],
+      "topSpeed": 103.71143513905638,
+      "finished": true
+    }
+  },
+  {
+    "key": "b4/a1/4",
+    "outcome": {
+      "totalTime": 33.19541013252691,
+      "segmentTimes": [
+        17.831581316790597, 2.474093213901096, 5.079542627489051, 1.1003524767540362,
+        6.709840497592129
+      ],
+      "topSpeed": 100.49100199013965,
+      "finished": true
+    }
+  },
+  {
+    "key": "b4/a1/5",
+    "outcome": {
+      "totalTime": 36.69477559174329,
+      "segmentTimes": [
+        19.3163208103855, 2.9247742420770457, 6.078311404278505, 1.3280752046921052,
+        7.047293930310133
+      ],
+      "topSpeed": 82.94451753764288,
+      "finished": true
+    },
+    "columnsHash": "3670:7f3865dd"
+  },
+  {
+    "key": "b4/a1/6",
+    "outcome": {
+      "totalTime": 37.92390357221518,
+      "segmentTimes": [
+        19.544739674714304, 3.1349686095168607, 6.550545218726693, 1.4322428666026603,
+        7.261407202654663
+      ],
+      "topSpeed": 76.94536925417184,
+      "finished": true
+    }
+  },
+  {
+    "key": "b4/a1/7",
+    "outcome": {
+      "totalTime": 33.07534937399667,
+      "segmentTimes": [
+        17.90772784577943, 2.43107272314095, 4.975396970510882, 1.0755740049763425,
+        6.685577829589068
+      ],
+      "topSpeed": 102.87637533658882,
+      "finished": true
+    }
+  },
+  {
+    "key": "b4/a2/0",
+    "outcome": {
+      "totalTime": 44.93063926627803,
+      "segmentTimes": [
+        18.462715545309564, 3.9372110517206664, 7.901389313736427, 4.541862052470716,
+        10.087461303040655
+      ],
+      "topSpeed": 86.67483342642973,
+      "finished": true
+    },
+    "columnsHash": "4494:a2eb808a"
+  },
+  {
+    "key": "b4/a2/1",
+    "outcome": {
+      "totalTime": 44.90304599686618,
+      "segmentTimes": [
+        18.436968510985317, 3.9371139182921873, 7.892738523818046, 4.541161626761895,
+        10.095063417008738
+      ],
+      "topSpeed": 86.69928671447812,
+      "finished": true
+    }
+  },
+  {
+    "key": "b4/a2/2",
+    "outcome": {
+      "totalTime": 53.89668049149452,
+      "segmentTimes": [
+        22.67030002115872, 4.540455368360714, 9.264197849725235, 5.339594518237263,
+        12.082132734012589
+      ],
+      "topSpeed": 69.03336653509804,
+      "finished": true
+    }
+  },
+  {
+    "key": "b4/a2/3",
+    "outcome": {
+      "totalTime": 55.6242687215612,
+      "segmentTimes": [
+        22.82397466188369, 5.240106567526208, 9.70392472339579, 5.33212692844878, 12.524135840306734
+      ],
+      "topSpeed": 85.42039776615792,
+      "finished": true
+    },
+    "columnsHash": "5563:25446522"
+  },
+  {
+    "key": "b4/a2/4",
+    "outcome": {
+      "totalTime": 48.125594720354755,
+      "segmentTimes": [
+        19.773207053810133, 4.499819887530531, 8.32175142779251, 4.823386612020762,
+        10.707429739200819
+      ],
+      "topSpeed": 90.40250050032546,
+      "finished": true
+    }
+  },
+  {
+    "key": "b4/a2/5",
+    "outcome": {
+      "totalTime": 46.19034130676818,
+      "segmentTimes": [
+        19.391110113149736, 3.747125792849708, 7.934502120917003, 4.617260818080382,
+        10.500342461771353
+      ],
+      "topSpeed": 79.01335400520625,
+      "finished": true
+    }
+  },
+  {
+    "key": "b4/a2/6",
+    "outcome": {
+      "totalTime": 45.58267484244431,
+      "segmentTimes": [
+        19.558251736144538, 3.4976591852759604, 7.795855116981773, 4.424381881338984,
+        10.306526922703057
+      ],
+      "topSpeed": 74.3252794955312,
+      "finished": true
+    },
+    "columnsHash": "4559:ffb94481"
+  },
+  {
+    "key": "b4/a2/7",
+    "outcome": {
+      "totalTime": 46.92286558538018,
+      "segmentTimes": [
+        19.23759562156177, 4.452183299140952, 8.244495647223612, 4.718599824820611,
+        10.269991192633235
+      ],
+      "topSpeed": 91.93019614560181,
+      "finished": true
+    }
+  }
+]

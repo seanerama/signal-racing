@@ -83,6 +83,34 @@ export const TRACK_B1: Track = {
   ],
 };
 
+/** The B4L ("Puzzle-lite") circuit from the Stage 8 notes: the longest meeting-cut track. */
+export const TRACK_B4: Track = {
+  id: 'b4l',
+  standingStart: true,
+  laps: 1,
+  segments: [
+    { id: 'main_straight', label: 'Main straight', kind: 'straight', length: 1000 },
+    {
+      id: 'fast_corner',
+      label: 'Fast corner',
+      kind: 'corner',
+      length: 150 * (Math.PI / 2),
+      radius: 150,
+      direction: 'right',
+    },
+    { id: 'back_straight', label: 'Back straight', kind: 'straight', length: 500 },
+    {
+      id: 'hairpin',
+      label: 'Hairpin',
+      kind: 'corner',
+      length: 35 * Math.PI,
+      radius: 35,
+      direction: 'right',
+    },
+    { id: 'run_stop', label: 'Run to stop', kind: 'straight', length: 400, endsWithStop: true },
+  ],
+};
+
 /** Lever grids (inclusive), built from integers to avoid float drift. */
 export const RAMPS = Array.from({ length: 16 }, (_, i) => i / 10);
 export const PRESSURES = Array.from({ length: 11 }, (_, i) => (12 + i) / 10);

@@ -1,11 +1,12 @@
 /**
- * Main-thread RPC to the sim worker. SKELETON (Stage 1): a typed request/response channel and
- * `ping`. Stage 5 builds `createSimClient(): SimClient` (contract 05) on top of `createWorkerRpc`.
+ * Main-thread RPC to the sim worker: `createWorkerRpc` (a typed request/response channel with
+ * request ids, progress events, typed error reconstruction and transfer lists) and
+ * `createSimClient` (contract 05) on top of it. This is the only way the UI reaches the engine.
  */
 import { log } from '@/app/log';
 import { deserializeError } from './protocol';
 import { spawnSimWorker } from './spawn';
-import type { RpcMessageFromWorker, RpcMethods, RpcType } from './types';
+import type { RpcMessageFromWorker, RpcMethods, RpcType, SimClient } from './types';
 
 export type { GridResult, RunPayload, SimClient } from './types';
 
@@ -79,5 +80,22 @@ export function createWorkerRpc(worker: Worker = spawnSimWorker()): WorkerRpc {
       for (const p of pending.values()) p.reject(err);
       pending.clear();
     },
+  };
+}
+
+/**
+ * The sim client (contract 05). `worker` defaults to the real sim worker; tests pass an
+ * in-process adapter (`tests/worker/adapter.ts`).
+ */
+export function createSimClient(worker?: Worker): SimClient {
+  const rpc = createWorkerRpc(worker ?? spawnSimWorker());
+  return {
+    run: (req) => rpc.request('run', req),
+    async gridSearch(req, onProgress) {
+      const res = await rpc.request('gridSearch', req, onProgress ? { onProgress } : undefined);
+      log.debug(`grid search ${res.levelId}: ${res.ms.toFixed(0)} ms, ${res.evaluated} setups`);
+      return res;
+    },
+    dispose: () => rpc.dispose(),
   };
 }
