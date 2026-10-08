@@ -8,11 +8,11 @@ Signal is a racing game with nothing on screen but data. The car exists only as 
 
 Each level introduces one physical effect (drag, grip, load transfer, cornering, balance, tire temperature, track conditions, fuel) and unlocks one or two setup levers. The player sets the car up, runs it, reads the telemetry, adjusts, and runs again. The objective never changes: a faster time in fewer runs.
 
-The skill the game teaches is not driving or setup. It is knowing which of the many telemetry channels to look at for the question in front of you. That is the problem Chip Ganassi Racing and OpenAI describe in their R&D series, reduced to something playable in ten minutes.
+The skill the game teaches is not driving or setup. It is knowing which of the many telemetry channels to look at for the question in front of you. That is the everyday problem of a race engineering team, reduced to something playable in ten minutes.
 
 The game has two phases. First, segments: a straight, a corner, a straight with a stop, each tuned on its own with one lever at a time. Then assembly: those segments are joined one by one into a track, and one setup has to serve all of them at once.
 
-The final level, The Puzzle, is the article's premise as a game: the fully assembled track, every lever, ten practice runs, two hundred channels, and an optional assist that ranks which channels matter. Working title only; see Open questions.
+The final level, The Puzzle, is the whole premise as a game: the fully assembled track, every lever, ten practice runs, two hundred channels, and an optional assist that ranks which channels matter. Working title only; see Open questions.
 
 ## Design principles
 
@@ -164,7 +164,7 @@ A vertical cursor reads every strip at the same instant, which is how a player s
 
 **Assembly view.** In the assembly levels the axis spans the whole joined track, segment boundaries are marked as vertical rules, and a strip labelled segment\_delta shows time lost against each segment's isolated best. That strip is how the player sees which segment is paying for the compromise.
 
-**Export.** Every run's telemetry downloads as a CSV with one column per channel. Opening a Puzzle run in a spreadsheet, two hundred columns wide, makes the article's point without a word.
+**Export.** Every run's telemetry downloads as a CSV with one column per channel. Opening a Puzzle run in a spreadsheet, two hundred columns wide, makes the point without a word: there is far more data than anyone can read.
 
 ## Hint engine
 
@@ -251,13 +251,13 @@ A level is passed by hitting its target time within the run budget. The score is
 
 ## The Puzzle and the AI assist
 
-The Puzzle is Ganassi's metaphor as a level: every team arrives with data, experience and tools, and limited practice time, and the question is who puts the puzzle together fastest. It is also the last assembly step, and the only one where the player has seen every piece before.
+The Puzzle is the race-weekend metaphor as a level: every team arrives with data, experience and tools, and limited practice time, and the question is who puts the puzzle together fastest. It is also the last assembly step, and the only one where the player has seen every piece before.
 
 **Setup.** The track assembled through B1 to B3, plus two segments the player has not tuned in isolation (a long fast corner and a chicane), so there is no floor to lean on for part of the lap. Every lever: throttle ramp, tire pressure, weight distribution, wing, front and rear anti-roll bar, fuel load, aggression. Conditions vary between runs. Ten runs. About 200 channels, of which six to eight are causal. Target is within 0.5% of the optimum stint.
 
 **The assist.** A toggle, off by default. When on, after each run it shows the five channels most correlated with lap time across the runs so far, with the sign of the correlation and a one-line reason drawn from the hint rules that fired. It never sets a lever and never names a value.
 
-**What it is.** Deliberately simple and fully explainable: a rank by absolute correlation with the outcome, plus the same rules that produced hints in levels 1 to 8 acting as priors. That is the point for the meeting. It is a filter, not a decider, which is exactly how the article frames OpenAI's role: surface what matters so the engineer applies their judgment faster.
+**What it is.** Deliberately simple and fully explainable: a rank by absolute correlation with the outcome, plus the same rules that produced hints in levels 1 to 8 acting as priors. That is the point for the meeting. It is a filter, not a decider: it surfaces what matters so the engineer applies their judgment faster.
 
 **What it is not.** Not a model of the car, not a setup optimiser, not a black box. With ten runs and 200 channels, raw correlation alone finds plenty of spurious matches. The priors are what make it useful, and the debrief says so.
 
