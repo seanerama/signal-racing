@@ -51,10 +51,11 @@ describe('session.answerCall', () => {
     await s.run({ throttle_ramp: 0.4, tire_pressure: 1.7, weight_dist: 0.46, wing: 4 });
     const left = s.runsLeft.value;
     expect(s.answerCall('nope')).toBeNull();
-    expect(s.answerCall('flag')).toEqual({ afterRun: 2, optionId: 'flag', correct: true });
+    const rec = { afterRun: 2, optionId: 'flag', correct: true, atRun: 2 };
+    expect(s.answerCall('flag')).toEqual(rec);
     expect(s.runsLeft.value).toBe(left);
     // A second answer does not overwrite the first.
-    expect(s.answerCall('act')).toEqual({ afterRun: 2, optionId: 'flag', correct: true });
+    expect(s.answerCall('act')).toEqual(rec);
     expect(s.call.value?.optionId).toBe('flag');
   }, 60_000);
 });

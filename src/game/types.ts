@@ -69,6 +69,8 @@ export interface CallAnswer {
   afterRun: number;
   optionId: string;
   correct: boolean;
+  /** Runs completed when the answer was given (the panel shows the result until the next run). */
+  atRun: number;
 }
 
 /** Persisted per-level progress (`signal.v1.progress`). */

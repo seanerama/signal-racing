@@ -31,10 +31,12 @@ export type Route =
   | { name: 'level'; id: LevelId }
   | { name: 'debrief'; id: LevelId }
   | { name: 'dev'; path: string }
+  | { name: 'model' }
   | { name: 'missing'; path: string };
 
 export function parseRoute(path: string): Route {
   if (path === '/' || path === '') return { name: 'select' };
+  if (path === '/model' || path === '/model/') return { name: 'model' };
   if (path === '/dev' || path.startsWith('/dev/')) return { name: 'dev', path };
   const m = /^\/level\/([A-Za-z0-9]+)(\/debrief)?\/?$/.exec(path);
   if (m) {
@@ -47,3 +49,6 @@ export function parseRoute(path: string): Route {
 
 export const levelPath = (id: LevelId): string => `/level/${id}`;
 export const debriefPath = (id: LevelId): string => `/level/${id}/debrief`;
+
+/** Stage 9: the Model & sources page. */
+export const MODEL_PATH = '/model';

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Setup } from '@/engine/types';
 import { toCsv } from '@/export/csv';
+import { DISCLAIMER } from '@/game/disclaimer';
 import { allChannels } from '@/telemetry/registry';
 import { createRunTelemetry } from '@/telemetry/run-telemetry';
 import type { RunTelemetry } from '@/telemetry/types';
@@ -27,6 +28,8 @@ describe('toCsv', () => {
     const csv = toCsv(rt, { levelId: 'A2', run: 3, seed: 7, setup: SETUP, units: 'metric' });
     const { comments, rows } = parse(csv);
     expect(comments[0]).toMatch(/^# signal v0\.\d+$/);
+    // Stage 9: the disclaimer is the second comment line.
+    expect(comments[1]).toBe(`# ${DISCLAIMER}`);
     expect(comments).toContain('# level: A2');
     expect(comments).toContain('# run: 3');
     expect(comments).toContain('# seed: 7');

@@ -221,7 +221,12 @@ export function startLevel(level: LevelConfig, client: SimClient): LevelSession 
       if (runs.value.length < spec.afterRun) return null;
       const option = spec.options.find((o) => o.id === optionId);
       if (!option) return null;
-      call.value = { afterRun: spec.afterRun, optionId, correct: option.correct };
+      call.value = {
+        afterRun: spec.afterRun,
+        optionId,
+        correct: option.correct,
+        atRun: runs.value.length,
+      };
       return call.value;
     },
     run(setup) {

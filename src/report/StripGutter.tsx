@@ -25,6 +25,8 @@ export interface StripGutterProps {
   placeholder?: boolean;
   /** Optional menu behind a `⋯` button (revealed on hover/focus, like remove). */
   menu?: GutterMenuItem[];
+  /** Stage 9: the strip is drawn smoothed (a `~` after the id). */
+  smoothed?: boolean;
   children?: ComponentChildren;
 }
 
@@ -39,7 +41,7 @@ function GutterMenu({ id, items }: { id: string; items: GutterMenuItem[] }) {
 
   useEffect(() => {
     if (!open) return;
-    rootRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
+    rootRef.current?.querySelector<HTMLButtonElement>('[role^="menuitem"]')?.focus();
     const onDown = (ev: PointerEvent) => {
       if (!rootRef.current?.contains(ev.target as Node)) setOpen(false);
     };
@@ -55,7 +57,7 @@ function GutterMenu({ id, items }: { id: string; items: GutterMenuItem[] }) {
   const onMenuKey = (ev: JSX.TargetedKeyboardEvent<HTMLDivElement>) => {
     ev.stopPropagation();
     const list = [
-      ...(rootRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? []),
+      ...(rootRef.current?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]') ?? []),
     ];
     const i = list.indexOf(document.activeElement as HTMLButtonElement);
     if (ev.key === 'Escape') {
@@ -97,8 +99,9 @@ function GutterMenu({ id, items }: { id: string; items: GutterMenuItem[] }) {
             <button
               key={item.label}
               type="button"
-              role="menuitem"
-              class="strip__menu-item data"
+              role={item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
+              {...(item.checked === undefined ? {} : { 'aria-checked': item.checked })}
+              class={`strip__menu-item data${item.checked ? ' strip__menu-item--on' : ''}`}
               onClick={(ev) => {
                 ev.stopPropagation();
                 close(false);
@@ -128,6 +131,7 @@ export function StripGutter({
   gutterRef,
   placeholder = false,
   menu,
+  smoothed = false,
   children,
 }: StripGutterProps) {
   return (
@@ -163,7 +167,14 @@ export function StripGutter({
         </span>
       ) : (
         <div class="strip__names">
-          <span class="strip__id data">{id}</span>
+          <span class="strip__id data">
+            {id}
+            {smoothed && (
+              <span class="strip__smooth" title="Smoothed: 5-point centred mean (display only)">
+                ~
+              </span>
+            )}
+          </span>
           <span class="strip__meta micro">
             <span class="strip__unit">{unit || '—'}</span>
             {slot !== null && <span class="strip__slot">{`T${(slot % 8) + 1}`}</span>}

@@ -16,7 +16,7 @@ import type { ComponentChildren } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { trackGeometry } from '@/engine/index';
 import type { ChannelId, LeverId, Setup } from '@/engine/types';
-import { stripLayout } from '@/game/prefs';
+import { stripLayout, stripSmooth } from '@/game/prefs';
 import { BudgetError } from '@/game/session';
 import type { RunRecord } from '@/game/types';
 import { renderTier, ruleFor } from '@/hints/engine';
@@ -28,6 +28,7 @@ import { selectedStrip } from '@/report/selection';
 import { StripStack } from '@/report/StripStack';
 import { toggleStrip } from '@/report/strip-ops';
 import { TrackView } from '@/report/TrackView';
+import { GripCircle } from '@/report/GripCircle';
 import type { ResultHeaderExtra } from '@/report/types';
 import type { UnitSystem } from '@/units';
 import { HintControls } from '@/setup/HintControls';
@@ -37,6 +38,7 @@ import { WaterfallOverlay } from '@/viz3d/WaterfallOverlay';
 import { CsvButton } from '@/report/CsvButton';
 import { workbenchActions } from './actions';
 import { BriefModal } from './BriefModal';
+import { CallPanel } from './CallPanel';
 import { Button } from './components/Button';
 import { FaultPanel, type FaultInfo } from './FaultPanel';
 import { levelState, openHint } from './game-store';
@@ -124,6 +126,12 @@ export function Workbench({
 
   const available = useMemo(() => new Set(level.channelSet), [level]);
   const inStack = useMemo(() => new Set(strips), [strips]);
+  const smoothList = stripSmooth.value;
+  const smoothed = useMemo(() => new Set(smoothList), [smoothList]);
+  const toggleSmooth = (id: ChannelId) => {
+    const cur = stripSmooth.value;
+    stripSmooth.value = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+  };
   const geometry = useMemo(() => trackGeometry(level.track), [level]);
   const segmentLabels = useMemo(() => level.track.segments.map((s) => s.label), [level]);
 
@@ -235,20 +243,32 @@ export function Workbench({
         runState={runState}
         progress={session.gridProgress.value}
         hints={
-          <HintControls
-            available={!!top}
-            tiersOpened={top ? tiers : 0}
-            cost={level.hintCost}
-            runsLeft={runsLeft}
-            texts={texts}
-            open={hintOpen}
-            onOpenChange={setHintOpen}
-            onOpenNext={() => {
-              openHint(st);
-            }}
-            onChannelClick={showChannel}
-            emptyReason={emptyReason}
-          />
+          <>
+            <CallPanel
+              level={level}
+              session={session}
+              units={units}
+              inStack={inStack}
+              onAdd={(id) => {
+                if (!stripLayout.value.includes(id)) stripLayout.value = [...stripLayout.value, id];
+              }}
+              onChannelClick={showChannel}
+            />
+            <HintControls
+              available={!!top}
+              tiersOpened={top ? tiers : 0}
+              cost={level.hintCost}
+              runsLeft={runsLeft}
+              texts={texts}
+              open={hintOpen}
+              onOpenChange={setHintOpen}
+              onOpenNext={() => {
+                openHint(st);
+              }}
+              onChannelClick={showChannel}
+              emptyReason={emptyReason}
+            />
+          </>
         }
       />
 
@@ -315,7 +335,15 @@ export function Workbench({
               hintWindow={hintWindow}
               units={units}
               flashChannel={flash}
-              gutterMenu={(id) => [{ label: 'Waterfall…', onSelect: () => setWaterfall(id) }]}
+              gutterMenu={(id) => [
+                { label: 'Waterfall…', onSelect: () => setWaterfall(id) },
+                {
+                  label: 'Smooth (5-pt centred mean)',
+                  checked: smoothed.has(id),
+                  onSelect: () => toggleSmooth(id),
+                },
+              ]}
+              smoothed={smoothed}
             />
           )}
           {!latest && !fault && (
@@ -337,6 +365,12 @@ export function Workbench({
           segmentLabels={segmentLabels}
           units={units}
           axis={axis}
+        />
+        <GripCircle
+          current={latest?.telemetry ?? null}
+          best={overlay?.telemetry ?? null}
+          axis={axis}
+          units={units}
         />
         <div class="wb__table">
           <ChannelTable

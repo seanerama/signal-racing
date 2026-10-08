@@ -294,3 +294,17 @@
   background: var(--line);
   outline: none;
 }
+/* Stage 9: toggle items (Smooth) show their state with a check, not colour alone. */
+.strip__menu-item[role='menuitemcheckbox']::before {
+  content: '☐ ';
+  color: var(--text-dim);
+}
+.strip__menu-item--on[role='menuitemcheckbox']::before {
+  content: '☑ ';
+  color: var(--text);
+}
+/* `~` after the id: the strip is drawn smoothed (display only). */
+.strip__smooth {
+  margin-left: 2px;
+  color: var(--accent);
+}

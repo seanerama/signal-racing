@@ -23,6 +23,8 @@ export interface HintWindow {
 export interface GutterMenuItem {
   label: string;
   onSelect(): void;
+  /** Stage 9: a toggle item (`menuitemcheckbox`), e.g. "Smooth (5-pt centred mean)". */
+  checked?: boolean;
 }
 
 /** `src/report/StripStack.tsx`: the synced uPlot strip stack. */
@@ -47,6 +49,11 @@ export interface StripStackProps {
   flashChannel?: ChannelId | null;
   /** Optional per-strip gutter menu (a `⋯` button on hover/focus). Omitted: no menu. */
   gutterMenu?: (id: ChannelId) => GutterMenuItem[];
+  /**
+   * Stage 9: strips drawn with the display-only 5-point smoothing (a `~` beside the id and on the
+   * readouts). The channel table stays raw.
+   */
+  smoothed?: ReadonlySet<ChannelId>;
 }
 
 /** `src/report/ChannelTable.tsx`: the virtualised channel table. */
@@ -117,6 +124,19 @@ export interface TrackViewProps {
   units: UnitSystem;
   /** How the best-run block is aligned to the cursor. */
   axis: 'time' | 'distance';
+}
+
+/**
+ * `src/report/GripCircle.tsx` (Stage 9, contract 07 addition): two friction circles (FRONT, REAR),
+ * radius 1 = the axle's grip budget, the tire force demand as a dot at the shared cursor. Model
+ * forces from the clean channels (`fx_*`, `fy_*`, `grip_budget_*`), labelled "model estimate".
+ */
+export interface GripCircleProps {
+  current: RunTelemetry | null;
+  /** Hollow `--trace-best` dot at the same t (or s, per `axis`). */
+  best: RunTelemetry | null;
+  axis: 'time' | 'distance';
+  units: UnitSystem;
 }
 
 /** Arguments to `buildStripOptions()` in `src/report/uplot-theme.ts`. */

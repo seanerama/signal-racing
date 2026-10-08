@@ -41,6 +41,12 @@ export const units: Signal<UnitSystem> = persisted<UnitSystem>('units', 'metric'
 export const axisMode: Signal<AxisMode> = persisted<AxisMode>('axis', 'time', isAxis);
 /** `signal.v1.layout`: the strip stack, global across levels (spec). Empty = level defaults. */
 export const stripLayout: Signal<ChannelId[]> = persisted<ChannelId[]>('layout', [], isIds);
+/**
+ * `signal.v1.layoutSmooth` (Stage 9): channels whose strip is drawn with the display-only 5-point
+ * smoothing. Part of the layout prefs, global like the stack; a channel keeps its setting when it
+ * leaves and re-enters the stack.
+ */
+export const stripSmooth: Signal<ChannelId[]> = persisted<ChannelId[]>('layoutSmooth', [], isIds);
 /** `signal.v1.projector`, default off. */
 export const projectorMode: Signal<boolean> = persisted<boolean>('projector', false, isBool);
 

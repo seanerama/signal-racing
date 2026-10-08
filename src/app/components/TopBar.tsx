@@ -1,4 +1,5 @@
 import type { ComponentChildren } from 'preact';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import type { UnitSystem } from '@/units';
 import { SegmentedControl, type SegmentOption } from './SegmentedControl';
 import './TopBar.css';
@@ -27,6 +28,8 @@ export interface TopBarProps {
   onPalette?(): void;
   /** ⓘ brief (in a level). */
   onBrief?(): void;
+  /** Stage 9: ⓘ → "How this is modelled" (`#/model`), on every screen. */
+  onModel?(): void;
   /** Status chips before the controls (Stage 8: `DEMO PROFILE`). */
   status?: ComponentChildren;
 }
@@ -45,6 +48,7 @@ export function TopBar({
   axisEnabled = false,
   onPalette,
   onBrief,
+  onModel,
   status,
 }: TopBarProps) {
   return (
@@ -83,23 +87,81 @@ export function TopBar({
             ⌘K
           </button>
         )}
-        {onBrief && (
-          <button
-            type="button"
-            class="topbar__icon topbar__icon--svg"
-            onClick={onBrief}
-            aria-label="Brief"
-            title="Brief"
-            data-testid="brief-button"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
-              <circle cx="7" cy="7" r="6" fill="none" stroke="currentColor" stroke-width="1.2" />
-              <rect x="6.4" y="6" width="1.2" height="4.2" fill="currentColor" />
-              <rect x="6.4" y="3.6" width="1.2" height="1.3" fill="currentColor" />
-            </svg>
-          </button>
-        )}
+        {(onBrief || onModel) && <InfoMenu onBrief={onBrief} onModel={onModel} />}
       </div>
     </header>
+  );
+}
+
+/**
+ * The ⓘ menu (Stage 9): Brief (in a level) and "How this is modelled". A small popover list;
+ * Esc or a click outside closes it. With only one item it still opens the menu, so the control
+ * means the same thing on every screen.
+ */
+function InfoMenu({ onBrief, onModel }: { onBrief?: () => void; onModel?: () => void }) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    root.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
+    const down = (ev: PointerEvent) => {
+      if (!root.current?.contains(ev.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', down, true);
+    return () => document.removeEventListener('pointerdown', down, true);
+  }, [open]);
+  const items: Array<{ label: string; run: () => void; id: string }> = [];
+  if (onBrief) items.push({ id: 'brief', label: 'Brief', run: onBrief });
+  if (onModel) items.push({ id: 'model', label: 'How this is modelled', run: onModel });
+  return (
+    <div
+      class="topbar__info"
+      ref={root}
+      onKeyDown={(ev) => {
+        if (ev.key === 'Escape' && open) {
+          ev.stopPropagation();
+          setOpen(false);
+          btn.current?.focus();
+        }
+      }}
+    >
+      <button
+        ref={btn}
+        type="button"
+        class="topbar__icon topbar__icon--svg"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Info"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="Brief and model"
+        data-testid="info-button"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+          <circle cx="7" cy="7" r="6" fill="none" stroke="currentColor" stroke-width="1.2" />
+          <rect x="6.4" y="6" width="1.2" height="4.2" fill="currentColor" />
+          <rect x="6.4" y="3.6" width="1.2" height="1.3" fill="currentColor" />
+        </svg>
+      </button>
+      {open && (
+        <div class="topbar__menu" role="menu" aria-label="Info">
+          {items.map((it) => (
+            <button
+              key={it.id}
+              type="button"
+              role="menuitem"
+              class="topbar__menu-item"
+              data-testid={`info-${it.id}`}
+              onClick={() => {
+                setOpen(false);
+                it.run();
+              }}
+            >
+              {it.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

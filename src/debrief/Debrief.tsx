@@ -18,6 +18,7 @@ import type { LevelSession, RunRecord } from '@/game/types';
 import { renderTier, ruleFor } from '@/hints/engine';
 import type { HintMatch } from '@/hints/types';
 import type { LevelConfig } from '@/levels/types';
+import { callVars as callVarsOf } from '@/app/CallPanel';
 import { DeltaValue } from '@/report/DeltaValue';
 import { LEVER_QUANTITY, LEVER_SHORT } from '@/report/ResultHeader';
 import { StripStack } from '@/report/StripStack';
@@ -46,6 +47,60 @@ export interface DebriefProps {
 }
 
 const LEVER_ORDER: LeverId[] = ['throttle_ramp', 'tire_pressure', 'weight_dist', 'wing'];
+
+/**
+ * Stage 9 "Calls": the Make-the-call question, the player's answer, right or wrong, and why.
+ * Channel ids in the text are plain here (the debrief has no stack to add to).
+ */
+function CallsRow({
+  level,
+  session,
+  units,
+}: {
+  level: LevelConfig;
+  session: LevelSession | null;
+  units: UnitSystem;
+}) {
+  const call = level.call!;
+  const ans = session?.call.value ?? null;
+  const chosen = ans ? call.options.find((o) => o.id === ans.optionId) : undefined;
+  const rec = session?.runs.value[call.afterRun - 1];
+  const vars = rec ? callVarsOf(level, rec) : {};
+  return (
+    <>
+      <h2 class="h2 dim db__h">Calls</h2>
+      <table class="db__table db__calls" data-testid="debrief-calls">
+        <tbody>
+          <tr>
+            <td class="mono dim">{`run ${call.afterRun}`}</td>
+            <td>
+              <RichText class="db__prose" text={call.question} vars={vars} units={units} />
+              {chosen && ans ? (
+                <>
+                  <p class="db__callans">
+                    <span class="dim">Your call: </span>
+                    {stripTicks(chosen.text)}
+                  </p>
+                  <p
+                    class={`micro ${ans.correct ? 'db__call--right' : 'db__call--wrong'}`}
+                    data-testid="debrief-call-verdict"
+                  >
+                    {ans.correct ? '✓ The call.' : '✗ Not the call.'}
+                  </p>
+                  <RichText class="db__prose dim" text={chosen.why} units={units} />
+                </>
+              ) : (
+                <p class="micro faint">Not answered.</p>
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </>
+  );
+}
+
+const stripTicks = (s: string): string => s.replace(/`/g, '');
 
 function SetupChips({
   level,
@@ -128,6 +183,13 @@ export function Debrief({
           <h1 class="h1">{level.title}</h1>
         </div>
         <div class="db__actions">
+          <a
+            class="sheet__link micro db__modellink"
+            href="#/model"
+            data-testid="debrief-model-link"
+          >
+            How this is modelled
+          </a>
           <Button variant="ghost" onClick={onLevelSelect}>
             Level select
           </Button>
@@ -175,6 +237,7 @@ export function Debrief({
             </dl>
           </div>
           {extra}
+          {level.call && <CallsRow level={level} session={session} units={units} />}
           <h2 class="h2 dim db__h">Convergence</h2>
           <div class="db__tablewrap">
             <table class="db__table" data-testid="convergence">
