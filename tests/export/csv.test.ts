@@ -13,8 +13,9 @@ const pc = makeFixture({ segments: CORNER_TRACK });
 /** Minimal CSV parse: comment lines, then rows of cells (no quoted cells occur in our output). */
 function parse(csv: string): { comments: string[]; rows: string[][] } {
   const lines = csv.trimEnd().split('\n');
-  const comments = lines.filter((l) => l.startsWith('#'));
-  const rows = lines.filter((l) => !l.startsWith('#')).map((l) => l.split(','));
+  const isComment = (l: string) => l.startsWith('#') || l.startsWith('"#');
+  const comments = lines.filter(isComment);
+  const rows = lines.filter((l) => !isComment(l)).map((l) => l.split(','));
   return { comments, rows };
 }
 
@@ -30,7 +31,10 @@ describe('toCsv', () => {
     expect(comments).toContain('# run: 3');
     expect(comments).toContain('# seed: 7');
     expect(comments).toContain('# units: metric');
-    expect(comments).toContain(`# setup: ${JSON.stringify(SETUP)}`);
+    // The setup line is one RFC 4180 cell, so a spreadsheet keeps the JSON in column A.
+    const quoted = `"# setup: ${JSON.stringify(SETUP).replace(/"/g, '""')}"`;
+    expect(comments).toContain(quoted);
+    expect(quoted.slice(1, -1).replace(/""/g, '"')).toBe(`# setup: ${JSON.stringify(SETUP)}`);
     expect(rows[0]).toEqual(['t', 's', ...rt.channelIds]);
     expect(rows[1]).toEqual(['s', 'm', 'km/h', '%', '', '°C', 's', '°C']);
     expect(rows.length).toBe(2 + rt.n);

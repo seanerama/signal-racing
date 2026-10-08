@@ -64,6 +64,8 @@ export async function playMeetingDemo(page: Page, { url, suffix }: DemoOptions):
   const file = await download;
   expect(file.suggestedFilename()).toBe('signal_B4L_run1.csv');
   const path = await file.path();
+  mkdirSync(SHOT_DIR, { recursive: true });
+  await file.saveAs(resolve(SHOT_DIR, `signal_B4L_run1${suffix}.csv`));
   const lines = readFileSync(path, 'utf8').split('\n');
   const header = lines.find((l) => l.startsWith('t,s,'))!;
   expect(header.split(',').length - 1).toBeGreaterThan(200);
