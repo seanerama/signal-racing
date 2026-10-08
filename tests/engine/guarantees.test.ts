@@ -56,15 +56,15 @@ describe('guarantee 1: A1, traction off', () => {
 });
 
 describe('guarantee 2: A2, traction and pressure on', () => {
-  it('the time-optimal ramp is strictly inside (0, 1.5) at p = pOpt', () => {
+  it('the time-optimal ramp is strictly inside (0, 3.0) at p = pOpt', () => {
     const ts = RAMPS.map((r) =>
       time(TRACK_A1, FLAGS_A2, { throttle_ramp: r, tire_pressure: car.pOpt }),
     );
     const i = argmin(ts);
     expect(RAMPS[i]!).toBeGreaterThan(0);
-    expect(RAMPS[i]!).toBeLessThan(1.5);
-    // The lever teaches something: ≥ 0.5% spread across the range.
-    expect((Math.max(...ts) - ts[i]!) / ts[i]!).toBeGreaterThan(0.005);
+    expect(RAMPS[i]!).toBeLessThan(3.0);
+    // The lever teaches something: ≥ 1% spread across the range.
+    expect((Math.max(...ts) - ts[i]!) / ts[i]!).toBeGreaterThan(0.01);
     // Ramp 0 spins the rears past the slip peak; the optimum does not.
     const spin = simulate(input(TRACK_A1, FLAGS_A2, { throttle_ramp: 0 }), 'full').columns!;
     const ok = simulate(input(TRACK_A1, FLAGS_A2, { throttle_ramp: RAMPS[i]! }), 'full').columns!;
@@ -72,12 +72,34 @@ describe('guarantee 2: A2, traction and pressure on', () => {
     expect(Math.max(...ok.ch.rear_slip_ratio!)).toBeLessThanOrEqual(0.1);
   });
 
+  it('robustness: the ramp optimum stays interior with ≥ 1% spread for fPeak 5.5–6.1 kN', () => {
+    for (const fPeak of [5500, 5600, 5700, 5800, 5900, 6000, 6100]) {
+      const ts = RAMPS.map(
+        (r) =>
+          simulate(
+            {
+              ...input(TRACK_A1, FLAGS_A2, { throttle_ramp: r, tire_pressure: car.pOpt }),
+              car: { ...car, fPeak },
+            },
+            'fast',
+          ).outcome.totalTime,
+      );
+      const i = argmin(ts);
+      expect(RAMPS[i]!, `fPeak ${fPeak}`).toBeGreaterThan(0);
+      expect(RAMPS[i]!, `fPeak ${fPeak}`).toBeLessThan(3.0);
+      expect((Math.max(...ts) - ts[i]!) / ts[i]!, `fPeak ${fPeak}`).toBeGreaterThan(0.01);
+    }
+  });
+
   it('the time-optimal pressure (ramp optimised per pressure) lies inside the lever range', () => {
     const ts = PRESSURES.map((p) => bestRamp(TRACK_A1, { tire_pressure: p }).t);
     const i = argmin(ts);
-    expect(i).toBeGreaterThan(0);
-    expect(i).toBeLessThan(PRESSURES.length - 1);
-    expect(Math.abs(PRESSURES[i]! - car.pOpt)).toBeLessThanOrEqual(0.05 + 1e-9);
+    // Once the tires out-grip the engine, more grip buys nothing: the optimum is a plateau of
+    // pressures near pOpt that all avoid wheelspin. It must sit inside the range and hold pOpt.
+    const best = PRESSURES.filter((_, j) => ts[j]! <= ts[i]! + 1e-9);
+    expect(best[0]!).toBeGreaterThan(PRESSURES[0]!);
+    expect(best[best.length - 1]!).toBeLessThan(PRESSURES[PRESSURES.length - 1]!);
+    expect(best.some((p) => Math.abs(p - car.pOpt) <= 0.05 + 1e-9)).toBe(true);
     expect((Math.max(...ts) - ts[i]!) / ts[i]!).toBeGreaterThan(0.005);
   });
 });
@@ -169,7 +191,7 @@ describe('guarantee 7: the aero compromise', () => {
   function bestWing(track: Track): { wing: number; times: number[] } {
     const times = WINGS.map((w) => {
       let best = Infinity;
-      for (const r of [0, 0.1, 0.2, 0.3]) {
+      for (const r of [0, 0.2, 0.4]) {
         for (const d of WEIGHT_DISTS)
           best = Math.min(
             best,

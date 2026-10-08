@@ -112,7 +112,8 @@ export const TRACK_B4: Track = {
 };
 
 /** Lever grids (inclusive), built from integers to avoid float drift. */
-export const RAMPS = Array.from({ length: 16 }, (_, i) => i / 10);
+/** throttle_ramp 0–3.0 s, step 0.2 (Stage 2b). */
+export const RAMPS = Array.from({ length: 16 }, (_, i) => (2 * i) / 10);
 export const PRESSURES = Array.from({ length: 11 }, (_, i) => (12 + i) / 10);
 export const WEIGHT_DISTS = Array.from({ length: 8 }, (_, i) => (38 + 2 * i) / 100);
 export const WINGS = Array.from({ length: 9 }, (_, i) => i);

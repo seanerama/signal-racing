@@ -134,12 +134,31 @@ describe('row 9–12: driver forces and tires', () => {
   it('tire force: over budget slides at slideFactor·F_max with growing slip', () => {
     const f = tireForce(car, 2000, 1000);
     expect(f.force).toBeCloseTo(800, 12);
-    expect(f.slip).toBeCloseTo(0.6, 12);
+    // Row 12b: slip = min(1, sPeak + kSlide·max(0, r − kRegrip)) = 0.1 + 0.5·(2 − 0.85).
+    expect(f.slip).toBeCloseTo(0.675, 12);
     expect(f.sliding).toBe(true);
     expect(tireForce(car, 5000, 1000).slip).toBe(1);
     expect(tireForce(car, 100, 0)).toEqual({ force: 0, slip: 1, sliding: true });
     expect(tireForce(car, 100, Infinity)).toEqual({ force: 100, slip: 0, sliding: false });
     expect(tireForce(car, 0, 1000)).toEqual({ force: 0, slip: 0, sliding: false });
+  });
+  it('row 12b hysteresis: a slide started at r = 1.05 persists at r = 0.9 and ends at r = 0.84', () => {
+    expect(car.kRegrip).toBe(0.85);
+    const start = tireForce(car, 1050, 1000, undefined, false);
+    expect(start.sliding).toBe(true);
+    expect(start.force).toBeCloseTo(car.slideFactor * 1000, 12);
+    // Without a prior slide r = 0.9 grips; after one it keeps sliding.
+    expect(tireForce(car, 900, 1000, undefined, false).sliding).toBe(false);
+    const held = tireForce(car, 900, 1000, undefined, start.sliding);
+    expect(held.sliding).toBe(true);
+    expect(held.force).toBeCloseTo(car.slideFactor * 1000, 12);
+    expect(held.slip).toBeCloseTo(car.sPeak + car.kSlide * (0.9 - car.kRegrip), 12);
+    const regrip = tireForce(car, 840, 1000, undefined, held.sliding);
+    expect(regrip.sliding).toBe(false);
+    expect(regrip.force).toBe(840);
+    expect(regrip.slip).toBeCloseTo(car.sPeak * 0.84, 12);
+    // No demand ends a slide.
+    expect(tireForce(car, 0, 1000, undefined, true).sliding).toBe(false);
   });
 });
 
