@@ -9,7 +9,9 @@
  * A new run whose top rule differs resets it to 0; runs already spent on hints stay spent.
  *
  * Best and pass: by total time, or for `scoreTarget: 'compromise_gap'` (B1L) by the compromise
- * gap `totalTime − Σ segmentFloors`; B1L passes at `gap ≤ bestAchievableGap × 1.005` with
+ * gap `totalTime − Σ segmentFloors`; B1L passes at
+ * `gap ≤ bestAchievableGap + tolerance × optimum.totalTime` (contract 06, amended: additive, since a
+ * multiplicative slack on a gap that can be 0 only ever passes the exact optimum), with
  * `bestAchievableGap = optimum.totalTime − Σ segmentFloors`. Other levels pass at
  * `totalTime ≤ grid.target`. `passOn: 'total'` is not in the meeting cut and is treated as
  * `'any_run'`.
@@ -37,8 +39,8 @@ export class BudgetError extends Error {
   }
 }
 
-/** Phase B pass slack on the compromise gap (contract 06). */
-export const GAP_PASS_FACTOR = 1.005;
+/** Phase B pass slack on the compromise gap, as a fraction of the optimum time (contract 06). */
+export const GAP_TOLERANCE = 0.005;
 
 const sum = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0);
 
@@ -61,11 +63,16 @@ export function scoreValue(level: LevelConfig, rec: RunRecord, grid: GridResult 
   return rec.outcome.totalTime;
 }
 
+/** The largest compromise gap that passes: `bestAchievableGap + 0.005 × optimum.totalTime` (s). */
+export function gapPassLimit(grid: GridResult): number {
+  return bestAchievableGap(grid) + GAP_TOLERANCE * grid.optimum.outcome.totalTime;
+}
+
 /** Does this run meet the level's cut? */
 export function runPasses(level: LevelConfig, rec: RunRecord, grid: GridResult): boolean {
   if (!rec.outcome.finished) return false;
   if (level.scoreTarget === 'compromise_gap') {
-    return compromiseGap(rec.outcome.totalTime, grid) <= bestAchievableGap(grid) * GAP_PASS_FACTOR;
+    return compromiseGap(rec.outcome.totalTime, grid) <= gapPassLimit(grid);
   }
   return rec.outcome.totalTime <= grid.target;
 }

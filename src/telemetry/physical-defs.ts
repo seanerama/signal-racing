@@ -7,6 +7,12 @@
  *
  * Noise: every physical channel carries sensor noise and dropouts, except `pos_x`, `pos_y` and
  * `heading`, which feed the track view and must stay exact.
+ *
+ * Noise levels (Stage 8 amendment, "sensor-noise realism"): primary sensors (speed, wheel speeds,
+ * pedals, rpm, gear, loads, accelerations) are precise, σ 0.2–0.5% of range; physics estimates
+ * (μ, grip, slip ratios) keep 0.5–1%; other analogue channels keep their Stage 3 levels.
+ * Physically bounded sensors carry a `clamp` (pedals 0–1, speeds ≥ 0, gear 1–6), applied after
+ * the noise so a pot never reads 103% and a stationary car never reads −10 km/h.
  */
 import type { ChannelId, Quantity } from '@/engine/types';
 import { DEFAULT_NOISE, NO_NOISE, type RegisteredChannel } from './def';
@@ -24,6 +30,8 @@ interface PhysicalSpec {
   sigmaFrac?: number;
   dropoutRate?: number;
   quantum?: number;
+  /** Physical bounds applied after noise (SI). */
+  clamp?: readonly [number, number];
 }
 
 const CORNERS = [
@@ -48,7 +56,8 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'speed',
     group: 'chassis',
     range: [0, 90],
-    sigmaFrac: 0.01,
+    sigmaFrac: 0.003,
+    clamp: [0, Infinity],
   },
   {
     id: 'long_g',
@@ -56,7 +65,7 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'accel_g',
     group: 'chassis',
     range: [-2.5, 1.5],
-    sigmaFrac: 0.015,
+    sigmaFrac: 0.005,
   },
   {
     id: 'drag_force',
@@ -88,7 +97,8 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'percent',
     group: 'powertrain',
     range: [0, 1],
-    sigmaFrac: 0.01,
+    sigmaFrac: 0.003,
+    clamp: [0, 1],
   },
   {
     id: 'brake',
@@ -96,7 +106,8 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'percent',
     group: 'brakes',
     range: [0, 1],
-    sigmaFrac: 0.01,
+    sigmaFrac: 0.003,
+    clamp: [0, 1],
   },
   {
     id: 'engine_rpm',
@@ -104,7 +115,7 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'rpm',
     group: 'powertrain',
     range: [4000, 12000],
-    sigmaFrac: 0.01,
+    sigmaFrac: 0.002,
   },
   {
     id: 'gear',
@@ -112,14 +123,15 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'gear',
     group: 'powertrain',
     range: [1, 6],
-    sigmaFrac: 0.01,
+    sigmaFrac: 0.003,
+    clamp: [1, 6],
     quantum: 1,
   },
   ...perCorner('load', 'Wheel load', {
     quantity: 'force',
     group: 'chassis',
     range: [0, 6000],
-    sigmaFrac: 0.02,
+    sigmaFrac: 0.005,
   }),
   {
     id: 'lat_g',
@@ -127,7 +139,7 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'accel_g',
     group: 'chassis',
     range: [0, 3],
-    sigmaFrac: 0.015,
+    sigmaFrac: 0.005,
   },
   {
     id: 'steering_angle',
@@ -152,7 +164,7 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'force',
     group: 'tires',
     range: [0, 15000],
-    sigmaFrac: 0.015,
+    sigmaFrac: 0.01,
   },
   {
     id: 'grip_budget_rear',
@@ -160,7 +172,7 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'force',
     group: 'tires',
     range: [0, 15000],
-    sigmaFrac: 0.015,
+    sigmaFrac: 0.01,
   },
   {
     id: 'grip_used_front',
@@ -168,7 +180,7 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'fraction',
     group: 'tires',
     range: [0, 1],
-    sigmaFrac: 0.015,
+    sigmaFrac: 0.01,
   },
   {
     id: 'grip_used_rear',
@@ -176,7 +188,7 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'fraction',
     group: 'tires',
     range: [0, 1],
-    sigmaFrac: 0.015,
+    sigmaFrac: 0.01,
   },
   {
     id: 'front_slip_ratio',
@@ -198,7 +210,8 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'speed',
     group: 'tires',
     range: [0, 90],
-    sigmaFrac: 0.01,
+    sigmaFrac: 0.003,
+    clamp: [0, Infinity],
   }),
   ...perCorner('tire_temp', 'Tire temperature', {
     quantity: 'temperature',
@@ -260,7 +273,7 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'force',
     group: 'chassis',
     range: [0, 12000],
-    sigmaFrac: 0.015,
+    sigmaFrac: 0.005,
   },
   {
     id: 'load_rear',
@@ -268,7 +281,7 @@ const SPECS: PhysicalSpec[] = [
     quantity: 'force',
     group: 'chassis',
     range: [0, 12000],
-    sigmaFrac: 0.015,
+    sigmaFrac: 0.005,
   },
   {
     id: 'yaw_rate',
@@ -333,6 +346,7 @@ export const PHYSICAL_DEFS: readonly RegisteredChannel[] = SPECS.map((s) => {
         },
     range: s.range,
     ...(s.quantum !== undefined ? { quantum: s.quantum } : {}),
+    ...(s.clamp ? { clamp: s.clamp } : {}),
   };
   return def;
 });

@@ -41,6 +41,8 @@ export interface DebriefProps {
    * optimum as a diamond). Stage 7 passes its lazy component here; until then a placeholder shows.
    */
   responseSurface?: ComponentChildren;
+  /** Stage 8: level-specific sections under the result (B1L segment table, B4L comparison). */
+  extra?: ComponentChildren;
 }
 
 const LEVER_ORDER: LeverId[] = ['throttle_ramp', 'tire_pressure', 'weight_dist', 'wing'];
@@ -96,6 +98,7 @@ export function Debrief({
   onNext,
   onLevelSelect,
   responseSurface,
+  extra,
 }: DebriefProps) {
   const runs = session?.runs.value ?? [];
   const grid = session?.grid.value ?? null;
@@ -171,6 +174,7 @@ export function Debrief({
               </dd>
             </dl>
           </div>
+          {extra}
           <h2 class="h2 dim db__h">Convergence</h2>
           <div class="db__tablewrap">
             <table class="db__table" data-testid="convergence">

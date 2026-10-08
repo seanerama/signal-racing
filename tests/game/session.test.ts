@@ -7,6 +7,7 @@ import {
   BudgetError,
   bestAchievableGap,
   compromiseGap,
+  gapPassLimit,
   runPasses,
   scoreAtPass,
   scoreValue,
@@ -174,11 +175,23 @@ describe('scoring comparators', () => {
     }) as unknown as RunRecord;
   const B1L: LevelConfig = { ...STUB_A2, id: 'B1L', scoreTarget: 'compromise_gap' };
 
-  it('compromise gap = totalTime − Σ floors; B1L passes within 0.5% of the best achievable gap', () => {
+  it('compromise gap = totalTime − Σ floors; B1L passes at gap ≤ best achievable + 0.5% of the optimum time (amended, additive)', () => {
     expect(bestAchievableGap(grid)).toBeCloseTo(1, 12);
     expect(compromiseGap(30.004, grid)).toBeCloseTo(1.004, 12);
+    // Limit = 1 + 0.005 × 30 = 1.15 s of gap, i.e. totalTime ≤ 30.15.
+    expect(gapPassLimit(grid)).toBeCloseTo(1.15, 12);
     expect(runPasses(B1L, rec(30.004), grid)).toBe(true);
-    expect(runPasses(B1L, rec(30.006), grid)).toBe(false);
+    expect(runPasses(B1L, rec(30.006), grid)).toBe(true);
+    expect(runPasses(B1L, rec(30.149), grid)).toBe(true);
+    expect(runPasses(B1L, rec(30.151), grid)).toBe(false);
+  });
+
+  it('the old multiplicative rule only passed the exact optimum when the best gap is 0', () => {
+    const zero: GridResult = { ...grid, segmentFloors: [20, 10] };
+    expect(bestAchievableGap(zero)).toBeCloseTo(0, 12);
+    // A run 0.1 s off the optimum still passes under the additive rule.
+    expect(runPasses(B1L, rec(30.1), zero)).toBe(true);
+    expect(runPasses(B1L, rec(30.2), zero)).toBe(false);
     // A time-scored level uses the target instead.
     expect(runPasses(STUB_A2, rec(30.1), grid)).toBe(true);
     expect(runPasses(STUB_A2, rec(30.2), grid)).toBe(false);

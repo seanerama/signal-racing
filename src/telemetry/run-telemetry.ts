@@ -104,6 +104,7 @@ export function createRunTelemetry(args: CreateRunTelemetryArgs): RunTelemetry {
         dropoutRate: def.noise.dropoutRate,
         range: channelRange(id),
         ...(quantum !== undefined ? { quantum } : {}),
+        ...(def.clamp ? { clamp: def.clamp } : {}),
       },
       root.fork('noise:' + id),
     );

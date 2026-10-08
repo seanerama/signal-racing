@@ -13,6 +13,7 @@
     "vite.single.config.ts",
     "vite.shared.ts",
     "vitest.config.ts",
+    "vitest.slow.config.ts",
     "playwright.config.ts",
     "eslint.config.js"
   ]

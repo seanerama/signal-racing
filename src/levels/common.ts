@@ -58,6 +58,56 @@ export const TRACK_CORNER: Track = {
   ],
 };
 
+/** B1L: 1 km straight from a standing start, a 150 m radius 90° right, a 150 m run-out. */
+export const TRACK_JOIN: Track = {
+  id: 'join_b1l',
+  standingStart: true,
+  laps: 1,
+  segments: [
+    { id: 'straight', label: 'Straight', kind: 'straight', length: 1000 },
+    {
+      id: 'fast_corner',
+      label: 'Fast corner',
+      kind: 'corner',
+      length: 150 * (Math.PI / 2),
+      radius: 150,
+      direction: 'right',
+    },
+    { id: 'run_out', label: 'Run-out', kind: 'straight', length: 150 },
+  ],
+};
+
+/**
+ * B4L "The Puzzle" (lite): main straight → fast 90° right → back straight → 35 m hairpin →
+ * run to a stop. An open circuit: the hairpin turns the car back alongside the main straight.
+ */
+export const TRACK_PUZZLE: Track = {
+  id: 'puzzle_b4l',
+  standingStart: true,
+  laps: 1,
+  segments: [
+    { id: 'main_straight', label: 'Main straight', kind: 'straight', length: 1000 },
+    {
+      id: 'fast_corner',
+      label: 'Fast corner',
+      kind: 'corner',
+      length: 150 * (Math.PI / 2),
+      radius: 150,
+      direction: 'right',
+    },
+    { id: 'back_straight', label: 'Back straight', kind: 'straight', length: 500 },
+    {
+      id: 'hairpin',
+      label: 'Hairpin',
+      kind: 'corner',
+      length: 35 * Math.PI,
+      radius: 35,
+      direction: 'right',
+    },
+    { id: 'run_stop', label: 'Run to stop', kind: 'straight', length: 400, endsWithStop: true },
+  ],
+};
+
 // ---- Flags and conditions ----
 
 export const FLAGS_NO_GRIP_LIMIT: ModelFlags = {

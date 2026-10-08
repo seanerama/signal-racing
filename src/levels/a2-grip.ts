@@ -9,11 +9,13 @@ import type { HintRule } from '@/hints/types';
 import type { RunSummary } from '@/telemetry/types';
 import type { LevelConfig } from './types';
 import {
+  brakeWindow,
   DRY,
   FLAGS_GRIP,
   TRACK_STRAIGHT,
   cleanMax,
   lever,
+  peakInPhase,
   pressureDirection,
   pressureGripRatio,
   pressureLever,
@@ -31,13 +33,32 @@ export const LIMIT_REACHED = 0.99;
 /** The ramp counts as too gentle when it is longer than this many lever steps. */
 export const RAMP_SLACK_STEPS = 1.5;
 
-/** Fault: the driven tires slid (shared by A2 and A4). */
+/**
+ * The rear slide that counts as wheelspin: one that starts under drive, before the first brake
+ * application. `rear_slip_ratio` is unsigned, so a rear lock under braking (B4L's stop) also reads
+ * above the peak; that is not wheelspin and the ramp cannot cure it.
+ */
+export function driveSlide(s: RunSummary): Window | null {
+  const w = slidingWindow(s, 'rear_slip_ratio');
+  if (!w) return null;
+  const brake = brakeWindow(s);
+  if (brake && w.tStart >= brake.tStart) return null;
+  return brake ? { tStart: w.tStart, tEnd: Math.min(w.tEnd, brake.tStart) } : w;
+}
+
+/** Peak rear slip under drive: before the first brake application (the whole run without braking). */
+export function drivePeakSlip(s: RunSummary): number {
+  const brake = brakeWindow(s);
+  return brake ? peakInPhase(s, 'rear_slip_ratio', brake.tStart) : cleanMax(s, 'rear_slip_ratio');
+}
+
+/** Fault: the driven tires slid under drive (shared by A2, A4, B1L and B4L). */
 export function wheelspinRule(): HintRule {
   return {
     id: 'wheelspin',
     kind: 'fault',
     when(s) {
-      const w = slidingWindow(s, 'rear_slip_ratio');
+      const w = driveSlide(s);
       if (!w) return null;
       return {
         ruleId: 'wheelspin',
@@ -47,7 +68,7 @@ export function wheelspinRule(): HintRule {
       };
     },
     estTimeCost(s) {
-      const w = slidingWindow(s, 'rear_slip_ratio');
+      const w = driveSlide(s);
       return w ? 0.1 + 0.25 * (w.tEnd - w.tStart) : 0;
     },
     tiers: [
@@ -107,7 +128,7 @@ export function pressureOffPeakRule(): HintRule {
  */
 export function rampTooGentleRule(): HintRule {
   const gentle = (s: RunSummary, step: number): Window | null => {
-    if (slidingWindow(s, 'rear_slip_ratio')) return null;
+    if (driveSlide(s)) return null;
     const ramp = rampWindow(s);
     const lg = s.clean.long_g;
     if (!ramp || !lg) return null;
@@ -124,7 +145,7 @@ export function rampTooGentleRule(): HintRule {
       if (!ramp) return null;
       return {
         ruleId: 'ramp_too_gentle',
-        vars: { t_full: ramp.tEnd, slip: cleanMax(s, 'rear_slip_ratio') },
+        vars: { t_full: ramp.tEnd, slip: drivePeakSlip(s) },
         window: { channel: 'long_g', tStart: 0, tEnd: ramp.tEnd },
         channels: ['long_g', 'throttle', 'rear_slip_ratio'],
       };

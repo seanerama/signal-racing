@@ -2,12 +2,12 @@
  * CSV export (contract 03). Stage 3 owns the string; Stage 8 owns the download UI.
  *
  * ```
- * # signal v0.1
+ * # signal v0.2
  * # level: A2
  * # run: 3
  * # seed: 12345
  * # units: metric
- * # setup: {"throttle_ramp":0.4,…}
+ * "# setup: {""throttle_ramp"":0.4,…}"   ← one RFC 4180-quoted cell (v0.2; v0.1 left it bare)
  * t,s,speed,…            ← header: t, s, then every channel of the level set in registry order
  * s,m,km/h,…             ← units row in the display system ('' for unitless quantities)
  * 0.000,0.0,0.0,…        ← one row per sample, formatted with precision() from contract 01
@@ -20,7 +20,7 @@ import { getChannel } from '@/telemetry/registry';
 import type { CsvMeta, RunTelemetry } from '@/telemetry/types';
 import { precision, toDisplay, unitLabel, type UnitSystem } from '@/units';
 
-export const CSV_FORMAT_VERSION = 'v0.1';
+export const CSV_FORMAT_VERSION = 'v0.2';
 
 /** Quotes a header/units cell if it holds a comma, quote or newline (RFC 4180). */
 function cell(text: string): string {
@@ -52,7 +52,8 @@ export function toCsv(rt: RunTelemetry, meta: CsvMeta): string {
     `# run: ${meta.run}`,
     `# seed: ${meta.seed}`,
     `# units: ${sys}`,
-    `# setup: ${JSON.stringify(meta.setup)}`,
+    // One quoted cell: the JSON's commas and quotes must not split across spreadsheet columns.
+    cell(`# setup: ${JSON.stringify(meta.setup)}`),
     ['t', 's', ...ids].map(cell).join(','),
     quantities.map((q) => cell(unitLabel(q, sys))).join(','),
   ];

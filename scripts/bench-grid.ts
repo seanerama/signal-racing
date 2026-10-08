@@ -1,22 +1,46 @@
 /**
- * Dev-only grid-search timing for the meeting-cut level shapes (Stage 5). Not part of the app or
- * the test suite. Prints wall time, evaluations and the optimum per level against its budget.
+ * Dev-only grid-search timing for the real levels (Stage 8: `LEVELS`, A1–B4L). Not part of the
+ * app or the test suite. Per level, prints the live search (warm, second of two runs) against its
+ * contract-05 budget, and the precomputed-target lookup the game actually uses when the config
+ * hash matches.
  *
- *   npx --yes tsx scripts/bench-grid.ts
+ *   npx tsx scripts/bench-grid.ts
  *
- * Node timings track Chromium's closely (same V8); the e2e pipeline test reports the in-browser
- * A2 time. Each level is searched twice and the second (warm) run is reported.
+ * Node timings track Chromium's closely (same V8); the e2e suite logs the in-browser B4L time.
  */
+import { gridKey } from '../src/game/config-hash';
 import { gridSearch } from '../src/game/grid-search';
-import { BENCH_LEVELS } from '../tests/game/bench-levels';
+import { precomputedGrid, precomputedTable } from '../src/game/precomputed';
+import { LEVELS } from '../src/levels/index';
+import type { LevelId } from '../src/levels/types';
 
-for (const { level, budgetMs } of BENCH_LEVELS) {
+const BUDGET_MS: Record<LevelId, number> = {
+  A1: 1000,
+  A2: 1000,
+  A3: 1000,
+  A4: 4000,
+  B1L: 2000,
+  B4L: 4000,
+};
+
+const t0 = performance.now();
+await precomputedTable();
+console.log(
+  `precomputed table load (JSON parse + revive): ${(performance.now() - t0).toFixed(1)} ms`,
+);
+
+for (const level of LEVELS) {
   gridSearch(level);
   const r = gridSearch(level);
-  const ok = r.ms < budgetMs ? 'ok  ' : 'OVER';
+  const budget = BUDGET_MS[level.id];
+  const ok = r.ms < budget ? 'ok  ' : 'OVER';
+  const t1 = performance.now();
+  const hit = await precomputedGrid(gridKey(level));
+  const lookup = performance.now() - t1;
   console.log(
-    `${ok} ${level.id.padEnd(4)} ${r.ms.toFixed(0).padStart(5)} ms / ${budgetMs} ms  ` +
+    `${ok} ${level.id.padEnd(4)} live ${r.ms.toFixed(0).padStart(5)} ms / ${budget} ms  ` +
       `${String(r.evaluated).padStart(5)} setups  ${(r.ms / r.evaluated).toFixed(3)} ms/setup  ` +
+      `precomputed ${hit ? `${lookup.toFixed(2)} ms` : 'MISSING'}  ` +
       `optimum ${r.optimum.outcome.totalTime.toFixed(3)} s ${JSON.stringify(r.optimum.setup)}`,
   );
 }

@@ -6,12 +6,14 @@ import { A1 } from './a1-throttle';
 import { A2 } from './a2-grip';
 import { A3 } from './a3-weight';
 import { A4 } from './a4-corner';
+import { B1L } from './b1l-join';
+import { B4L } from './b4l-puzzle';
 import type { LevelConfig } from './types';
 
-export { A1, A2, A3, A4 };
+export { A1, A2, A3, A4, B1L, B4L };
 
 /** Levels in unlock order. */
-export const LEVELS: readonly LevelConfig[] = [A1, A2, A3, A4];
+export const LEVELS: readonly LevelConfig[] = [A1, A2, A3, A4, B1L, B4L];
 
 export function getLevel(id: string): LevelConfig | undefined {
   return LEVELS.find((l) => l.id === id);

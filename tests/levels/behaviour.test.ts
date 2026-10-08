@@ -40,7 +40,8 @@ function play(level: LevelConfig, setup: Partial<Setup>) {
     physical: columns!,
     channelIds: [...level.channelSet],
     seed: input.seed,
-    segmentFloors: level.track.segments.map(() => 0),
+    segmentFloors:
+      level.phase === 'B' ? grid(level).segmentFloors : level.track.segments.map(() => 0),
   });
   const summary = summarize(rt);
   const hints = evaluateHints(level, summary, { level, setup: input.setup, outcome });
@@ -76,7 +77,7 @@ describe.each(LEVELS.map((l) => [l.id, l] as const))('%s behaviour', (id, level)
     'every fired rule renders all three tiers with every variable filled',
     { timeout: 60_000 },
     () => {
-      const crafted = CRAFTED[id as keyof typeof CRAFTED];
+      const crafted = CRAFTED[id];
       for (const [setup] of crafted) {
         const { hints } = play(level, setup);
         for (const h of hints) {
@@ -108,6 +109,19 @@ const CRAFTED = {
   A4: [
     [{ throttle_ramp: 0.4, tire_pressure: 1.6, weight_dist: 0.46, wing: 1 }, 'corner_grip_limited'],
     [{ throttle_ramp: 0, tire_pressure: 2.2, weight_dist: 0.4, wing: 4 }, 'wheelspin'],
+  ],
+  B1L: [
+    [{ throttle_ramp: 0, tire_pressure: 1.6, weight_dist: 0.52, wing: 7 }, 'segment_paying'],
+    [{ throttle_ramp: 0, tire_pressure: 1.6, weight_dist: 0.52, wing: 1 }, 'segment_paying'],
+    [{ throttle_ramp: 0, tire_pressure: 1.6, weight_dist: 0.52, wing: 1 }, 'corner_grip_limited'],
+    [{ throttle_ramp: 0, tire_pressure: 2.2, weight_dist: 0.4, wing: 3 }, 'wheelspin'],
+  ],
+  B4L: [
+    [{ throttle_ramp: 0.4, tire_pressure: 1.7, weight_dist: 0.46, wing: 7 }, 'segment_paying'],
+    [{ throttle_ramp: 0, tire_pressure: 1.6, weight_dist: 0.52, wing: 0 }, 'front_lock'],
+    [{ throttle_ramp: 0, tire_pressure: 2.2, weight_dist: 0.4, wing: 3 }, 'wheelspin'],
+    [{ throttle_ramp: 0, tire_pressure: 1.2, weight_dist: 0.52, wing: 3 }, 'pressure_off_peak'],
+    [{ throttle_ramp: 1.4, tire_pressure: 1.6, weight_dist: 0.52, wing: 3 }, 'ramp_too_gentle'],
   ],
 } satisfies Record<string, Array<[Partial<Setup>, string]>>;
 

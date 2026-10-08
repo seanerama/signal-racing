@@ -18,19 +18,34 @@ npm run check      # typecheck + lint + unit tests (must pass before any stage m
 | Script                 | What it does                                                                          |
 | ---------------------- | ------------------------------------------------------------------------------------- |
 | `npm run dev`          | Vite dev server                                                                       |
+| `npm run precompute`   | Grid-search every level → `src/game/precomputed-targets.json` (runs as `prebuild`)    |
 | `npm run build`        | Static build → `dist/` (serve with `npm run preview`)                                 |
 | `npm run build:single` | Meeting fallback → `dist-single/signal.html`, one self-contained file for `file://`   |
 | `npm run preview`      | Serves `dist/` on port 4173                                                           |
 | `npm run typecheck`    | `tsc --noEmit` for the app (`tsconfig.json`) and tests/configs (`tsconfig.node.json`) |
 | `npm run lint`         | ESLint (typescript-eslint type-checked + import boundaries)                           |
 | `npm run test`         | Vitest (node for `*.test.ts`, jsdom for `*.dom.test.tsx`)                             |
-| `npm run test:e2e`     | Builds both artifacts, then Playwright (smoke + single-file from `file://`)           |
+| `npm run test:slow`    | Recomputes the precomputed targets and compares them bit-for-bit                      |
+| `npm run test:e2e`     | Builds both artifacts, then Playwright (incl. the meeting demo on both builds)        |
 | `npm run check`        | typecheck + lint + test                                                               |
 | `npm run format`       | Prettier                                                                              |
 
 First e2e run: `npx playwright install chromium`.
 
-Dev route `#/dev/worker` pings the sim worker and shows the round-trip time.
+Dev route `#/dev/worker` pings the sim worker and shows the round-trip time; "live grid B4L"
+times the worker search the game falls back to when a level has no precomputed target.
+
+## The meeting demo (v0.2.0)
+
+Levels: A1–A4 (Phase A), B1L "Join: straight + fast corner" and B4L "The Puzzle" (Phase B).
+
+Open `signal.html?demo=1#/level/B4L` (or `npm run preview` and `/?demo=1#/level/B4L`). The
+`DEMO PROFILE` chip shows while the profile is active: every level is unlocked and a recorded
+unassisted Puzzle attempt (`src/app/demo-history.json`: setups and seeds only) is re-simulated on
+load, so the debrief's with/without-assist comparison exists on a fresh laptop. Then: run at the
+defaults, scroll the channel table (219 channels), Export CSV, switch the assist on, run again.
+`tests/e2e/demo.spec.ts` and `tests/e2e/single-file.spec.ts` play exactly this path.
+`docs/playtest.md` is the observer's note for a first playtest.
 
 ## Layout and rules
 

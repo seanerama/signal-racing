@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "levelId": "B4L",
+  "assist": false,
+  "recordedOn": "2026-10-08",
+  "recordedWith": "B4L:014019a5ad822a",
+  "label": "Recorded unassisted attempt",
+  "note": "Played by hand without the assist, one lever change per run, reading the hints. Stored as setups and seeds only; every run is re-simulated on load.",
+  "runs": [
+    {
+      "runIndex": 1,
+      "seed": 2690147153,
+      "setup": {
+        "throttle_ramp": 0.4,
+        "tire_pressure": 1.7,
+        "weight_dist": 0.46,
+        "wing": 7
+      }
+    },
+    {
+      "runIndex": 2,
+      "seed": 2639814296,
+      "setup": {
+        "throttle_ramp": 0.4,
+        "tire_pressure": 1.7,
+        "weight_dist": 0.46,
+        "wing": 4
+      }
+    },
+    {
+      "runIndex": 3,
+      "seed": 2656591915,
+      "setup": {
+        "throttle_ramp": 0.2,
+        "tire_pressure": 1.7,
+        "weight_dist": 0.46,
+        "wing": 4
+      }
+    },
+    {
+      "runIndex": 4,
+      "seed": 2740480010,
+      "setup": {
+        "throttle_ramp": 0.2,
+        "tire_pressure": 1.7,
+        "weight_dist": 0.5,
+        "wing": 4
+      }
+    },
+    {
+      "runIndex": 5,
+      "seed": 2757257629,
+      "setup": {
+        "throttle_ramp": 0.2,
+        "tire_pressure": 1.6,
+        "weight_dist": 0.5,
+        "wing": 4
+      }
+    },
+    {
+      "runIndex": 6,
+      "seed": 2706924772,
+      "setup": {
+        "throttle_ramp": 0.2,
+        "tire_pressure": 1.6,
+        "weight_dist": 0.5,
+        "wing": 3
+      }
+    },
+    {
+      "runIndex": 7,
+      "seed": 2723702391,
+      "setup": {
+        "throttle_ramp": 0.2,
+        "tire_pressure": 1.6,
+        "weight_dist": 0.52,
+        "wing": 3
+      }
+    },
+    {
+      "runIndex": 8,
+      "seed": 2539148582,
+      "setup": {
+        "throttle_ramp": 0,
+        "tire_pressure": 1.6,
+        "weight_dist": 0.52,
+        "wing": 3
+      }
+    }
+  ]
+}

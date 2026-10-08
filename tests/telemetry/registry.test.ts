@@ -126,7 +126,7 @@ describe('channel registry', () => {
     }
   });
 
-  it('every other sensor channel has 1–3% noise and ≤ 0.2% dropouts', () => {
+  it('every other sensor channel has 0.2–3% noise and ≤ 0.2% dropouts', () => {
     for (const c of all) {
       if (['pos_x', 'pos_y', 'heading'].includes(c.id)) continue;
       if (c.source.kind === 'derived') {
@@ -134,11 +134,62 @@ describe('channel registry', () => {
         expect(c.noise, c.id).toEqual({ sigmaFrac: 0, dropoutRate: 0 });
         continue;
       }
-      expect(c.noise.sigmaFrac, c.id).toBeGreaterThanOrEqual(0.01);
+      expect(c.noise.sigmaFrac, c.id).toBeGreaterThanOrEqual(0.002);
       expect(c.noise.sigmaFrac, c.id).toBeLessThanOrEqual(0.03);
       expect(c.noise.dropoutRate, c.id).toBeGreaterThan(0);
       expect(c.noise.dropoutRate, c.id).toBeLessThanOrEqual(0.002);
     }
+  });
+
+  it('sensor-noise realism (Stage 8): primary sensors 0.2–0.5%, estimates 0.5–1%, distractors 1–3%', () => {
+    const PRIMARY = [
+      'speed',
+      'wheel_speed_fl',
+      'wheel_speed_fr',
+      'wheel_speed_rl',
+      'wheel_speed_rr',
+      'throttle',
+      'brake',
+      'engine_rpm',
+      'gear',
+      'load_fl',
+      'load_fr',
+      'load_rl',
+      'load_rr',
+      'load_front',
+      'load_rear',
+      'long_g',
+      'lat_g',
+    ];
+    for (const id of PRIMARY) {
+      const s = getChannel(id).noise.sigmaFrac;
+      expect(s, id).toBeGreaterThanOrEqual(0.002);
+      expect(s, id).toBeLessThanOrEqual(0.005);
+    }
+    for (const c of all) {
+      if (!/^(mu_|grip_|.*_slip_ratio$)/.test(c.id)) continue;
+      expect(c.noise.sigmaFrac, c.id).toBeGreaterThanOrEqual(0.005);
+      expect(c.noise.sigmaFrac, c.id).toBeLessThanOrEqual(0.01);
+    }
+    for (const c of all) {
+      if (c.source.kind !== 'distractor') continue;
+      expect(c.noise.sigmaFrac, c.id).toBeGreaterThanOrEqual(0.01);
+      expect(c.noise.sigmaFrac, c.id).toBeLessThanOrEqual(0.03);
+    }
+  });
+
+  it('physically bounded sensors clamp: pedals 0–1, speeds ≥ 0, gear 1–6', () => {
+    expect(getChannel('throttle').clamp).toEqual([0, 1]);
+    expect(getChannel('brake').clamp).toEqual([0, 1]);
+    expect(getChannel('gear').clamp).toEqual([1, 6]);
+    for (const id of [
+      'speed',
+      'wheel_speed_fl',
+      'wheel_speed_fr',
+      'wheel_speed_rl',
+      'wheel_speed_rr',
+    ])
+      expect(getChannel(id).clamp, id).toEqual([0, Infinity]);
   });
 
   it('every def has a label, a known quantity and group, and a positive range', () => {

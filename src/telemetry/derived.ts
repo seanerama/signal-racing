@@ -102,44 +102,37 @@ export function computeSegmentTime(ctx: DeriveCtx): Float32Array {
 
 /**
  * `segment_delta`: time lost against the segment floor, cumulative within each segment.
- * `segment_time − floor × progress`, where progress is the fraction of the segment's distance
- * covered (0 at the segment's first sample, 1 at the next segment's first sample). So it is 0 at
- * every segment start and reaches `segmentTime − floor` at each segment end. All-NaN when the
- * level has no segment floors (only join levels have them).
+ * `segment_time × (1 − floor / T)`, where `T` is this run's time for the segment: the segment's
+ * loss `T − floor` accrues in proportion to the run's own elapsed time in it. So it is 0 at every
+ * segment start, reaches `T − floor` at each segment end, and is monotone in between, so the value
+ * at each dashed boundary reads straight off the strip.
+ *
+ * Stage 8 change: Stage 3 accrued the floor by distance (`segment_time − floor × s-progress`). On
+ * a standing-start straight that draws a multi-second hump mid-segment (the car covers the first
+ * metres slowly, and a distance-proportional floor assumes it does not), which swamped the
+ * compromise the B1L strip exists to show. Endpoints are unchanged.
+ *
+ * All-NaN when the level has no segment floors (only join levels have them).
  */
 export function computeSegmentDelta(ctx: DeriveCtx): Float32Array {
-  const { run, segmentFloors } = ctx;
+  const { run, segmentFloors, segmentStartTimes: starts } = ctx;
   const out = new Float32Array(run.n);
   if (!segmentFloors) return out.fill(NaN);
   const segTime = computeSegmentTime(ctx);
-  const startIdx = segmentStartIndices(run);
-  const k = startIdx.length;
-  const sStart: number[] = [];
-  const sEnd: number[] = [];
-  for (let seg = 0; seg < k; seg++) {
-    const i0 = startIdx[seg]!;
-    sStart.push(i0 >= 0 ? run.s[i0]! : NaN);
-  }
-  for (let seg = 0; seg < k; seg++) {
-    let end = NaN;
-    for (let next = seg + 1; next < k; next++) {
-      if (startIdx[next]! >= 0) {
-        end = sStart[next]!;
-        break;
-      }
-    }
-    sEnd.push(Number.isNaN(end) ? (run.n > 0 ? run.s[run.n - 1]! : NaN) : end);
-  }
+  const k = starts.length;
+  // Each segment's duration on this run: the next segment's start, or the last sample.
+  const tEnd = run.n > 0 ? run.t[run.n - 1]! : 0;
+  const duration = starts.map((t0, seg) => (seg + 1 < k ? starts[seg + 1]! : tEnd) - t0);
   for (let i = 0; i < run.n; i++) {
     const seg = run.seg[i]!;
     const floor = segmentFloors[seg];
-    if (floor === undefined) {
+    const T = duration[seg];
+    if (floor === undefined || T === undefined) {
       out[i] = NaN;
       continue;
     }
-    const len = sEnd[seg]! - sStart[seg]!;
-    const progress = len > 0 ? Math.min(1, Math.max(0, (run.s[i]! - sStart[seg]!) / len)) : 0;
-    out[i] = segTime[i]! - floor * progress;
+    // `+ 0` normalises −0 (a segment start on a run faster than its floor).
+    out[i] = T > 0 ? segTime[i]! * (1 - floor / T) + 0 : 0;
   }
   return out;
 }

@@ -21,8 +21,8 @@ const sentences = (text: string): number =>
     .filter((x) => x.trim().length > 0).length;
 
 describe('LEVELS', () => {
-  it('ships A1–A4 in unlock order', () => {
-    expect(LEVELS.map((l) => l.id)).toEqual(['A1', 'A2', 'A3', 'A4']);
+  it('ships A1–A4, B1L, B4L in unlock order', () => {
+    expect(LEVELS.map((l) => l.id)).toEqual(['A1', 'A2', 'A3', 'A4', 'B1L', 'B4L']);
     expect(getLevel('A2')).toBe(A2);
     expect(getLevel('B9')).toBeUndefined();
   });
@@ -56,10 +56,13 @@ describe.each(LEVELS.map((l) => [l.id, l] as const))('%s config', (_id, level) =
   });
 
   it('channel and causal counts follow the meeting-cut growth', () => {
-    const want = { A1: 12, A2: 20, A3: 28, A4: 36 }[level.id as 'A1'];
-    expect(Math.abs(level.channelSet.length - want)).toBeLessThanOrEqual(2);
-    expect(causal.length).toBeGreaterThanOrEqual(3);
-    expect(causal.length).toBeLessThanOrEqual(5);
+    const want = { A1: 12, A2: 20, A3: 28, A4: 36, B1L: 45, B4L: 210 }[level.id];
+    expect(Math.abs(level.channelSet.length - want)).toBeLessThanOrEqual(
+      level.id === 'B4L' ? 10 : 2,
+    );
+    const [lo, hi] = level.id === 'B4L' ? [6, 8] : level.id === 'B1L' ? [5, 5] : [3, 5];
+    expect(causal.length).toBeGreaterThanOrEqual(lo);
+    expect(causal.length).toBeLessThanOrEqual(hi);
     expect(new Set(level.debrief.causal)).toEqual(new Set(causal));
   });
 
@@ -84,6 +87,8 @@ describe.each(LEVELS.map((l) => [l.id, l] as const))('%s config', (_id, level) =
 
   it('tier 3 names a lever and a direction, never a value', () => {
     for (const r of level.hintRules) {
+      // The generic noise rule directs a method (repeat, compare like with like), not a lever.
+      if (r.kind === 'noise') continue;
       const t3 = r.tiers[2];
       expect(t3, r.id).not.toMatch(VALUE_WITH_UNIT);
       expect(t3, r.id).not.toMatch(LEVER_VALUE);

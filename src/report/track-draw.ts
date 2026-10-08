@@ -280,12 +280,13 @@ export function drawScene(ctx: CanvasRenderingContext2D, scene: Scene): void {
       nx = -nx;
       ny = -ny;
     }
-    let lx = mx + nx * 10;
+    const ax = mx + nx * 10;
     const ly = my + ny * 10;
-    ctx.textAlign = nx > 0.5 ? 'left' : nx < -0.5 ? 'right' : 'center';
-    // Keep the label inside the canvas.
-    if (ctx.textAlign === 'center') lx = Math.max(tw / 2 + 2, Math.min(width - tw / 2 - 2, lx));
-    ctx.fillText(text, lx, Math.max(8, Math.min(height - 8, ly)));
+    // Left edge for the side the label hangs on, then kept inside the canvas whatever the side.
+    const left0 = nx > 0.5 ? ax : nx < -0.5 ? ax - tw : ax - tw / 2;
+    const left = Math.max(2, Math.min(width - tw - 2, left0));
+    ctx.textAlign = 'left';
+    ctx.fillText(text, left, Math.max(8, Math.min(height - 8, ly)));
   });
 
   // Best run: hollow --trace-best block, drawn under the current block.
