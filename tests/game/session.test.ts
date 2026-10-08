@@ -22,7 +22,7 @@ import { createInProcessWorker } from '../worker/adapter';
 
 vi.setConfig({ testTimeout: 60_000 });
 
-const SPIN: Setup = { throttle_ramp: 0, tire_pressure: 1.6, weight_dist: 0.45, wing: 4 }; // fires `wheelspin`
+const SPIN: Setup = { throttle_ramp: 0, tire_pressure: 1.7, weight_dist: 0.45, wing: 4 }; // fires `wheelspin` (Stage 11: pOpt 1.7)
 const BAD: Setup = { ...SPIN, throttle_ramp: 9 }; // SimInputError
 
 let client: SimClient;

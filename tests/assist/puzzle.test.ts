@@ -4,7 +4,7 @@
  * session → telemetry → summary → hints). Checks the guarantees that matter in the meeting:
  * - no reason, at any run count, names a lever (id or label) or a setup value;
  * - the assist only ever returns channels of the level, never outcome channels;
- * - the recorded attempt reaches the target on run 8 (unassisted);
+ * - the recorded attempt reaches the target on run 4 (unassisted; re-recorded by hand in Stage 11);
  * - raw correlation alone puts an echo channel in the top five at some point, and the rule
  *   priors keep it out (the debrief's spurious-correlation note).
  */
@@ -50,9 +50,9 @@ const LEVER_WORDS = [
 const SETUP_VALUE = /\b\d+(\.\d+)?\s*(bar|psi)\b/;
 
 describe('assist on the recorded Puzzle attempt', () => {
-  it('the recorded unassisted attempt meets the target on run 8', () => {
-    expect(runs).toHaveLength(8);
-    expect(passIndex).toBe(8);
+  it('the recorded unassisted attempt meets the target on run 4', () => {
+    expect(runs).toHaveLength(4);
+    expect(passIndex).toBe(4);
   });
 
   it('never names a lever or a setup value, at any run count, in either unit system', () => {

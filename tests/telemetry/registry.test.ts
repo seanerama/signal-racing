@@ -62,6 +62,9 @@ const CONTRACT_02: Record<string, Quantity> = {
   pos_x: 'distance',
   pos_y: 'distance',
   corner_limit_speed: 'speed',
+  // Stage 11 amendment: the run's conditions.
+  track_temp: 'temperature',
+  grip_multiplier: 'dimensionless',
 };
 
 const DERIVED = [

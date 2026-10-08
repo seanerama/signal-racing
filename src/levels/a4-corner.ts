@@ -2,25 +2,38 @@
  * A4 Corner (signal.md "A4, Corner"): a short run-up, one constant-radius left, a short run-out.
  * Wing buys corner speed through downforce and costs exit speed through drag; on a segment this
  * short the balance tips toward wing (which sets up B1). The brief points at the track view.
+ *
+ * Stage 11 (Fable finding 1, Vision Lead decision): only the wing is unlocked. The throttle ramp,
+ * tire pressure and weight distribution are locked, shown greyed, at the A3 grid optimum on the
+ * final engine (`A3_ANSWER`; a test recomputes it), so a change in the data has one cause and the
+ * wing alone reaches the target. Before, weight 0.46 → 0.52 was worth 0.47 s here and the whole
+ * wing range 0.19 s, and wing alone could not pass.
  */
+import { setupHeadroomRule } from '@/hints/headroom';
 import type { HintCtx, HintRule } from '@/hints/types';
 import type { RunSummary } from '@/telemetry/types';
 import type { LevelConfig } from './types';
 import {
   AT_LIMIT,
   AXLE_FORCES,
+  brakeWindow,
   cleanMin,
   DRY,
   FLAGS_GRIP,
   lever,
-  pressureLever,
-  rampLever,
+  peakInPhase,
   roles,
+  SLIDING,
   TRACK_CORNER,
-  weightLever,
   wingLever,
 } from './common';
-import { pressureOffPeakRule, wheelspinRule } from './a2-grip';
+import { LOCK_MIN_FRACTION } from './a3-weight';
+
+/**
+ * The A3 answer (A3's grid optimum on the final engine): A4 locks the levers A3 taught here, and
+ * B1L starts from them. `tests/levels/lessons.test.ts` recomputes A3's optimum and checks it.
+ */
+export const A3_ANSWER = { throttle_ramp: 0.2, tire_pressure: 1.7, weight_dist: 0.44 } as const;
 
 /** Segment indices on `TRACK_CORNER`. */
 const CORNER = 1;
@@ -57,6 +70,51 @@ export function cornerGripLimitedRule(gate?: (s: RunSummary, ctx: HintCtx) => bo
       '`lat_g` sits flat at {lat:accel_g} through the corner and `corner_min_speed` bottoms out at {vmin:speed}: the tires are at their limit the whole way round.',
       'In a corner the tires spend their grip budget on lateral force, and the budget is μ times load. `downforce` adds load that grows with v², so more of it raises the speed the corner allows.',
       'Raise the wing until exit speed stops improving.',
+    ],
+  };
+}
+
+/** The fronts locked braking into the corner for a real part of the braking, or null. */
+function entryLock(s: RunSummary) {
+  const brake = brakeWindow(s);
+  if (!brake) return null;
+  const peak = peakInPhase(s, 'front_slip_ratio', brake.tStart, true);
+  if (!SLIDING(peak)) return null;
+  const w = s.window('front_slip_ratio', SLIDING);
+  if (!w || w.tEnd < brake.tStart) return null;
+  const tStart = Math.max(w.tStart, brake.tStart);
+  const frac = (w.tEnd - tStart) / Math.max(1e-6, brake.tEnd - brake.tStart);
+  return frac > LOCK_MIN_FRACTION ? { tStart, tEnd: w.tEnd, peak } : null;
+}
+
+/**
+ * Fault (A4, Stage 11): the fronts locked braking into the corner. With the weight split locked
+ * the lever that loads the fronts is the wing: downforce adds front load in proportion to v², and
+ * the braking happens at the top of the run-up's speed.
+ */
+export function entryLockRule(): HintRule {
+  return {
+    id: 'entry_lock',
+    kind: 'fault',
+    when(s, ctx) {
+      if (!(ctx.setup.wing < lever(ctx.level, 'wing').max)) return null;
+      const l = entryLock(s);
+      if (!l) return null;
+      return {
+        ruleId: 'entry_lock',
+        vars: { peak: l.peak, t_start: l.tStart, t_end: l.tEnd },
+        window: { channel: 'front_slip_ratio', tStart: l.tStart, tEnd: l.tEnd },
+        channels: ['front_slip_ratio', 'downforce', 'load_front'],
+      };
+    },
+    estTimeCost(s) {
+      const l = entryLock(s);
+      return l ? 0.05 + 0.3 * (l.tEnd - l.tStart) : 0;
+    },
+    tiers: [
+      '`front_slip_ratio` peaked at {peak} braking into the corner, between {t_start:time} and {t_end:time}: the fronts locked.',
+      'The fronts carry most of the braking, and their grip is μ times their load. `downforce` adds load that grows with v², and the braking for the corner happens at the top of the run-up, where downforce is largest.',
+      'Raise the wing until `front_slip_ratio` stays under 0.10 into the corner.',
     ],
   };
 }
@@ -103,11 +161,11 @@ export const A4: LevelConfig = {
   title: 'Corner',
   concept: 'Friction circle, aero tradeoff',
   brief:
-    'A short run-up, one 80 m left-hander, a short run-out; the driver brakes to the corner limit for you. Wing angle buys corner speed with downforce and pays for it in drag. Watch where on the path the speed bottoms out: the track view at the top right follows the cursor.',
+    'A short run-up, one 80 m left-hander, a short run-out; the driver brakes to the corner limit for you. Wing angle buys corner speed with downforce and pays for it in drag, and it is the only lever: ramp, pressure and weight are locked at the A3 answer. Watch where on the path the speed bottoms out: the track view at the top right follows the cursor.',
   track: TRACK_CORNER,
   flags: FLAGS_GRIP,
-  levers: [rampLever(0.4), pressureLever(1.7), weightLever(0.46), wingLever(2)],
-  lockedLevers: {},
+  levers: [wingLever(2)],
+  lockedLevers: { ...A3_ANSWER },
   runBudget: 7,
   tolerance: 0.005,
   hintCost: [1, 1, 1],
@@ -152,7 +210,8 @@ export const A4: LevelConfig = {
     'pitot_dp_1',
   ],
   channelRoles: {
-    ...roles('causal', AXLE_FORCES),
+    // Stage 11: the axle forces feed the grip circle but are not what the brief names.
+    ...roles('correlated', AXLE_FORCES),
     ...roles('outcome', ['segment_time', 'delta_best', 'top_speed']),
     ...roles('causal', ['lat_g', 'corner_min_speed', 'exit_speed', 'downforce']),
     ...roles('correlated', [
@@ -191,7 +250,7 @@ export const A4: LevelConfig = {
     ]),
   },
   defaultStrips: ['segment_time', 'speed', 'throttle', 'brake', 'steering_angle'],
-  hintRules: [cornerGripLimitedRule(), dragCostRule(), wheelspinRule(), pressureOffPeakRule()],
+  hintRules: [cornerGripLimitedRule(), dragCostRule(), entryLockRule(), setupHeadroomRule()],
   conditions: DRY,
   passOn: 'any_run',
   scoreTarget: 'time',
@@ -200,6 +259,6 @@ export const A4: LevelConfig = {
       'A tire has one grip budget, μ times load, shared between braking, driving and cornering, so in the corner `lat_g` sits flat at the limit and `corner_min_speed` is set by how much load the tires carry.',
       'Wing adds `downforce`, and so load, in proportion to v², but drag grows faster than downforce as the wing goes up; on a segment this short the corner is worth more than the straights, so the best wing is high.',
     ],
-    causal: ['lat_g', 'corner_min_speed', 'exit_speed', 'downforce', ...AXLE_FORCES],
+    causal: ['lat_g', 'corner_min_speed', 'exit_speed', 'downforce'],
   },
 };

@@ -8,6 +8,7 @@
  * (`segmentFloorSource: 'engine_optimum'`), labelled "engine floor" in the UI, not the player's
  * Phase A bests.
  */
+import { setupHeadroomRule } from '@/hints/headroom';
 import type { HintCtx, HintRule } from '@/hints/types';
 import type { RunSummary } from '@/telemetry/types';
 import type { LevelConfig } from './types';
@@ -23,8 +24,8 @@ import {
   wingLever,
 } from './common';
 import { pressureOffPeakRule, rampTooGentleRule, wheelspinRule } from './a2-grip';
-import { frontLockRule } from './a3-weight';
-import { cornerGripLimitedRule, dragCostRule } from './a4-corner';
+import { frontLockRule, launchSpinRule } from './a3-weight';
+import { A3_ANSWER, cornerGripLimitedRule, dragCostRule } from './a4-corner';
 
 /** A segment pays for the compromise when its end-of-segment delta is at least this (s). */
 export const PAYING_MIN = 0.05;
@@ -34,6 +35,21 @@ export const PAYING_MIN = 0.05;
  * straight more than the corner), so "clearly paying" means well over double.
  */
 export const PAYING_RATIO = 2.5;
+
+/** Stage 11: real sensors with no bearing on the join (signal-to-noise, finding 6). */
+const B1L_EXTRA_DISTRACTORS = [
+  'oil_pressure',
+  'radiator_out_temp',
+  'fuel_temp',
+  'airbox_temp',
+  'ecu_temp',
+  'lambda_bank_1',
+  'damper_temp_fl',
+  'brake_duct_temp_front',
+  'strain_wing_pillar_r',
+  'ambient_air_temp',
+  'logger_temp',
+];
 
 /** End-of-segment `segment_delta` per segment (s); NaN where the level has no floors. */
 export function segmentEndDeltas(s: RunSummary): number[] {
@@ -123,10 +139,18 @@ export const B1L: LevelConfig = {
   title: 'Join: straight + fast corner',
   concept: 'The aero compromise',
   brief:
-    'A kilometre of straight from a standing start, a fast 150 m right-hander and a short run-out, on one setup. The score is the compromise gap: your time minus the sum of each segment’s engine floor, the fastest any setup can do it alone. The `segment_time` strip restarts at every dashed boundary; find the strip that shows which segment is paying.',
+    'A kilometre of straight from a standing start, a fast 150 m right-hander and a short run-out, on one setup, starting with no throttle ramp and a high wing. The score is the compromise gap: your time minus the sum of each segment’s engine floor, the fastest any setup can do it alone. Every lever is free, and more rear weight lets a shorter ramp launch cleanly: the same wheelspin, solved by a different lever. The `segment_time` strip restarts at every dashed boundary; find the strip that shows which segment is paying.',
   track: TRACK_JOIN,
   flags: FLAGS_GRIP,
-  levers: [rampLever(0.4), pressureLever(1.7), weightLever(0.46), wingLever(7)],
+  // Stage 11: the A3 weight and pressure, no ramp (the A1 instinct) and a high wing (the A4
+  // instinct). The launch spins and the straight pays; with no stop on this track, the hints cure
+  // the spin with rear weight rather than a ramp (`launch_spin`, `withRamp`).
+  levers: [
+    rampLever(0),
+    pressureLever(A3_ANSWER.tire_pressure),
+    weightLever(A3_ANSWER.weight_dist),
+    wingLever(5),
+  ],
   lockedLevers: {},
   runBudget: 8,
   tolerance: 0.005,
@@ -178,9 +202,12 @@ export const B1L: LevelConfig = {
     'cooling_air_dp',
     'strain_wing_pillar_l',
     'diff_temp',
+    // Stage 11: more believable distractors, so 5 causal of 60 (1 in 12).
+    ...B1L_EXTRA_DISTRACTORS,
   ],
   channelRoles: {
-    ...roles('causal', AXLE_FORCES),
+    // Stage 11: the axle forces feed the grip circle but are not what the brief names.
+    ...roles('correlated', AXLE_FORCES),
     ...roles('outcome', ['segment_time', 'delta_best']),
     ...roles('causal', [
       'segment_delta',
@@ -230,34 +257,31 @@ export const B1L: LevelConfig = {
       'cooling_air_dp',
       'strain_wing_pillar_l',
       'diff_temp',
+      ...B1L_EXTRA_DISTRACTORS,
     ]),
   },
   defaultStrips: ['segment_time', 'speed', 'throttle', 'brake'],
   hintRules: [
     segmentPayingRule(),
+    launchSpinRule({ withRamp: true }),
     wheelspinRule(),
     frontLockRule('under braking'),
     cornerGripLimitedRule(cornerIsPaying),
     dragCostRule(),
     pressureOffPeakRule(),
     rampTooGentleRule(),
+    setupHeadroomRule(),
   ],
   conditions: DRY,
   passOn: 'any_run',
   scoreTarget: 'compromise_gap',
   segmentFloorSource: 'engine_optimum',
+  surfaceLevers: ['wing', 'weight_dist'],
   debrief: {
     physics: [
       'Drag grows with v² and with the wing, so on a kilometre of straight a high wing costs time on every metre: `drag_force` caps `top_speed` long before the braking point.',
-      'The same wing buys `downforce` and so `corner_min_speed` in one fast corner; the best single setup sits where the time the wing saves in the corner equals the time it costs on the straight, which is why `segment_delta` is shared out rather than zero.',
+      'The same wing buys `downforce` and so `corner_min_speed` in one fast corner; the best single setup sits where the time the wing saves in the corner equals the time it costs on the straight, which is why `segment_delta` is shared out rather than zero, and with no stop to protect the fronts here, rear weight can take over the launch from the ramp: the same wheelspin, solved by a different lever.',
     ],
-    causal: [
-      'segment_delta',
-      'drag_force',
-      'top_speed',
-      'corner_min_speed',
-      'downforce',
-      ...AXLE_FORCES,
-    ],
+    causal: ['segment_delta', 'drag_force', 'top_speed', 'corner_min_speed', 'downforce'],
   },
 };

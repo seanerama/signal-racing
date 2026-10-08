@@ -92,7 +92,8 @@ describe('B1L: the aero compromise', () => {
     'a launch-optimal setup (max rear weight, no wing) moves the cost into the fast corner',
     T,
     () => {
-      const r = play(B1L, { throttle_ramp: 0, tire_pressure: 1.6, weight_dist: 0.52, wing: 0 });
+      // Stage 11: 1.7 bar is the pressure peak (pOpt).
+      const r = play(B1L, { throttle_ramp: 0, tire_pressure: 1.7, weight_dist: 0.52, wing: 0 });
       const d = segmentEndDeltas(r.summary);
       expect(d.indexOf(Math.max(...d))).toBe(1);
       // The straight is at its floor (within 0.05 s): the launch is all it can be.

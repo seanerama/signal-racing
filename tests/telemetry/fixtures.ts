@@ -179,6 +179,8 @@ export function makeFixture(opts: FixtureOptions = {}): PhysicalColumns {
       pos_x: x,
       pos_y: y,
       corner_limit_speed: vlim,
+      track_temp: 30,
+      grip_multiplier: 1,
     });
 
     // Integrate.

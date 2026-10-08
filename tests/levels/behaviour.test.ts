@@ -94,34 +94,44 @@ describe.each(LEVELS.map((l) => [l.id, l] as const))('%s behaviour', (id, level)
   );
 });
 
-/** Crafted bad setups and the rule each must fire. */
+/**
+ * Crafted bad setups and the rule each must fire (Stage 11: 1.7 bar is the pressure peak; A4
+ * unlocks only the wing; A3 and B4L gain `rear_lock`, B1L and B4L `launch_spin`).
+ */
 const CRAFTED = {
   A1: [[{ throttle_ramp: 1.0 }, 'ramp_headroom']],
   A2: [
-    [{ throttle_ramp: 0, tire_pressure: 1.9 }, 'wheelspin'],
+    [{ throttle_ramp: 0, tire_pressure: 1.7 }, 'wheelspin'],
+    [{ throttle_ramp: 0, tire_pressure: 1.9 }, 'pressure_off_peak'],
     [{ throttle_ramp: 0.2, tire_pressure: 1.2 }, 'pressure_off_peak'],
-    [{ throttle_ramp: 1.4, tire_pressure: 1.6 }, 'ramp_too_gentle'],
+    [{ throttle_ramp: 1.4, tire_pressure: 1.7 }, 'ramp_too_gentle'],
   ],
   A3: [
-    [{ throttle_ramp: 0.2, tire_pressure: 1.6, weight_dist: 0.38 }, 'launch_spin'],
-    [{ throttle_ramp: 0.6, tire_pressure: 1.6, weight_dist: 0.52 }, 'front_lock'],
+    [{ throttle_ramp: 0.2, tire_pressure: 1.7, weight_dist: 0.38 }, 'launch_spin'],
+    [{ throttle_ramp: 0.4, tire_pressure: 1.7, weight_dist: 0.42 }, 'rear_lock'],
+    [{ throttle_ramp: 0.6, tire_pressure: 1.7, weight_dist: 0.52 }, 'front_lock'],
+    [{ throttle_ramp: 0.2, tire_pressure: 1.7, weight_dist: 0.46 }, 'front_lock'],
   ],
   A4: [
-    [{ throttle_ramp: 0.4, tire_pressure: 1.6, weight_dist: 0.46, wing: 1 }, 'corner_grip_limited'],
-    [{ throttle_ramp: 0, tire_pressure: 2.2, weight_dist: 0.4, wing: 4 }, 'wheelspin'],
+    [{ wing: 1 }, 'corner_grip_limited'],
+    [{ wing: 0 }, 'entry_lock'],
   ],
   B1L: [
-    [{ throttle_ramp: 0, tire_pressure: 1.6, weight_dist: 0.52, wing: 7 }, 'segment_paying'],
-    [{ throttle_ramp: 0, tire_pressure: 1.6, weight_dist: 0.52, wing: 1 }, 'segment_paying'],
-    [{ throttle_ramp: 0, tire_pressure: 1.6, weight_dist: 0.52, wing: 1 }, 'corner_grip_limited'],
-    [{ throttle_ramp: 0, tire_pressure: 2.2, weight_dist: 0.4, wing: 3 }, 'wheelspin'],
+    [{ throttle_ramp: 0, tire_pressure: 1.7, weight_dist: 0.52, wing: 7 }, 'segment_paying'],
+    [{ throttle_ramp: 0, tire_pressure: 1.7, weight_dist: 0.52, wing: 1 }, 'segment_paying'],
+    [{ throttle_ramp: 0, tire_pressure: 1.7, weight_dist: 0.52, wing: 1 }, 'corner_grip_limited'],
+    [{ throttle_ramp: 0, tire_pressure: 1.7, weight_dist: 0.4, wing: 3 }, 'launch_spin'],
+    [{ throttle_ramp: 0, tire_pressure: 1.7, weight_dist: 0.4, wing: 3 }, 'wheelspin'],
+    [{ throttle_ramp: 0, tire_pressure: 2.2, weight_dist: 0.4, wing: 3 }, 'pressure_off_peak'],
   ],
   B4L: [
     [{ throttle_ramp: 0.4, tire_pressure: 1.7, weight_dist: 0.46, wing: 7 }, 'segment_paying'],
-    [{ throttle_ramp: 0, tire_pressure: 1.6, weight_dist: 0.52, wing: 0 }, 'front_lock'],
-    [{ throttle_ramp: 0, tire_pressure: 2.2, weight_dist: 0.4, wing: 3 }, 'wheelspin'],
+    [{ throttle_ramp: 0, tire_pressure: 1.7, weight_dist: 0.52, wing: 0 }, 'front_lock'],
+    [{ throttle_ramp: 0.2, tire_pressure: 1.7, weight_dist: 0.4, wing: 3 }, 'rear_lock'],
+    [{ throttle_ramp: 0, tire_pressure: 1.7, weight_dist: 0.42, wing: 3 }, 'launch_spin'],
+    [{ throttle_ramp: 0, tire_pressure: 1.7, weight_dist: 0.48, wing: 3 }, 'wheelspin'],
     [{ throttle_ramp: 0, tire_pressure: 1.2, weight_dist: 0.52, wing: 3 }, 'pressure_off_peak'],
-    [{ throttle_ramp: 1.4, tire_pressure: 1.6, weight_dist: 0.52, wing: 3 }, 'ramp_too_gentle'],
+    [{ throttle_ramp: 1.4, tire_pressure: 1.7, weight_dist: 0.52, wing: 3 }, 'ramp_too_gentle'],
   ],
 } satisfies Record<string, Array<[Partial<Setup>, string]>>;
 
@@ -141,7 +151,7 @@ describe('crafted bad setups fire their rule', () => {
   });
 
   it('A4 drag_cost fires at the top of the wing range when the run-out is slower than the best', () => {
-    const input = buildSimInput(A4, { wing: 8, weight_dist: 0.46, throttle_ramp: 0.4 }, 1);
+    const input = buildSimInput(A4, { wing: 8 }, 1);
     const { outcome, columns } = simulate(input, 'full');
     const rt = createRunTelemetry({
       physical: columns!,

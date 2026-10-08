@@ -124,6 +124,17 @@ export const PHYSICAL_CHANNELS: readonly PhysicalChannelMeta[] = Object.freeze([
     quantity: 'speed',
     description: 'Limit speed of the current corner (0 on straights).',
   },
+  // Stage 11: the run's actual conditions, so a player can compare runs under like conditions.
+  {
+    id: 'track_temp',
+    quantity: 'temperature',
+    description: 'Track surface temperature this run (the run conditions; it varies run to run).',
+  },
+  {
+    id: 'grip_multiplier',
+    quantity: 'dimensionless',
+    description: 'Track grip multiplier this run (the run conditions; dry is 1).',
+  },
 ]);
 
 /** Channel ids in `PHYSICAL_CHANNELS` order. */
