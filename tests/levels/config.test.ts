@@ -30,10 +30,34 @@ describe('LEVELS', () => {
   it('the amended ramp range is 0–3.0 s step 0.2 (clamped to the engine on this branch)', () => {
     for (const l of LEVELS) {
       const ramp = l.levers.find((x) => x.id === 'throttle_ramp');
+      if (!ramp) {
+        // Stage 11: A4 locks the ramp (only the wing is free); the locked value is on that grid.
+        const v = l.lockedLevers.throttle_ramp!;
+        expect(Math.abs(v / 0.2 - Math.round(v / 0.2)), l.id).toBeLessThan(1e-9);
+        continue;
+      }
       expect(ramp).toMatchObject({ min: 0, step: 0.2 });
-      expect(ramp?.max).toBeCloseTo(RAMP_MAX, 9);
-      expect(ramp!.max).toBeLessThanOrEqual(3.0);
+      expect(ramp.max).toBeCloseTo(RAMP_MAX, 9);
+      expect(ramp.max).toBeLessThanOrEqual(3.0);
     }
+  });
+
+  it('signal-to-noise falls monotonically, from 1 in 4 at A1 toward 1 in 30 at the Puzzle', () => {
+    // Stage 11 (finding 6): total channels per causal channel, in unlock order.
+    const ratio = LEVELS.map((l) => {
+      const causal = l.channelSet.filter((id) => l.channelRoles[id] === 'causal').length;
+      return l.channelSet.length / causal;
+    });
+    for (let i = 1; i < ratio.length; i++) expect(ratio[i]!).toBeGreaterThan(ratio[i - 1]!);
+    expect(ratio[0]!).toBeCloseTo(4, 0);
+    expect(ratio[ratio.length - 1]!).toBeGreaterThanOrEqual(25);
+    expect(ratio[ratio.length - 1]!).toBeLessThanOrEqual(30);
+  });
+
+  it('the axle forces (Stage 9) are never causal: they feed the grip circle, not the lesson', () => {
+    for (const l of LEVELS)
+      for (const id of ['fx_front', 'fy_front', 'fx_rear', 'fy_rear'])
+        expect(l.channelRoles[id], `${l.id} ${id}`).toBe('correlated');
   });
 });
 
@@ -56,14 +80,21 @@ describe.each(LEVELS.map((l) => [l.id, l] as const))('%s config', (_id, level) =
   });
 
   it('channel and causal counts follow the meeting-cut growth', () => {
-    // Stage 9 adds the four axle-force channels (grip circle) to every level.
-    const want = { A1: 16, A2: 24, A3: 32, A4: 40, B1L: 49, B4L: 214 }[level.id];
+    // Stage 9 adds the four axle-force channels (grip circle) to every level; Stage 11 adds B1L
+    // distractors and makes the forces correlated everywhere (signal-to-noise, finding 6).
+    const want = { A1: 16, A2: 25, A3: 32, A4: 41, B1L: 60, B4L: 215 }[level.id];
     expect(Math.abs(level.channelSet.length - want)).toBeLessThanOrEqual(
       level.id === 'B4L' ? 10 : 2,
     );
-    // From A4 on the axle forces are causal (+4).
-    const ranges: Record<string, [number, number]> = { B4L: [10, 12], B1L: [9, 9], A4: [7, 9] };
-    const [lo, hi] = ranges[level.id] ?? [3, 5];
+    const ranges: Record<string, [number, number]> = {
+      A1: [4, 4],
+      A2: [5, 5],
+      A3: [4, 4],
+      A4: [4, 4],
+      B1L: [5, 5],
+      B4L: [8, 8],
+    };
+    const [lo, hi] = ranges[level.id]!;
     expect(causal.length).toBeGreaterThanOrEqual(lo);
     expect(causal.length).toBeLessThanOrEqual(hi);
     expect(new Set(level.debrief.causal)).toEqual(new Set(causal));
@@ -93,6 +124,13 @@ describe.each(LEVELS.map((l) => [l.id, l] as const))('%s config', (_id, level) =
       // The generic noise rule directs a method (repeat, compare like with like), not a lever.
       if (r.kind === 'noise') continue;
       const t3 = r.tiers[2];
+      if (r.fallback) {
+        // The generic headroom rule (Stage 11) names its lever and direction through `{move}`,
+        // one of the fixed phrases in LEVER_MOVES (checked in tests/hints/headroom.test.ts).
+        expect(t3, r.id).toMatch(/^\{move\}/);
+        expect(t3, r.id).not.toMatch(VALUE_WITH_UNIT);
+        continue;
+      }
       expect(t3, r.id).not.toMatch(VALUE_WITH_UNIT);
       expect(t3, r.id).not.toMatch(LEVER_VALUE);
       expect(t3, r.id).toMatch(/throttle ramp|tire pressure|weight distribution|wing/i);
