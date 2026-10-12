@@ -1,7 +1,8 @@
 # Signal
 
 A racing game that shows nothing on screen but data. You tune a car's setup using only stacked
-telemetry graphs. `signal.md` is the game design spec.
+telemetry graphs. `signal.md` is the game design spec; `docs/backend-spec.md` documents the model
+and backend as built (the contract the UI rework builds on).
 
 ## Quick start
 
@@ -15,20 +16,20 @@ npm run check      # typecheck + lint + unit tests (must pass before any stage m
 
 ## Scripts
 
-| Script                 | What it does                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------- |
-| `npm run dev`          | Vite dev server                                                                       |
-| `npm run precompute`   | Grid-search every level → `src/game/precomputed-targets.json` (runs as `prebuild`)    |
-| `npm run build`        | Static build → `dist/` (serve with `npm run preview`)                                 |
-| `npm run build:single` | Offline single-file build → `dist-single/signal.html`, one self-contained file for `file://`   |
-| `npm run preview`      | Serves `dist/` on port 4173                                                           |
-| `npm run typecheck`    | `tsc --noEmit` for the app (`tsconfig.json`) and tests/configs (`tsconfig.node.json`) |
-| `npm run lint`         | ESLint (typescript-eslint type-checked + import boundaries)                           |
-| `npm run test`         | Vitest (node for `*.test.ts`, jsdom for `*.dom.test.tsx`)                             |
-| `npm run test:slow`    | Recomputes the precomputed targets and compares them bit-for-bit                      |
-| `npm run test:e2e`     | Builds both artifacts, then Playwright (incl. the guided demo on both builds)        |
-| `npm run check`        | typecheck + lint + test                                                               |
-| `npm run format`       | Prettier                                                                              |
+| Script                 | What it does                                                                                 |
+| ---------------------- | -------------------------------------------------------------------------------------------- |
+| `npm run dev`          | Vite dev server                                                                              |
+| `npm run precompute`   | Grid-search every level → `src/game/precomputed-targets.json` (runs as `prebuild`)           |
+| `npm run build`        | Static build → `dist/` (serve with `npm run preview`)                                        |
+| `npm run build:single` | Offline single-file build → `dist-single/signal.html`, one self-contained file for `file://` |
+| `npm run preview`      | Serves `dist/` on port 4173                                                                  |
+| `npm run typecheck`    | `tsc --noEmit` for the app (`tsconfig.json`) and tests/configs (`tsconfig.node.json`)        |
+| `npm run lint`         | ESLint (typescript-eslint type-checked + import boundaries)                                  |
+| `npm run test`         | Vitest (node for `*.test.ts`, jsdom for `*.dom.test.tsx`)                                    |
+| `npm run test:slow`    | Recomputes the precomputed targets and compares them bit-for-bit                             |
+| `npm run test:e2e`     | Builds both artifacts, then Playwright (incl. the guided demo on both builds)                |
+| `npm run check`        | typecheck + lint + test                                                                      |
+| `npm run format`       | Prettier                                                                                     |
 
 First e2e run: `npx playwright install chromium`.
 
